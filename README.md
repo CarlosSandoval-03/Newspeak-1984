@@ -93,3 +93,4 @@ Third-party parts keep their own licenses:
 
 - *1942* (Capcom, 1984) for the gameplay foundation.
 - *Nineteen Eighty-Four* (George Orwell, 1949) for the world. All slogans in the game are original.
+- [PixelLab](https://pixellab.ai) for generating the pixel art.
