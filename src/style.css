@@ -1,4 +1,35 @@
+@font-face {
+  font-family: 'VT323';
+  src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('/assets/fonts/CourierPrime-Regular.ttf') format('truetype');
+}
+
 body {
   margin: 0;
   background: #1a1a1a;
+  color: #e8e4d8;
+  font-family: 'Courier Prime', monospace;
+}
+
+main {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 0 16px;
+}
+
+h1 {
+  margin: 0 0 0.5em;
+  font-family: 'VT323', monospace;
+  font-size: 60px;
+  font-weight: normal;
+}
+
+p {
+  margin: 0.25em 0;
 }
