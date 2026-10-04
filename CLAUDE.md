@@ -38,6 +38,12 @@ A vertical shmup inspired by *1942*, set in Orwell's *1984*. This file holds onl
 - The theme is expressed through mechanics, not only visuals.
 - Red belongs to the regime: nothing the player owns is red. Aircraft use core colors only. Slogans and story text are original, never quoted from Orwell.
 
+## Comments
+- A comment says why: an intent, a constraint, or a non-obvious decision the code can't show. Never restate what the code, a name, or a type already says, and never describe what a file contains.
+- Comments are self-contained: no references to docs, other files, tickets, or conversations. If the reader needs more, the knowledge belongs in `docs/`, not in a pointer.
+- TSDoc (`/** */`) on an export only when its name and signature don't say enough; `//` for everything else.
+- No commented-out code, section banners, or template boilerplate. A comment that no longer matches the code is deleted or fixed in the same change.
+
 ## Git
 - Follow the commit rules in docs/technical.md › Git; the hooks enforce them. Never use `--no-verify`.
 - Never push: no `git push` of branches or tags, and no changes to remotes. Only I push.
