@@ -2,7 +2,7 @@
 // Placeholders in braces are replaced at runtime: {id} pilot number, {word} a Newspeak word,
 // {enemy} the current enemy, {from}/{to} numbers, {ordinal} an edition ordinal.
 // Rules: regime text is UPPERCASE; slogans are at most 22 characters per line and 2 lines;
-// no arrows or "№" (the fonts lack them). See docs/typography.md.
+// no arrows or "№" (the fonts lack them). See docs/text-and-language.md.
 
 export const en = {
   meta: {
