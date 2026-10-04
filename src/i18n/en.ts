@@ -57,7 +57,7 @@ export const en = {
     takeOff: 'PRESS ENTER TO TAKE OFF',
   },
 
-  // One list per level, three tones chosen by suspicion: [calm, wary, cold].
+  // One list per level, three tones chosen by the Ministry's verdict on the last level: [calm, wary, cold].
   briefings: [
     [
       'Pilot {id}. Eurasian bombers approach the capital. Defend the Ministry of Truth.',
@@ -149,11 +149,15 @@ export const en = {
     officialScore: 'OFFICIAL SCORE',
     correctionsTitle: 'CORRECTIONS',
     corrections: {
-      kills: 'Enemy aircraft destroyed: {from}, corrected to {to}. Rounded in the Party\'s favor.',
+      // One per Ministry verdict: a hero, a pilot under review, a suspect.
+      kills: [
+        'Enemy aircraft destroyed: {from}, corrected to {to}. Rounded in the Party\'s favor.',
+        'Enemy aircraft destroyed: {from}, corrected to {to}. The rest are credited to loyal pilots.',
+        'Enemy aircraft destroyed: {from}, corrected to 0. This pilot flew no sorties.',
+      ],
       eyesDestroyed: 'Surveillance towers lost: {from}, corrected to 0. No towers were lost.',
       secondsSeen: 'Time under observation: {from} s, corrected to 0. The pilot was never observed.',
       diaries: 'Diaries recovered: {from}, corrected to 0. No such document exists.',
-      removedWords: 'Obsolete words collected: {from}, corrected to 0. Those words do not exist.',
     },
     stamps: {
       corrected: 'CORRECTED',
@@ -166,7 +170,6 @@ export const en = {
     title: 'HONOR ROLL',
     pilot: 'PILOT {id}',
     unperson: '[UNPERSON]',
-    sector: 'SECTOR',
   },
 
   // The erased pilot's diary: one page per level, in order.

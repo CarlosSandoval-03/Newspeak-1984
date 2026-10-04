@@ -139,11 +139,14 @@ export const es: Strings = {
     officialScore: 'PUNTUACIÓN OFICIAL',
     correctionsTitle: 'CORRECCIONES',
     corrections: {
-      kills: 'Aviones enemigos derribados: {from}, corregido a {to}. Redondeado a favor del Partido.',
+      kills: [
+        'Aviones enemigos derribados: {from}, corregido a {to}. Redondeado a favor del Partido.',
+        'Aviones enemigos derribados: {from}, corregido a {to}. El resto se atribuye a pilotos leales.',
+        'Aviones enemigos derribados: {from}, corregido a 0. Este piloto no realizó ninguna salida.',
+      ],
       eyesDestroyed: 'Torres de vigilancia perdidas: {from}, corregido a 0. No se perdió ninguna torre.',
       secondsSeen: 'Tiempo bajo observación: {from} s, corregido a 0. El piloto nunca fue observado.',
       diaries: 'Diarios recuperados: {from}, corregido a 0. Tal documento no existe.',
-      removedWords: 'Palabras obsoletas recogidas: {from}, corregido a 0. Esas palabras no existen.',
     },
     stamps: {
       corrected: 'CORREGIDO',
@@ -156,7 +159,6 @@ export const es: Strings = {
     title: 'CUADRO DE HONOR',
     pilot: 'PILOTO {id}',
     unperson: '[NO-PERSONA]',
-    sector: 'SECTOR',
   },
 
   diary: {
