@@ -20,6 +20,7 @@ You fly for the Party. The longer you fly, the more you see, and the more you se
 - [TypeScript](https://www.typescriptlang.org/) (strict mode)
 - [Vite](https://vite.dev/)
 - [p5.js](https://p5js.org/) in instance mode
+- [Vitest](https://vitest.dev/) for tests, GitHub Actions for CI and deploys to GitHub Pages
 
 ## Getting started
 
@@ -45,6 +46,7 @@ Open http://localhost:5173 in your browser.
 | ---------------- | ----------------------------------------- |
 | `pnpm dev`       | Start the dev server with hot reload      |
 | `pnpm typecheck` | Type-check the project without emitting   |
+| `pnpm test`      | Run the tests                             |
 | `pnpm build`     | Type-check and build to `dist/`           |
 | `pnpm preview`   | Serve the production build locally        |
 

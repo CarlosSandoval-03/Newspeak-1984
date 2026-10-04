@@ -7,12 +7,13 @@ Stack, architecture, conventions, rendering, and tooling: how the code is built.
 | Tool | Version | Notes |
 | ---- | ------- | ----- |
 | TypeScript | 6.0.3 | `strict`; `vite/client` types come from `tsconfig.json` (no `vite-env.d.ts`). |
-| Vite | 8.3.2 | `vanilla-ts`; serves `public/` at the site root. |
+| Vite | 8.3.2 | `vanilla-ts`; serves `public/` at the site root. Builds with a relative base (`--base=./`), so the game runs under any path, such as GitHub Pages. |
+| Vitest | 5.0.3 | Tests; uses Vite's resolution, so tests import modules as the game does. |
 | p5.js | 2.3.4 | **Instance mode only** (`new p5(sketch)`). |
 | pnpm | 12.3.4 | Pinned via `packageManager`. |
 | Node.js | ≥ 22.12 | Required by Vite 8. |
 
-Dependencies are pinned exactly (`.npmrc`: `save-exact=true`). No new runtime dependency without approval.
+Dependencies are pinned exactly (`pnpm-workspace.yaml`: `saveExact: true`; pnpm no longer reads it from `.npmrc`). No new runtime dependency without approval.
 
 ## Project structure
 
@@ -22,8 +23,9 @@ newspeak-1984/
 ├── package.json          # scripts, exact dependency versions, packageManager
 ├── pnpm-lock.yaml
 ├── tsconfig.json
-├── .npmrc                # save-exact=true
+├── pnpm-workspace.yaml   # pnpm settings (saveExact)
 ├── .githooks/            # commit-msg, pre-commit
+├── .github/workflows/    # ci.yml: checks, and deploys tags to GitHub Pages
 ├── README.md             # project overview and how to run it
 ├── docs/                 # this documentation (start at docs/README.md)
 ├── public/
@@ -52,6 +54,7 @@ newspeak-1984/
 
 - **Language:** all code, comments, identifiers, file names, and commit messages are in English. Player-facing text lives in `src/i18n/` (English and Spanish).
 - **Every player-facing string comes from `src/i18n/`**, never inline; `es.ts` is typed against `en.ts`, so edit both together.
+- **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's corrections, `t()`), not drawing. Load assets with relative paths (`assets/...`), never `/assets/...`, or they break under the Pages path.
 
 ## Architecture
 
@@ -171,6 +174,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | ------- | ---- |
 | `pnpm dev` | Dev server with hot reload. |
 | `pnpm typecheck` | `tsc --noEmit`; run after every change. |
+| `pnpm test` | Run the tests once (`vitest run`); `pnpm vitest` watches. |
 | `pnpm build` | Typecheck and build to `dist/`. |
 | `pnpm preview` | Serve the build. |
 
@@ -185,3 +189,11 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 - **Hooks** (`.githooks/`, activated by `pnpm install` through the `prepare` script, which sets `core.hooksPath`): `commit-msg` validates the message, `pre-commit` runs `pnpm typecheck`. Never bypass them with `--no-verify`.
 - **Versioning:** [SemVer](https://semver.org/) in `package.json`. While in `0.x`, each completed implementation step bumps the minor version (`0.1.0` → `0.2.0`) and fixes bump the patch. Releases get their own commit (`chore(release): vX.Y.Z`) and an annotated tag `vX.Y.Z`. `1.0.0` = the full game playable through both endings.
 - Only the project owner pushes.
+
+### CI and deploy
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request: install with the frozen lockfile, typecheck, test, build. Pushing a `vX.Y.Z` tag runs the same checks, fails if the tag doesn't match the `package.json` version, and deploys `dist/` to GitHub Pages, so the published game is always a release.
+
+One-time setup on GitHub:
+- **Settings › Pages › Source:** GitHub Actions.
+- **Settings › Environments › github-pages › Deployment branches and tags:** add a tag rule `v*` (by default only the default branch may deploy).
