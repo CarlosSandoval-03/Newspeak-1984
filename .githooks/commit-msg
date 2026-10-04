@@ -1,0 +1,57 @@
+#!/bin/sh
+# Enforces Conventional Commits with this project's types and scopes.
+
+msg=$(grep -v '^#' "$1")
+header=$(printf '%s\n' "$msg" | sed -n 1p)
+
+# Let git-generated messages through.
+case "$header" in
+  Merge\ *|Revert\ *|fixup!\ *|squash!\ *) exit 0 ;;
+esac
+
+types='feat|fix|refactor|perf|style|docs|test|build|chore'
+scopes='core|entities|systems|levels|ui|scenes|config|state|deps|release'
+
+fail() {
+  cat >&2 <<EOF
+commit-msg: $1
+  got: $header
+
+Commit rules (https://www.conventionalcommits.org):
+  <type>(<scope>): <summary>      scope is optional
+  type:    $types
+  scope:   $scopes
+  summary: imperative, starts lowercase, no trailing period
+  header:  72 characters max, blank line before the body
+  breaking change: '!' before ':' plus a 'BREAKING CHANGE: ...' footer
+  release: 'chore(release): vX.Y.Z' matching the package.json version
+
+  e.g. feat(entities): add player dash
+EOF
+  exit 1
+}
+
+printf '%s\n' "$header" | grep -Eq "^($types)(\(($scopes)\))?!?: " ||
+  fail "header must be '<type>(<scope>): <summary>' with a valid type and scope"
+
+summary=${header#*: }
+printf '%s\n' "$summary" | grep -Eq '^[a-z0-9]' || fail "summary must start lowercase"
+case "$summary" in *.) fail "summary must not end with a period" ;; esac
+[ ${#header} -le 72 ] || fail "header must be 72 characters or fewer (is ${#header})"
+
+line2=$(printf '%s\n' "$msg" | sed -n 2p)
+[ -z "$line2" ] || fail "leave a blank line between header and body"
+
+case "$header" in
+  *!:*) printf '%s\n' "$msg" | grep -q '^BREAKING CHANGE: ' ||
+    fail "'!' requires a 'BREAKING CHANGE: ' footer" ;;
+esac
+
+case "$header" in
+  'chore(release): '*)
+    version=$(node -p "require('./package.json').version")
+    [ "$summary" = "v$version" ] ||
+      fail "release commit must be 'chore(release): v$version' (package.json version)" ;;
+esac
+
+exit 0
