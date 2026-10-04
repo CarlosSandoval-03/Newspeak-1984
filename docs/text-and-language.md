@@ -29,14 +29,14 @@ Every place where the player reads something: when it appears, in which voice, h
 | Telescreens | Machine | Background screens. | Static, the eye, or a line. | `slogans.telescreens` | `THE LEADER IS WATCHING` |
 | HUD | Machine | Score, lives, suspicion, alert state, words. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT` |
 | Word pickups | Machine | Falling pickups. | Removed words appear struck out in red. | `words` | `FREE` struck in red |
-| Menu | Machine | Start screen. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
+| Menu | Machine | Start screen, as a vertical list. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
-| Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level by suspicion: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
+| Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level, by the Ministry's verdict on the last level: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
 | Diary line | Human | Bottom of the screen on pickup, without pausing. | One per level, in order. | `diary.pages[].line` | `These ruins were not made by the enemy.` |
 | Pause | Machine | Over the pause telescreen. | — | `pause` | `THE TELESCREEN REMAINS ON` |
-| Ministry | Paperwork | After each boss. | One correction per non-zero stat. | `ministry` | `Surveillance towers lost: 3, corrected to 0. No towers were lost.` |
+| Ministry | Paperwork | After each boss. | One correction per non-zero stat; the kills line follows the Ministry's verdict. | `ministry` | `Surveillance towers lost: 3, corrected to 0. No towers were lost.` |
 | Stamps | Machine, red | Ministry, game over. | — | `ministry.stamps`, `gameOver.stamp` | `CORRECTED`, `VAPORIZED` |
-| Honor roll | Machine | Menu and Ministry. | Past entries are altered or become unpersons. | `honorRoll` | `[UNPERSON]` |
+| Honor roll | Machine | Menu, Ministry, obedient ending. | Completed runs only; at every Ministry visit, past entries are altered or become unpersons. | `honorRoll` | `[UNPERSON]` |
 | Game over | Machine | Over the squadron photo. | — | `gameOver` | `PILOT 6079 NEVER EXISTED.` |
 | Endings | Paperwork (obedient), human (rebel) | After level 5. | Obedient: the Party's message. Rebel: the truth beside the record, plus the full diary pages. | `endings`, `diary.pages[].page` | `Pilot 6079 did not land.` |
 
@@ -100,8 +100,9 @@ The game ships in **English and Spanish**, detected from the player's browser an
 
 - **Files:** `src/i18n/en.ts` defines every player-facing string and exports `type Strings = typeof en`; `src/i18n/es.ts` is typed `Strings`, so a missing or misnamed key in Spanish fails `pnpm typecheck`. Array lengths (briefings, pages) are not type-checked; keep them equal.
 - **Placeholders:** `{id}`, `{word}`, `{enemy}`, `{from}`, `{to}`, `{ordinal}`, `{language}`. Both languages must use the same set per string.
-- **Detection** (once, at startup): `?lang=` URL parameter → saved choice in `localStorage['newspeak1984.lang']` (`try/catch`) → first supported primary subtag in `navigator.languages` → `en`. Set `document.documentElement.lang`.
-- **`t(path, params)`** looks up the current language and replaces placeholders. Store data, never rendered text (high scores keep the pilot ID and an `unperson` flag), so everything follows a language switch.
+- **Detection** (once, at startup): `?lang=` URL parameter, handy for testing → saved choice in `localStorage['newspeak1984.lang']` (`try/catch`) → first entry of `navigator.languages` whose primary subtag is supported (`es-CO` gives `es`) → `en`. Set `document.documentElement.lang`.
+- **`t(path, params)`** looks up the current language and replaces placeholders. Lists (briefings, ticker, slogans, diary pages) are read directly from the current language's strings object. Store data, never rendered text (high scores keep the pilot ID and an `unperson` flag), so everything follows a language switch.
+- **Word keys** (`FREE`, …) stay in English in code; the display name comes from `words`.
 - **Ticker rewrites itself:** lines use `{enemy}`, so when the alliance flips, re-rendering the history with the new enemy *is* the rewrite.
 - **Adding a language:** copy `es.ts`, translate, add the code to the supported list; the type does the rest. Check glyph coverage of both fonts first.
 

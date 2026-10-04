@@ -51,7 +51,7 @@ A vertical shmup inspired by *1942*, set in Orwell's *1984*. This file holds onl
 
 ## Documentation
 - `docs/` is the source of truth. When a decision, system, text, or asset changes, update the matching document in the same change.
-- When I change a decision from the plan's "Decisions to confirm", update the plan, then the document it belongs to.
+- When I change a decision from the plan's "Decisions", update the plan, then the document it belongs to.
 - No project file references this file. Project knowledge goes into `docs/`; this file only points to it.
 
 ## Assets

@@ -9,7 +9,7 @@ How *Newspeak 1984* plays: the rules, the controls, the levels, and the enemies.
 | Lives | A few real lives; getting hit costs one and respawns the pilot with blinking invulnerability. Losing the last one is game over (VAPORIZED). |
 | Shooting | Hold to fire straight up; FREE turns it into a spread. |
 | Dash | ESCAPE: a short dash with 0.5 s of invulnerability, on a cooldown. |
-| Bomb | REMEMBER: clears normal enemies and bullets, damages bosses; one per level. |
+| Bomb | REMEMBER: clears normal enemies and bullets, damages bosses; one per level for each upgrade level. |
 | Truth | TRUTH: a timed ability that shows real values and camouflaged enemies. |
 | Bosses | One per level, with attack phases; they visibly break as they lose hp (see [Feedback and damage](#feedback-and-damage)). |
 | Score | Kills add to the real score, which is tracked silently. The HUD shows what Propaganda allows. |
@@ -23,7 +23,7 @@ Towers and drones sweep vision cones. Being seen raises **suspicion** (faster up
 | 0–33 | Normal | A standard shmup. |
 | 34–66 | Alert | More enemies and bullets. |
 | 67–99 | Pursuit | Autogyros hunt the player. |
-| 100 | Thought Police | A mini-boss; afterwards suspicion drops to 50. |
+| 100 | Thought Police | A mini-boss; kill it or outlast it, and suspicion drops to 50. Never during a boss fight. |
 
 Destroying an eye is allowed but costs +15: you can fight the system, but it notices. Suspicion is also felt without reading the meter: the screen glitches harder and a red vignette closes in.
 
@@ -31,7 +31,7 @@ Destroying an eye is allowed but costs +15: you can fight the system, but it not
 
 Abilities are words: `FREE` (spread shot), `ESCAPE` (dash), `TRUTH` (see through lies), `REMEMBER` (bomb). From level 2 the Party removes one per level: FREE → ESCAPE → REMEMBER → TRUTH. A removed word's pickup appears crossed out, gives nothing, and raises suspicion (+10), so players learn to stop reaching for what was taken.
 
-A **diary** page restores the most recently removed word for the rest of that level (+25 suspicion).
+Upgrades last the whole run, so every removal takes away something the player built. A **diary** page restores the most recently removed word, at the level it had, for the rest of that level (+25 suspicion).
 
 ## Doublethink: the lying HUD
 
@@ -39,7 +39,7 @@ The HUD shows what the Party wants believed. Each level adds a lie: (1) the tick
 
 ## Ministry of Truth: the rewritten score
 
-After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it. A list of bureaucratic "corrections" justifies the changes, and past high scores are quietly altered or replaced with `[UNPERSON]`. The real score appears only in the rebel ending.
+After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Only completed runs are recorded; a vaporized pilot leaves no entry. The real score appears only in the rebel ending.
 
 ## Feedback and damage
 
@@ -61,12 +61,13 @@ After each level the real score is crossed out and an "official" one typed in, s
 | Dash (ESCAPE) | `X` or `Shift` |
 | Bomb (REMEMBER) | `C` |
 | Truth (TRUTH) | `V` |
+| Menu: select / activate | Up and Down / `Enter` or Shoot |
 | Confirm / skip text | `Enter` |
 | Pause | `P` or `Escape` |
 
 ## Structure
 
-**Flow:** Menu → Dictionary → Game → Ministry → Dictionary → … → Ending. Losing every life shows VAPORIZED and returns to the Menu. The scenes in this flow are described in [narrative.md › Scenes](narrative.md#scenes).
+**Flow:** Menu → Dictionary → Game → Ministry → Dictionary → … → Ending. Losing every life shows VAPORIZED; `Enter` returns to the Menu. Between levels, the Ministry rewrites suspicion from its verdict. The scenes in this flow are described in [narrative.md › Scenes](narrative.md#scenes).
 
 - **In a level:** fly, shoot, dodge, stay out of the eyes' sight, collect words, maybe risk a diary, beat the boss.
 - **Between levels:** the Ministry rewrites the score; the Dictionary and the Officer announce the next word to be removed.
@@ -96,4 +97,4 @@ Foreign enemies fire light bullets; only the regime's own forces fire red.
 
 ## Open decisions
 
-See [implementation-plan.md › Decisions to confirm](implementation-plan.md#decisions-to-confirm).
+See [implementation-plan.md › Decisions](implementation-plan.md#decisions).

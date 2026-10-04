@@ -40,8 +40,8 @@ Top-down. Hitbox radii are suggestions for `config.ts`, smaller than the sprites
 | ---- | ---- | ------- | ---- | -------- | ----- |
 | `player.png` | 48×48 | Player | 1 | 5 | Off-white, nose up: the brightest object on screen. |
 | `player-bank-left.png`, `player-bank-right.png` | 48×48 | Player strafing | Polish | 5 | Lowered wing foreshortened and darkened one step (made locally). Show while moving sideways. |
-| `enemy-fighter.png` | 48×48 | Kinds `straight`, `sine`, `camo` | 1 | 12 | Mid grey, nose down. Behavior tells the kinds apart. |
-| `enemy-bomber.png` | 64×64 | Heavy enemy | 1 | 20 | Twin-engine. |
+| `enemy-fighter.png` | 48×48 | Kinds `straight` and `sine`; the `camo` flag | 1 | 12 | Mid grey, nose down. Behavior tells the kinds apart. |
+| `enemy-bomber.png` | 64×64 | Kind `bomber` | 1 | 20 | Twin-engine. |
 | `enemy-gyro.png` | 48×48 | Kind `homing` (pursuit) | 2 | 10 | Autogyro: its silhouette warns that the regime is chasing you. |
 | `enemy-aa-gun.png` | 48×48 | Ground turret | 2 | 14 | Burlap sandbag ring (material tones) and a grey steel platform; scrolls with the ground. |
 | `eye-tower.png` | 48×48 | Eye `tower` | 2 | 16 | Red lens = the cone's origin. |
@@ -71,7 +71,7 @@ One per level. Hitboxes and weak points live in the level data.
 | `rubble-tileset.png` + `.json` | 16 tiles, 32×32 | Asphalt (`lower`) ↔ demolished brick lots (`upper`) in brick tones with a concrete curb. Same asphalt, so both join seamlessly. |
 | `river-tileset.png` + `.json` | 16 tiles, 32×32 | Asphalt (`lower`) ↔ river water (`upper`) in water tones, with a stone embankment. The Thames splits the city in level 2. Ripples are darker than the surface on purpose: light dots would read as bullets. |
 | `bridge.png` | 48×96 | Vertical bridge laid over the river. Bridges are bottlenecks: the only ground the AA guns can cover. |
-| `railway.png` | 48×32 | Track strip that tiles seamlessly along y (made locally): grey ballast, wooden sleepers, steel rails. Level 3: the land battleship rides it. Lay it over rubble. |
+| `railway.png` | 48×32 | Track strip that tiles seamlessly along y (made locally): grey ballast, wooden sleepers, steel rails. Level 3: the land battleship rides it. Tiled along the railway corridor, between rubble blocks. |
 | `crater.png` | 48×48 | Bomb crater decal on asphalt. |
 | `ministry-truth-topdown.png` | 128×128 | Ministry of Truth: white stepped pyramid. Level 1 landmark; the only bright building, as in Orwell ("glittering white concrete"). |
 | `ministry-plenty-topdown.png` | 128×128 | Ministry of Plenty: warehouse and grain silos, the rationing machine. Level 2 landmark. |
@@ -104,7 +104,7 @@ Side-view scenes, drawn at an integer scale (240×160 → 2× = 480×320).
 | `menu-city.png` | 240×160 | Menu | Stepped pyramid over the city at night; dark lower third for the menu. Regenerated from a pyramid sketch after the first try drew a spire. |
 | `dictionary-cover.png` | 96×128 | Dictionary | Red eye emblem, no title. |
 | `vaporized.png` | 240×160 | Game over | Squadron photo with one pilot's head erased: the diarist, and now the player. |
-| `pilot-portrait.png` | 64×64 | Ministry, endings | Pilot 6079, the player; same style as the Leader and the Officer so they can face each other. |
+| `pilot-portrait.png` | 64×64 | Ministry, endings | The player's pilot; same style as the Leader and the Officer so they can face each other. |
 | `officer-portrait.png` | 64×64 | Dictionary (briefing), Ministry | The Inner Party officer who gives the pilot orders: a face for the regime besides the leader. Completes the trio leader–officer–pilot. |
 | `memory-hole.png` | 240×160 | Ministry | A records clerk at his typewriter beside the memory hole, the slot where records are burned. The real score goes down the hole before the official one is typed. |
 | `pause-telescreen.png` | 240×160 | Pause | A telescreen eye with a red iris: even stopping is watched. |
@@ -135,7 +135,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `boss-landship.png` | — (scrolls with the ground). | Muzzle flash on the main cannon. | 4 |
 | `diary.png` | ~60% alpha. | One-pixel glint every few seconds. | 3 |
 | `enemy-fighter.png` (camo) | Very low alpha unless TRUTH is active. | — | 3 |
-| `dictionary-cover.png` | Edition title ("DICTIONARY OF NEWSPEAK — 11th EDITION") and word list with red strike-throughs, in Courier Prime. | — | 3 |
+| `dictionary-cover.png` | Heading and edition (`DICTIONARY OF NEWSPEAK`, `ELEVENTH EDITION`) and word list with red strike-throughs, in Courier Prime. | — | 3 |
 | Endings | Text typed below the illustration; the rebel ending also shows the diary pages read. | — | 4 |
 | `diary.png` (pickup) | One line of the page typed at the bottom of the screen on a leather band, without pausing. | — | 3 |
 | `pilot-portrait.png` | — | Thin frame and pilot ID caption. | 4 |
@@ -143,7 +143,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `propaganda-blimp.png` | **Towed banner**: tow line and a light banner with dark VT323 text behind the blimp. | Banner sways slightly. | 5 |
 | `boss-*-damaged.png` | Reveal damage regions progressively from `boss-*-damage.json`, never a single swap. | Smoke: grey particles from the revealed holes, more as more regions show. | 4 |
 | `player-bank-*.png` | Use while the horizontal input is held. | — | Polish |
-| `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as suspicion rises. | Thin frame, rank caption. | 4 |
+| `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as the Ministry's verdict worsens. | Thin frame, rank caption. | 3, 4 |
 | `memory-hole.png` | The crossed-out real score slides into the slot before the official one is typed. | Papers fluttering into the slot. | 4 |
 | `pause-telescreen.png` | "PAUSED" in VT323. | Suspicion creeps up slowly while paused. | 5 |
 
@@ -167,7 +167,7 @@ Made with [PixelLab](https://pixellab.ai), post-processed with ImageMagick and s
 
 ### Generating
 
-- **Tools:** `create_image_pixflux` (1 generation per image); `create_topdown_tileset` (~4). Inpainting and editing cost 20–40, so they are out of reach on the trial.
+- **Tools:** `create_image_pixflux` for images; `create_topdown_tileset` for Wang tilesets.
 - **Forced palette:** every request includes a tiny PNG of the allowed colors: the 4 core colors, plus red only for regime assets. Terrain tones are applied afterwards, when remapping tilesets.
 - **Sketch + img2img:** top-down shapes are only reliable from a flat palette sketch (an ImageMagick MVG file) passed as `init_image`. `init_image_strength` 40–60 lets the AI add detail; 80 keeps the sketch nearly unchanged; ~110 on a full scene restyles it while keeping its composition. A portrait init at ~30 transfers style to a new character.
 - **Known limits:** buildings come out in perspective; aircraft under 48 px break; small edits (banking, battle damage) are ignored even at img2img 80–150; linear features (rails) don't fit Wang tilesets; dark subjects can come out pure `#1a1a1a`, invisible on the ground. Landmarks need a sketch: at strength ~70 the result is faithful but flat, at ~40–55 it adds detail but may drop features, so retouch locally (roof ribs, red lights).
@@ -208,5 +208,5 @@ Local scripts (Pillow), kept out of the repo:
 ## Source and license
 
 - **Project license:** [PolyForm Noncommercial 1.0.0](../LICENSE), noncommercial use only; see the [README](../README.md#license). The items below keep their own terms on top of it.
-- **Images:** generated with [PixelLab](https://pixellab.ai) (free trial) with the palette forced, then post-processed with ImageMagick. The damaged bosses, banking frames, railway, red-ramp shading, and material recolors were made locally with scripts ([how they were made](#how-the-assets-were-made)). **Check PixelLab's terms on redistribution before a public release.**
+- **Images:** generated with [PixelLab](https://pixellab.ai) with the palette forced, then post-processed with ImageMagick. The damaged bosses, banking frames, railway, red-ramp shading, and material recolors were made locally with scripts ([how they were made](#how-the-assets-were-made)). [PixelLab's terms](https://pixellab.ai/termsofservice) (section 3.3) leave the outputs owned by the user and free to use, modify, and distribute for any purpose, except to train other models.
 - **Fonts:** from the [Google Fonts repository](https://github.com/google/fonts), SIL OFL 1.1. The license files must ship with them.

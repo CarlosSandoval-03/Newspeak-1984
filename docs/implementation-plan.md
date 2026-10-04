@@ -1,12 +1,12 @@
 # Implementation Plan
 
-This document says **what** to build in each step, **how the pieces fit together**, and **how to tell when a step is finished**. The design comes from the other documents in `docs/` (overview: [README.md](README.md)). Where they leave a gap, this plan fills it with a proposal, marked **Decision**. Every decision is collected in [Decisions to confirm](#decisions-to-confirm) so you can override any of them before you build on it.
+This document says **what** to build in each step, **how the pieces fit together**, and **how to tell when a step is finished**. The design comes from the other documents in `docs/` (overview: [README.md](README.md)). Where they leave a gap, this plan fills it with a proposal, marked **Decision**. Every decision is collected in [Decisions](#decisions); an open one can still change before you build the step that depends on it.
 
 Every step ends with a playable game. Each one finishes with a version bump (see [technical.md › Git](technical.md#git)).
 
 | Step | Delivers | Version |
 | ---- | -------- | ------- |
-| 0 | Scaffold: Vite, TypeScript, p5, tooling | `0.1.0` (done) |
+| 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` (done) |
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` |
@@ -39,27 +39,29 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 | File | In this step |
 | ---- | ------------ |
-| `main.ts` | Creates the p5 instance. `setup`: canvas, `frameRate(60)`, `SceneManager` starting on `MenuScene`. `draw`: `manager.update(); manager.draw();` |
+| `index.html`, `style.css` | Remove the "under construction" page (the `<main>` and its styles, including the `@font-face` rules: the game loads fonts with `p.loadFont`). The page centers the canvas and scales it by the largest integer factor that fits the window (the canvas element's CSS size, with `image-rendering: pixelated`), recomputed on resize. The game itself always works in 480 × 640. |
+| `main.ts` | Creates the p5 instance. `setup`: canvas, `frameRate(60)`, `SceneManager` starting on `MenuScene`. `draw`: `manager.frame(p.deltaTime)`. |
 | `config.ts` | Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
-| `types.ts` | `Vec`, `Word`, `AlertLevel`, `GameState`, `LevelDef`, `WaveDef` (shapes below) |
+| `types.ts` | `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | **Already written.** Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts` | Language detection and `t()` (see **Language** below) |
-| `state.ts` | `state` object with the shape from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
+| `state.ts` | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
 | `core/Scene.ts` | `Scene` interface |
 | `core/SceneManager.ts` | Holds the current scene and switches between scenes |
 | `core/Input.ts` | Keyboard state |
 | `core/Collisions.ts` | Circle–circle test |
 | `entities/Entity.ts` | Abstract base class |
-| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts` | Real implementations |
+| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Real implementations |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Stubs |
 | `systems/Spawner.ts` | Reads waves from level data |
 | `systems/Propaganda.ts` | **Pass-through version**: returns the real values and never lies |
 | `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Stubs |
-| `levels/levels.ts` | Level 1 waves only |
+| `levels/levels.ts` | Level 1: terrain recipe and waves |
+| `levels/layout.ts`, `layout.test.ts` | City generator: streets, blocks, buildings, craters (see **Background** below) |
 | `levels/Background.ts` | Scrolling background on a `p5.Graphics` |
 | `ui/HUD.ts` | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Stubs |
-| `scenes/MenuScene.ts` | `menu-city.png` with the title, "press Enter", and the language option |
+| `scenes/MenuScene.ts` | `menu-city.png` with the title and the option list (see **Menu** below) |
 | `scenes/GameScene.ts` | The game loop |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Stubs |
 
@@ -69,13 +71,13 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 - `Scene` has four methods: `enter(): void`, `update(): void`, `draw(): void`, and `exit(): void`.
 - `SceneManager.change(next: Scene)` calls `exit()` on the current scene, swaps it out, and calls `enter()` on the new one. Scenes receive `p` and the manager in their constructor so they can switch scenes themselves.
-- `SceneManager.update()` and `SceneManager.draw()` forward to the current scene, then call `input.endFrame()`.
+- **Decision:** a fixed 60 Hz tick. `SceneManager.frame(ms)` adds the elapsed time to an accumulator and, for every 1/60 s in it, calls the scene's `update()` and then `input.endFrame()`, at most `MAX_UPDATES_PER_FRAME` (2) times; then it calls the scene's `draw()` once. Game logic still counts frames, but the speed no longer depends on the monitor: p5 only draws on the screen's refreshes, so on a 75, 90, or 100 Hz screen it manages 45–50 draws per second, and one update per draw would run the game 15–25% slow. A slow machine still slows the game down instead of skipping ahead.
 
 **Input**
 
 - Listens to `keydown` and `keyup` on `window` and keeps a `Set<string>` of the codes that are held down. Call `preventDefault()` for the game keys so the arrow keys and Space don't scroll the page.
 - `isDown(code)` reports whether a key is held. `wasPressed(code)` is true only on the frame the key went down. `endFrame()` clears the "pressed this frame" set.
-- Add helpers for actions, such as `isDown('shoot')`, that map to the key table above. The key mapping lives in `config.ts`.
+- Add helpers for actions, such as `isDown('shoot')`, that map to the bindings in [gameplay.md › Controls](gameplay.md#controls). The key mapping lives in `config.ts`.
 
 **Entity**
 
@@ -87,7 +89,11 @@ Create every file from the structure in [technical.md › Project structure](tec
 - Moves at a constant speed with 8 directions; diagonal movement is normalized. The player is clamped inside the canvas.
 - Holding Shoot fires straight up every `PLAYER_FIRE_COOLDOWN` frames.
 - When hit, the player loses one real life and respawns at the bottom center with `RESPAWN_INVULN_FRAMES` frames of invulnerability. While invulnerable, the ship blinks by skipping its draw every few frames.
-- When the last life is lost, the game is over. **Decision:** show `vaporized.png` with a red "VAPORIZED" stamp for about 2 seconds, then return to the Menu.
+- When the last life is lost, the game is over (see **Game over** below).
+
+**Pilot ID**
+
+- **Decision:** `resetGame()` draws `state.pilotId`, a random four-digit number, once per run. Every `{id}` placeholder uses it, so each run is a different pilot and the honor roll doesn't repeat one name.
 
 **Bullet**
 
@@ -96,8 +102,16 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Enemy**
 
 - Spawned by the Spawner from a wave. Each enemy has `hp`, a `score` value, and a `kind`.
-- Step 1 kinds: `straight` flies straight down, and `sine` flies down while weaving horizontally. Both shoot at the player's current position every `ENEMY_FIRE_INTERVAL` frames, with some random jitter.
-- It dies at 0 hp, which adds `score` to `state.realScore` and increments `stats.kills`. It is removed when it leaves the screen.
+- Step 1 kinds:
+  - `straight` (`enemy-fighter.png`) flies straight down; `sine` (the same sprite) flies down while weaving horizontally. Both shoot at the player's current position every `ENEMY_FIRE_INTERVAL` frames, with some random jitter.
+  - `bomber` (`enemy-bomber.png`) flies straight down, slower and with more hp. Every `BOMBER_FIRE_INTERVAL` frames it fires a fan of `BOMBER_FAN_COUNT` bullets centered on the player.
+- A hit that doesn't kill it swaps the sprite for its `-flash` variant for `HIT_FLASH_FRAMES` (~3) frames.
+- It dies at 0 hp, which spawns an `Explosion`, adds `score` to `state.realScore`, and increments `stats.kills`. It is removed when it leaves the screen.
+
+**Explosion**
+
+- An `Entity` with no hitbox: a few circles that expand and fade over `EXPLOSION_FRAMES` (~20) frames, plus particles flying outward. The color is a parameter, so step 2 reuses it for the eyes' red sparks.
+- Spawned where an enemy or the player dies. It stays where it was spawned (aircraft fly above the ground) and dies when it fades out.
 
 **Collisions**
 
@@ -112,21 +126,25 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Background**
 
 - Build the background from chunks, as described in [technical.md › Background](technical.md#background). In this step, the ground tilesets, craters, and procedural rooftops are enough; landmarks and posters come in step 5.
+- **Decision:** terrain is generated by rules from a recipe in the level data, as described in [technical.md › City layout](technical.md#city-layout). In this step, `layout.ts` needs rules 1–3: streets, plaza and asphalt blocks, buildings, and craters. Anchors come in step 2; the river, railway, and landmark come with the content that uses them.
 - Draw the current chunk and the next one, offset by the scroll, so there is never a seam.
 - The scroll speed is `SCROLL_SPEED` px per frame. The Spawner and, later, the eyes use the same scroll value.
 
 **Language** (`i18n/index.ts`)
 
-- Supported languages: `en` and `es`. **Decision:** detect once at startup, in this order:
-  1. `?lang=es` or `?lang=en` in the URL (handy for testing);
-  2. the player's saved choice, `localStorage['newspeak1984.lang']` (read inside `try/catch`);
-  3. the browser's languages: the first entry of `navigator.languages` (or `navigator.language`) whose primary subtag is supported, so `es-CO` or `es-419` gives `es`;
-  4. otherwise `en`.
-- Set `document.documentElement.lang` to the result.
-- `t(path, params?)` returns the string for the current language and replaces `{name}` placeholders, e.g. `t('gameOver.line', { id: 6079 })`. Lists (briefings, ticker, slogans, diary pages) are read directly from the strings object for the current language.
-- The Menu has a language option that switches between the two and saves the choice (`try/catch`). Changing language redraws the current scene; nothing else depends on it.
-- **No player-facing string is written inline in code.** Word keys (`FREE`, …) stay in English in code; the display name comes from `words`.
-- Layouts must not assume English widths: Spanish runs about 20% longer. Measure with `p.textWidth()`, and wrap long paragraphs (briefings, corrections, diary pages).
+- Detection, `t()`, and the rules for strings: [text-and-language.md › Translation files](text-and-language.md#translation-files).
+- Changing language redraws the current scene; nothing else depends on it.
+
+**Menu**
+
+- **Decision:** under the title, a vertical list: `BEGIN SERVICE` and `LANGUAGE: ENGLISH` (step 4 adds `HONOR ROLL`). Up and Down move the selection; Enter or Shoot activates it.
+- `BEGIN SERVICE` calls `resetGame()` and starts the run. `LANGUAGE` switches to the other language and saves the choice (`try/catch`).
+- Shoot confirms only in the Menu. Everywhere else it is Enter, so a held fire button never skips the text at the end of a level.
+
+**Game over**
+
+- **Decision:** draw `vaporized.png`. After `STAMP_DELAY` frames, the red `VAPORIZED` stamp lands, then `gameOver.line` and `PRESS ENTER` appear. Enter returns to the Menu.
+- The run is not recorded: only completed runs reach the honor roll (step 4). The vaporized pilot leaves no trace, like the diarist.
 
 **HUD**
 
@@ -136,7 +154,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 - `enter()` resets the level state and builds the background and spawner.
 - `update()` order: input → player → spawner → entities → collisions → cull dead entities → scroll.
-- `draw()` order: background → enemies → bullets → player → HUD.
+- `draw()` order: background → enemies → bullets → player → explosions → HUD.
 - For now, once the last wave is cleared the level simply loops: the scroll resets and the waves spawn again. Proper level ends come in step 4.
 
 ### Shapes (`types.ts`)
@@ -144,7 +162,8 @@ Create every file from the structure in [technical.md › Project structure](tec
 ```ts
 type Vec = { x: number; y: number };
 type Word = 'FREE' | 'ESCAPE' | 'TRUTH' | 'REMEMBER';
-type AlertLevel = 0 | 1 | 2;
+type AlertLevel = 0 | 1 | 2 | 3;   // normal, alert, pursuit, Thought Police
+type EnemyKind = 'straight' | 'sine' | 'bomber';   // later steps add 'homing'
 
 interface WaveDef {
   at: number;          // scroll distance
@@ -155,8 +174,9 @@ interface WaveDef {
 }
 
 interface LevelDef {
+  terrain: TerrainDef; // shape in technical.md › City layout
   waves: WaveDef[];
-  // added in later steps: eyes, pickups, diary, boss, length
+  // added in later steps: eyes, turrets, pickups, diary, boss, length
 }
 ```
 
@@ -165,21 +185,22 @@ interface LevelDef {
 Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-need-p5-additions).
 
 - **Every aircraft:** draw its `-shadow` variant first, offset, at about 40% alpha.
-- **Player (optional):** `player-bank-left.png` / `player-bank-right.png` while moving sideways.
+- **Enemies:** the `-flash` variant on hit; explosions on death.
 - **Regime red in the city:** hanging Party banners on part of the procedural rooftops (`#b3261e` with `#6e1712` folds) and blinking `#e0503a` warning lamps on antennas.
 - **Player:** blink while invulnerable.
-- **Menu:** draw `menu-city.png` at 2× and write the title and "press Enter" in its dark lower third.
+- **Menu:** draw `menu-city.png` at 2× and write the title and the option list in its dark lower third.
 - **Game over:** draw `vaporized.png` at 2×, then stamp a red "VAPORIZED" over it.
 
 ### Done when
 
-- [ ] `pnpm typecheck` and `pnpm build` pass.
-- [ ] Menu → Enter → the game starts.
+- [ ] `pnpm typecheck` and `pnpm build` pass, and the "under construction" page is gone.
+- [ ] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
 - [ ] The player moves in 8 directions, stays on screen, and shoots by holding the button.
-- [ ] Level 1 waves appear at their scroll positions and shoot back.
-- [ ] Hits destroy enemies and add score. Getting hit costs a life, then the player respawns with blinking invulnerability.
-- [ ] Losing all lives shows "VAPORIZED" and returns to the Menu.
+- [ ] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.
+- [ ] Hit enemies flash, and destroyed ones explode and add score. Getting hit costs a life, then the player respawns with blinking invulnerability.
+- [ ] Losing all lives shows "VAPORIZED" with this run's pilot ID; Enter returns to the Menu. A new run gets a new ID.
 - [ ] The background scrolls with no visible seam.
+- [ ] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
 - [ ] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
 - [ ] Every file from the structure exists, and the stubs typecheck.
 - [ ] The browser language picks Spanish or English; `?lang=` overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
@@ -193,7 +214,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`entities/Eye.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (used for the Thought Police), and updates to `levels/levels.ts`, `systems/Spawner.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
+`entities/Eye.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (used for the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
 
 ### Specification
 
@@ -205,8 +226,12 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - Vision cone: `facing` (the base angle), `aperture` (default 45°), `range`, and a sinusoidal sweep `angle = facing + sweepAmp * sin(frame * sweepSpeed + phase)`.
 - Detection: `dist(eye, player) < range` **and** `abs(atan2(sin(d), cos(d))) < aperture / 2`, where `d = angleToPlayer - angle`. Line of sight is ignored; buildings don't block vision.
 - Drawing: a `p.arc(x, y, 2*range, 2*range, angle - aperture/2, angle + aperture/2, PIE)` with low-alpha fill. It is grey (`#7a7a7a`) when idle and red (`#b3261e`) when detecting.
-- Eyes have hp and can be shot down. Destroying one adds **+15 suspicion** immediately and increments `stats.eyesDestroyed`. Eyes don't shoot.
-- Eyes are placed by level data: `eyes: [{ at, type, x, facing, range, sweepAmp, sweepSpeed, path? }]`.
+- Eyes have hp and can be shot down. Destroying one bursts in red sparks (a red `Explosion`), adds **+15 suspicion** immediately, and increments `stats.eyesDestroyed`. Eyes don't shoot.
+- Eyes are placed by level data: `eyes: [{ at, type, facing, range, sweepAmp, sweepSpeed, on?, x?, path? }]`. A tower stands on an anchor (`on: 'rooftop'`, `'plaza'`, or `'street'`); a drone flies, so it uses `x`.
+
+**Anchors** (`levels/layout.ts`)
+
+- The layout now returns anchors, and `anchorNear(level, kind, at)` finds the nearest one ([technical.md › City layout](technical.md#city-layout)). Every ground element uses it, so none ends up floating over the wrong terrain.
 
 **Suspicion** (owns `state.suspicion` and `state.alertLevel`)
 
@@ -215,6 +240,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   - If no eye sees the player, it decays by `0.05` per frame.
   - Clamp the value to `[0, 100]`.
 - `add(amount)` is used for instant changes: destroying an eye, and in later steps crossed-out pickups and diaries.
+- `resetLevelState()` doesn't touch suspicion. Until step 4 it simply carries over; from step 4 the Ministry rewrites it between levels (see **The Party's verdict**).
 - The alert level comes from thresholds in `config.ts`:
 
   | Suspicion | Level | Effect |
@@ -222,33 +248,21 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   | 0–33 | 0, normal | none |
   | 34–66 | 1, alert | +30% spawn rate and more enemy fire |
   | 67–99 | 2, pursuit | the effects above, plus homing autogyros |
-  | 100 | Thought Police | see below |
+  | 100 | 3, Thought Police | see below |
 
 - **Alert:** the Spawner adds extra enemies to each wave (`count * 1.3`, rounded up), and `ENEMY_FIRE_INTERVAL` is divided by `ALERT_FIRE_MULT`.
 - **Pursuit:** the Spawner adds autogyros (`enemy-gyro.png`) with the `homing` behavior. They turn toward the player at a capped turn rate (`HOMING_TURN_RATE`), so they can be dodged. Their distinct silhouette tells the player the regime is chasing them.
-- **Thought Police:** when suspicion reaches 100, spawn the Thought Police, a mini-boss built on `Boss` (hp bar, attack pattern, red accents) with a small escort. **Decision:** suspicion is frozen while it is alive. When it dies, or after `THOUGHT_POLICE_TIMEOUT` frames if it can't be killed in time, suspicion resets to **50**.
+- **Thought Police:** when suspicion reaches 100, `alertLevel` becomes 3 and the Thought Police spawn: a mini-boss built on `Boss` (hp bar, attack pattern, red accents) with a small escort. **Decision:** suspicion is frozen while they are on screen. If the player kills them, or survives `THOUGHT_POLICE_TIMEOUT` frames until they withdraw off the top of the screen, suspicion resets to **50**. Outlasting them counts as much as beating them, which matters once FREE is gone.
+- They never spawn while a level boss is alive: suspicion stays at 100, with the pursuit effects, until the boss dies. They come back in the same level if suspicion climbs to 100 again.
 
 **AA guns** (`enemy-aa-gun.png`)
 
-- Ground turrets placed by level data like towers (`turrets: [{ at, x }]`); they scroll with the ground.
+- Ground turrets placed by level data like towers (`turrets: [{ at, on }]`, usually on `street` or `bridge`); they scroll with the ground.
 - p5 draws their twin barrels rotated toward the player, and they fire aimed shots from the barrel tips.
-
-**Language** (`i18n/index.ts`)
-
-- Supported languages: `en` and `es`. **Decision:** detect once at startup, in this order:
-  1. `?lang=es` or `?lang=en` in the URL (handy for testing);
-  2. the player's saved choice, `localStorage['newspeak1984.lang']` (read inside `try/catch`);
-  3. the browser's languages: the first entry of `navigator.languages` (or `navigator.language`) whose primary subtag is supported, so `es-CO` or `es-419` gives `es`;
-  4. otherwise `en`.
-- Set `document.documentElement.lang` to the result.
-- `t(path, params?)` returns the string for the current language and replaces `{name}` placeholders, e.g. `t('gameOver.line', { id: 6079 })`. Lists (briefings, ticker, slogans, diary pages) are read directly from the strings object for the current language.
-- The Menu has a language option that switches between the two and saves the choice (`try/catch`). Changing language redraws the current scene; nothing else depends on it.
-- **No player-facing string is written inline in code.** Word keys (`FREE`, …) stay in English in code; the display name comes from `words`.
-- Layouts must not assume English widths: Spanish runs about 20% longer. Measure with `p.textWidth()`, and wrap long paragraphs (briefings, corrections, diary pages).
 
 **HUD**
 
-- Add a suspicion meter. For now it reads `Suspicion` directly; in step 5 it moves behind `Propaganda`.
+- Add a suspicion meter and the alert state (`hud.states`). The meter reads `propaganda.displayedSuspicion()`, a pass-through until step 5.
 
 ### p5 additions on assets
 
@@ -267,7 +281,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [ ] Suspicion rises faster when the player is closer, decays when unseen, and `framesSeen` counts up.
 - [ ] Shooting an eye adds +15 instantly.
 - [ ] At 34 the spawns and enemy fire visibly increase. At 67 homing autogyros appear.
-- [ ] At 100 the Thought Police appear. Afterward, suspicion is 50.
+- [ ] At 100 the Thought Police appear and the HUD shows `THOUGHT POLICE`. Killing them or outlasting them leaves suspicion at 50.
 - [ ] All the numbers above live in `config.ts`.
 - [ ] AA gun barrels track the player, and gyro rotors spin.
 
@@ -279,20 +293,23 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`systems/Newspeak.ts`, `entities/Pickup.ts`, `scenes/DictionaryScene.ts`, and updates to `levels/levels.ts`, `entities/Player.ts`, `entities/Enemy.ts` (camouflage), `state.ts`, and `config.ts`.
+`systems/Newspeak.ts`, `entities/Pickup.ts`, `scenes/DictionaryScene.ts`, the typewriter in `ui/effects.ts`, and updates to `levels/levels.ts`, `entities/Player.ts`, `entities/Enemy.ts` (camouflage), `systems/Propaganda.ts`, `ui/HUD.ts`, `state.ts`, and `config.ts`.
 
 ### Specification
 
 **Words and abilities**
 
-`state.words` is the set of words that are currently **available**. Every word has an upgrade level from 1 to `WORD_MAX_LEVEL` (default 3).
+`state.words` is the set of words that are currently **available**. `state.wordLevels` keeps each word's upgrade level, from 1 to `WORD_MAX_LEVEL` (default 3).
+
+- **Decision:** upgrades last the whole run, and removing a word doesn't clear its level. Losing a word the player built up hurts more, and a diary brings it back at the level it had.
+- A pickup for a word already at the maximum gives a score bonus instead.
 
 | Word | Without it | With it | Upgrade per extra pickup |
 | ---- | ---------- | ------- | ------------------------ |
 | `FREE` | single shot | triple spread shot | wider spread, then 5-way |
 | `ESCAPE` | no dash | a short dash in the movement direction with 30 frames (0.5 s) of invulnerability, on a cooldown | shorter cooldown |
-| `TRUTH` | lies are visible as truth (from step 5) and camouflaged enemies are almost invisible | press `V` to see the truth for `TRUTH_DURATION` frames, on a cooldown | longer duration |
-| `REMEMBER` | no bomb | one screen-clearing bomb per level: kills normal enemies and enemy bullets, and damages bosses | +1 bomb this level |
+| `TRUTH` | no way to see through the lies (from step 5); camouflaged enemies are almost invisible | press `V` to see the truth for `TRUTH_DURATION` frames, on a cooldown | longer duration |
+| `REMEMBER` | no bomb | screen-clearing bombs, as many per level as its upgrade level: each kills normal enemies and enemy bullets, and damages bosses | +1 bomb per level, and +1 now |
 
 **Decision:** TRUTH is an **active, timed ability**. If it were always on while the word is held, the HUD lies would never matter until level 5. As an active ability, it is a resource the player chooses when to spend.
 
@@ -300,6 +317,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Removal** (`Newspeak.applyLevel(level)`)
 
+- Until step 4 adds level ends, each loop of the level 1 waves advances to the next level through the DictionaryScene, so every removal can be tested.
 - Level 1 removes nothing. From level 2 on, one word is removed per level in the order from `config.ts`, `WORD_REMOVAL_ORDER = ['FREE', 'ESCAPE', 'REMEMBER', 'TRUTH']`:
 
   | Level | Removed this level | Still available |
@@ -321,20 +339,28 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Diary**
 
-- There is one per level, at a hidden spot given in level data (`diary: { at, x }`). **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
+- There is one per level, on the skylight anchor nearest to the `at` in level data (`diary: { at }`), so players learn where to look. **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
 - Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word. In level 1 nothing has been removed yet, so it gives a score bonus instead.
 - Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed at the bottom of the screen without pausing ([narrative.md](narrative.md)). Record which pages were read in `runStats`.
 
 **DictionaryScene** (shown before every level)
 
-- A typewriter heading such as "DICTIONARY OF NEWSPEAK — 11th EDITION" (one edition per level), followed by the four words.
+- A typewritten heading, `DICTIONARY OF NEWSPEAK` and its edition (`ELEVENTH EDITION` in level 1, one more per level), followed by the four words.
 - The word removed this level gets a red strike-through drawn in an animation. Words removed earlier are already struck through and greyed out.
-- The Inner Party officer (`officer-portrait.png`) briefs the pilot with one or two lines; the lines turn colder as suspicion rises. All lines live in a data table.
+- The Inner Party officer (`officer-portrait.png`) briefs the pilot. The line comes from `briefings` in `i18n/`: one of three tones (calm, wary, cold) picked by the Ministry's verdict on the last level (`state.verdict`, step 4). Level 1, and every level until step 4, uses the calm one.
 - `Enter` skips the typewriter, then continues to the GameScene.
+
+**Typewriter** (`ui/effects.ts`)
+
+- Reveals a string at `TYPEWRITER_CPF` characters per frame, with a blinking block cursor; `Enter` reveals the rest. DictionaryScene, MinistryScene, and EndingScene use it. Rules: [text-and-language.md › Rules](text-and-language.md#rules).
+
+**HUD**
+
+- Add the available words and the bombs left, read through `Propaganda` pass-through methods like every other HUD value.
 
 **state.ts**
 
-- `resetLevelState()` clears the per-level stats (`kills`, `eyesDestroyed`, `framesSeen`, `diaries`), the bomb count, and any word a diary restored. It does not touch `realScore`, `realLives`, the permanently removed words, or the cumulative run totals that step 4 needs. **Decision:** keep a separate `runStats` object for the run totals.
+- `resetLevelState()` clears the per-level stats (`kills`, `eyesDestroyed`, `framesSeen`, `diaries`), and any word a diary restored, and refills `bombs` to REMEMBER's level (0 without the word). It does not touch `realScore`, `realLives`, the permanently removed words, or the cumulative run totals that step 4 needs. **Decision:** keep a separate `runStats` object for the run totals.
 
 ### p5 additions on assets
 
@@ -368,7 +394,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 **Level end**
 
 - Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss ends the level and switches to `MinistryScene`. This replaces the step 1 loop.
-- **Bosses are data:** sprite, hp, hitbox, whether it is a ground boss (moves with the scroll) or an air boss, and a list of attack phases (for example: aimed bursts → spread fan → enrage below 30% hp). One `Boss` class runs any of them. Each level has its own sprite (see [assets.md](assets.md)).
+- **Bosses are data:** sprite, hp, hitbox, whether it is a ground boss (moves with the scroll and stands on an anchor, `on: 'railway'` for the land battleship) or an air boss, and a list of attack phases (for example: aimed bursts → spread fan → enrage below 30% hp). One `Boss` class runs any of them. Each level has its own sprite (see [assets.md](assets.md)).
 - **Progressive damage:** the boss shows its wounds hole by hole as it loses hp, never in one swap. Its `boss-*-damage.json` lists the damage regions in reveal order. At load, copy the clean sprite into a `p5.Graphics`. Whenever the number of regions that should be visible (`ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END))`, capped at `n`, where `DAMAGE_END` ≈ 0.2 is the hp fraction at which all damage is shown) grows, reveal the new ones: `erase()` the rect, `noErase()`, then draw that rect from `boss-*-damaged.png`. Draw the boss from the graphics. Work happens only when a region appears, never per frame. See [technical.md › Progressive damage](technical.md#progressive-damage).
 
 **Obedience factor and official score** (`Ministry.ts`)
@@ -384,38 +410,44 @@ officialLevelScore = round(realLevelScore * obedience)
 ```
 
 - The weights live in `config.ts`. Tune them so that a "good citizen" run lands around 1.3–1.6 and a rebellious run around 0.3–0.6.
-- `state.realScore` keeps counting silently for the whole run. Keep the official total in a separate field; it is the only score the regime ever shows, until the rebel ending.
+- `realLevelScore` is `state.realScore - state.levelStartScore`. `state.realScore` keeps counting silently for the whole run. The official total lives in `state.officialScore`; it is the only score the regime ever shows, until the rebel ending.
 
 **MinistryScene**
 
-1. A typewriter header, "MINISTRY OF TRUTH — RECORDS DEPARTMENT", over `memory-hole.png`.
+1. A typewritten header, `MINISTRY OF TRUTH` and `RECORDS DEPARTMENT`, over `memory-hole.png`.
 2. The real level score is shown, crossed out with a red line, and slides into the memory hole.
 3. The official score is typed in beneath it.
-4. A list of "corrections" is typed line by line. It is generated from the level stats, one line per stat that is not zero. Examples:
-   - `Enemy aircraft destroyed: 42, corrected to 50. Rounded in the Party's favor.`
-   - `Surveillance towers lost: 3, corrected to 0. No towers were lost.`
-   - `Time under observation: 21 s, corrected to 0. The pilot was never observed.`
-   - `Diaries recovered: 1, corrected to 0. No such document exists.`
+4. A list of corrections (`ministry.corrections`) is typed line by line: one per stat that is not zero, with frames observed shown as seconds. Every stat except kills is corrected to 0.
+5. The honor roll appears and is tampered with in front of the player (see **Honor roll**).
+6. `Enter` goes to the next DictionaryScene, or to the Ending after level 5.
 
-   (No arrows: neither font has `→`.)
-5. `Enter` saves the score and goes to the next DictionaryScene, or to the Ending after level 5.
+**The Party's verdict.** **Decision:** at the end of each level the Ministry judges the pilot by the level's obedience factor, and the verdict, not the facts, decides what follows. Obedience sums up the whole level, so the verdict doesn't depend on how much suspicion decayed during the boss fight. Store it in `state.verdict` (0, 1, or 2).
 
-All correction texts live in `i18n/` (`ministry.corrections`), never inline in the scene. Frames observed are shown as seconds.
+| Obedience | Verdict | Kills corrected to | Stamp | Next briefing | Suspicion next level |
+| --------- | ------- | ------------------ | ----- | ------------- | -------------------- |
+| ≥ `VERDICT_HERO` (~1.2) | A hero for the broadcasts | Rounded up to the next multiple of 10 (42 becomes 50) | `APPROVED` | Calm | 0: the file is closed |
+| In between | Under review: credit goes to the squadron | Half, rounded down (42 becomes 21) | `CORRECTED` | Wary | `SUSPICION_REVIEW` (~20) |
+| < `VERDICT_SUSPECT` (~0.6) | A suspect being erased | 0 | `CORRECTED` | Cold | `SUSPICION_SUSPECT` (~40): the file stays open |
 
-**High score table** (`localStorage`, with every access wrapped in `try/catch`)
+- The kills line is `ministry.corrections.kills[verdict]`.
+- **Decision:** suspicion is rewritten, not carried over: the Ministry sets it from the verdict, whatever it really was. A loyal pilot starts clean; a suspect starts already on alert but never in pursuit, so one bad level can't lock the run into a spiral.
+- Add the corrected kills to `runStats.officialKills`: the rebel ending shows them as the official record.
 
-- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, level, unperson }`, top 10, storing **official** scores only. Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
-- **Decision:** the name is an automatic pilot ID, such as `PILOT 6079` / `PILOTO 6079`, so the game has no name-entry screen.
-- Every time a new score is saved, the past entries are tampered with:
+**Honor roll** (`localStorage`, with every access wrapped in `try/catch`)
+
+- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, unperson }`, top 10, storing **official** scores only. Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
+- **Decision:** only completed runs are recorded. The EndingScene, either variant, saves one entry with the run's pilot ID and official total. A vaporized pilot leaves no record.
+- **Decision:** the stored entries are tampered with at every MinistryScene, so the player watches the archive change during the run:
   - Each one has a `SCORE_ALTER_CHANCE` chance of its score being multiplied by a random factor.
   - Each one has a `SCORE_ERASE_CHANCE` chance of being replaced with `[UNPERSON]` and a score of 0.
+  - The altered table is saved back.
 - If storage is unavailable, the table works in memory for the session and the game keeps running.
-- The table is shown on the Menu and at the end of the MinistryScene.
+- The table is shown in the Menu (the `HONOR ROLL` option, added in this step), in the MinistryScene, and in the obedient ending.
 
 **Endings** (`EndingScene` with a `variant`)
 
 - **Decision:** the ending is chosen by how many diaries the player read during the run. With `runStats.diaries >= REBEL_DIARY_THRESHOLD` (default 3) the player gets the rebel ending; otherwise the obedient one.
-- **Obedient:** the official score, a closing Party message, and the final high score table, already "corrected".
+- **Obedient:** the official score, a closing Party message, and the honor roll, already "corrected".
 - **Rebel:** the first time the game shows the truth. It shows the real score next to the official one, the run totals (kills, towers destroyed, time observed, diaries read) next to what the Ministry recorded, and the full diary pages read. No regime red is used on this screen.
 
 ### p5 additions on assets
@@ -424,17 +456,16 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 - **Every boss:** an hp bar, a hit flash using its `-flash` variant, and progressive damage from its damage map; optionally, smoke particles whose rate grows with the regions shown.
 - **The Eye** (`boss-eye.png`): a pupil drawn over the lens and shifted toward the player. Its bullets are red.
-- **Ministry:** red `CORRECTED` / `APPROVED` stamps on the corrections.
+- **Ministry:** `memory-hole.png` behind the score; the red `CORRECTED` / `APPROVED` stamp on the corrections; optionally `pilot-portrait.png` and `officer-portrait.png` facing each other.
 - **Endings:** the ending text typed below the illustration.
-- **Ministry:** `memory-hole.png` behind the score; optionally `pilot-portrait.png` and `officer-portrait.png` facing each other.
 
 ### Done when
 
 - [ ] Each level ends with its boss, and the full Menu → … → Ending flow works.
 - [ ] Boss damage appears region by region as hp drops; at `DAMAGE_END` the boss matches its `-damaged` sprite.
 - [ ] Official score = real score × obedience, with the factor clamped to [0.1, 2.0]. Check this by hand for one level.
-- [ ] The MinistryScene shows the crossed-out real score, the typed official score, and the correction lines.
-- [ ] High scores persist across reloads, old entries get altered or erased, and the game still runs with storage blocked (test it in a private window or with an exception thrown in DevTools).
+- [ ] The MinistryScene shows the crossed-out real score, the typed official score, and the correction lines. The verdict sets the kills correction, the stamp, the next briefing's tone, and the next level's starting suspicion.
+- [ ] Only completed runs reach the honor roll. Entries persist across reloads, change at every Ministry visit, and the game still runs with storage blocked (test it in a private window or with an exception thrown in DevTools).
 - [ ] Both endings can be reached.
 
 ---
@@ -445,7 +476,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`systems/Propaganda.ts` (the real version), `ui/Ticker.ts`, `ui/effects.ts`, and updates to `ui/HUD.ts`, `levels/Background.ts`, and `config.ts`.
+`systems/Propaganda.ts` (the real version), `ui/Ticker.ts`, `ui/effects.ts`, and updates to `ui/HUD.ts`, `levels/layout.ts`, `levels/Background.ts`, `levels/levels.ts`, and `config.ts`.
 
 ### Specification
 
@@ -482,13 +513,11 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 
 - **Scanlines:** a `p5.Graphics` overlay prerendered once (1 px dark lines, low alpha) and drawn last every frame.
 - **Glitch:** `intensity = suspicion / 100`. Each frame, copy a number of random horizontal slices of the canvas and redraw them shifted on x with `p.copy()`. Both the slice count and the maximum offset scale with intensity. At intensity 0 the effect is off.
-- **Typewriter:** reveals a string character by character at `TYPEWRITER_CPF` characters per frame, and can be skipped. DictionaryScene, MinistryScene, and EndingScene use it. (If you already wrote it in steps 3–4, move it here.)
 
 **Aesthetics**
 
-- Add each level's ministry landmark (`ministry-*-topdown.png`), rooftop murals, ground slogans, banners towed by `propaganda-blimp.png`, and p5 telescreens, as described in [art-direction.md](art-direction.md). Poster and telescreen slogans flip mid-level and contradict each other, and the lie has a tell (a one-frame flicker when the text changes).
-- Regime red (`#b3261e`) is used only for regime elements: eye cones, the Thought Police, strike-throughs, stamps, and posters.
-- Every piece of regime text uses one of the two monospaced fonts in `public/assets/fonts/`: VT323 for the machine voice (HUD, ticker, telescreens, slogans) and Courier Prime for the paperwork (Dictionary, Ministry, endings). See [text-and-language.md](text-and-language.md).
+- Add each level's ministry landmark (`ministry-*-topdown.png`) on the layout's landmark block (rule 6), rooftop murals on `rooftop` anchors and ground slogans on `plaza` anchors (`murals: [{ at }]`, `groundSlogans: [{ at }]`), banners towed by `propaganda-blimp.png`, and p5 telescreens, as described in [art-direction.md › Messages seen from the sky](art-direction.md#messages-seen-from-the-sky). Poster and telescreen slogans flip mid-level and contradict each other, and the lie has a tell (a one-frame flicker when the text changes).
+- Colors follow [art-direction.md › Red belongs to the regime](art-direction.md#red-belongs-to-the-regime); fonts and sizes follow [text-and-language.md › Usage map](text-and-language.md#usage-map).
 
 ### p5 additions on assets
 
@@ -512,39 +541,47 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ## Toward `1.0.0`
 
-- Write the content for levels 1–5 in `levels.ts`: waves, eyes, turrets, pickups, diary, boss, and terrain (river and bridges in level 2, railway in level 3; see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
+- Write the content for levels 1–5 in `levels.ts`: waves, eyes, turrets, pickups, diary, boss, and terrain recipe (rubble in levels 3–4, the river and bridges in level 2, the railway in level 3, a landmark in every level but 4; see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
 - Balance the obedience weights, suspicion rates, and alert multipliers.
+- Polish: the banking frames (`player-bank-*.png`) while moving sideways, and the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
 - Sound is optional. Assets go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
 - `1.0.0` = the full game can be played through both endings ([technical.md › Git](technical.md#git)).
 
 ---
 
-## Decisions to confirm
+## Decisions
 
-These are the gaps this plan filled in. Change any of them before you build the step that depends on it.
+These are the gaps this plan filled in. An open decision can still change before you build the step that depends on it; a confirmed one is settled, by your choice or because finished assets or texts already depend on it.
 
-| # | Decision | Step |
-| - | -------- | ---- |
-| 1 | Frame-based simulation at 60 fps, no `deltaTime` | 1 |
-| 2 | 480 × 640 canvas, unscaled | 1 |
-| 3 | Plain `Vec` type instead of `p5.Vector` | 1 |
-| 4 | The control scheme in [gameplay.md › Controls](gameplay.md#controls) | 1 |
-| 5 | Game over shows "VAPORIZED" and returns to the Menu | 1 |
-| 6 | Suspicion is frozen while the Thought Police are alive | 2 |
-| 7 | Eye vision ignores line of sight | 2 |
-| 8 | TRUTH is an active, timed ability | 3 |
-| 9 | 5 levels, one for each word in the removal order | 3 |
-| 10 | The run starts with all words at level 1 | 3 |
-| 11 | The diary restores the most recently removed word (a score bonus in level 1) | 3 |
-| 12 | Separate `runStats` for run totals | 3 |
-| 13 | Automatic pilot ID instead of a name-entry screen | 4 |
-| 14 | Ending chosen by diaries read during the run (≥ 3 → rebel) | 4 |
-| 15 | Two fonts: VT323 (machine voice) and Courier Prime (paperwork), both OFL | 1 |
-| 16 | Pixel-art sprites for shapes; p5 drawing for geometry, animation, and text (see [assets.md](assets.md)) | 1 |
-| 17 | Buildings are procedural p5 rooftops, not sprites | 1 |
-| 18 | A different boss sprite per level; level 3 is a ground boss and level 5 is the regime's own Eye | 4 |
-| 19 | Messages seen from above: rooftop murals, ground slogans, and banners towed by a propaganda blimp | 5 |
-| 20 | Boss damage is progressive, revealed region by region from a damage map | 4 |
-| 21 | Palette widened into core, regime red ramp, and material tones; aircraft stay in core colors | 1 |
-| 22 | More red from code: rooftop banners, lamps, red vignette, red regime bullets, stamps | 1–5 |
-| 23 | Two languages (en, es) from typed data files; detected from URL, saved choice, then browser; switchable in the Menu | 1 |
+| # | Decision | Step | Status |
+| - | -------- | ---- | ------ |
+| 1 | Fixed 60 Hz simulation counted in frames, no `deltaTime` in game logic; an accumulator keeps the speed on any monitor | 1 | Confirmed |
+| 2 | 480 × 640 canvas, shown at the largest integer scale that fits the window | 1 | Confirmed |
+| 3 | Plain `Vec` type instead of `p5.Vector` | 1 | Confirmed |
+| 4 | The control scheme in [gameplay.md › Controls](gameplay.md#controls) | 1 | Confirmed |
+| 5 | Game over: the `VAPORIZED` stamp, then `Enter` returns to the Menu; the run leaves no record | 1 | Confirmed |
+| 6 | Thought Police: suspicion frozen while they are on screen; killed or outlasted, it resets to 50; never during a boss; `AlertLevel` 3 | 2 | Confirmed |
+| 7 | Eye vision ignores line of sight | 2 | Confirmed |
+| 8 | TRUTH is an active, timed ability | 3 | Confirmed |
+| 9 | 5 levels, one for each word in the removal order | 3 | Confirmed |
+| 10 | The run starts with all words at level 1 | 3 | Confirmed |
+| 11 | The diary restores the most recently removed word (a score bonus in level 1) | 3 | Confirmed |
+| 12 | Separate `runStats` for run totals | 3 | Confirmed |
+| 13 | A random four-digit pilot ID per run instead of a name-entry screen | 1 | Confirmed |
+| 14 | Ending chosen by diaries read during the run (≥ 3 → rebel) | 4 | Confirmed |
+| 15 | Two fonts: VT323 (machine voice) and Courier Prime (paperwork), both OFL | 1 | Confirmed |
+| 16 | Pixel-art sprites for shapes; p5 drawing for geometry, animation, and text (see [assets.md](assets.md)) | 1 | Confirmed |
+| 17 | Buildings are procedural p5 rooftops, not sprites | 1 | Confirmed |
+| 18 | A different boss sprite per level; level 3 is a ground boss and level 5 is the regime's own Eye | 4 | Confirmed |
+| 19 | Messages seen from above: rooftop murals, ground slogans, and banners towed by a propaganda blimp | 5 | Confirmed |
+| 20 | Boss damage is progressive, revealed region by region from a damage map | 4 | Confirmed |
+| 21 | Palette widened into core, regime red ramp, and material tones; aircraft stay in core colors | 1 | Confirmed |
+| 22 | More red from code: rooftop banners, lamps, red vignette, red regime bullets, stamps | 1–5 | Confirmed |
+| 23 | Two languages (en, es) from typed data files; detected from URL, saved choice, then browser; switchable in the Menu | 1 | Confirmed |
+| 24 | The Menu is a vertical list; Up/Down select, Enter or Shoot activates; Shoot confirms only in the Menu | 1 | Confirmed |
+| 25 | Between levels the Ministry rewrites suspicion from its verdict (0, ~20, or ~40), never into pursuit | 4 | Confirmed |
+| 26 | One verdict per level, from obedience, sets the kills correction, the stamp, the next briefing's tone, and the starting suspicion | 4 | Confirmed |
+| 27 | Only completed runs reach the honor roll, one entry per run | 4 | Confirmed |
+| 28 | The honor roll is tampered with at every Ministry visit, not only when a score is saved | 4 | Confirmed |
+| 29 | Terrain is generated by rules from a per-level recipe (streets, blocks, river, railway, landmark); ground elements stand on anchors it generates | 1 | Confirmed |
+| 30 | Word upgrades last the whole run and survive removal; REMEMBER's level is the bombs per level | 3 | Confirmed |

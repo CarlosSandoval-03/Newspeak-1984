@@ -4,7 +4,7 @@ The idea of the game in one page. Every other document goes deeper into one part
 
 ## The idea
 
-A vertical shmup in the tradition of Capcom's *1942*, set in Orwell's *Nineteen Eighty-Four*. You are Pilot 6079 and you fly for the Party. The game watches you, takes your abilities away one word at a time, and lies to you about how you are doing. In the end you either love the Party or leave.
+A vertical shmup in the tradition of Capcom's *1942*, set in Orwell's *Nineteen Eighty-Four*. You are a Party pilot, known only by a number, and you fly for the Party. The game watches you, takes your abilities away one word at a time, and lies to you about how you are doing. In the end you either love the Party or leave.
 
 **The story in brief.** Airstrip One is at a war whose enemy changes when the Party says so. Each level ends near one of the four Ministries, and each takes away a word: `FREE`, `ESCAPE`, `REMEMBER`, `TRUTH`. Hidden in every level is a page of a diary written by a pilot from your own squadron, a man the Party vaporized and erased from the squadron photo. Reading his pages raises the regime's suspicion, but with three or more you have seen enough to escape. The last enemy is not a foreign bomber but the Party's own Eye.
 

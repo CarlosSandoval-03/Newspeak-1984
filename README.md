@@ -50,35 +50,9 @@ Open http://localhost:5173 in your browser.
 | `pnpm build`     | Type-check and build to `dist/`           |
 | `pnpm preview`   | Serve the production build locally        |
 
-## Project structure
-
-```
-docs/             # game design and technical documentation (start at docs/README.md)
-public/assets/    # sprites, illustrations, fonts
-src/
-├── i18n/      # all player-facing text, English and Spanish
-├── core/      # scene system, input, collisions
-├── entities/  # player, bullets, enemies, eyes, bosses, pickups
-├── systems/   # suspicion, newspeak, propaganda, ministry, spawner
-├── levels/    # data-driven level definitions and background
-├── ui/        # HUD, ticker, visual effects
-└── scenes/    # menu, dictionary, game, ministry, ending
-```
-
 ## Documentation
 
-The design and technical documentation lives in [`docs/`](docs/README.md). Each document answers one question:
-
-| Document | Answers |
-| -------- | ------- |
-| [docs/README.md](docs/README.md) | What is the idea? The game in one page, and a map of the rest. |
-| [narrative.md](docs/narrative.md) | What story is told, and in which scenes? |
-| [gameplay.md](docs/gameplay.md) | How does it play? Mechanics, controls, levels, enemies. |
-| [text-and-language.md](docs/text-and-language.md) | What does the player read, where, in which font and language? |
-| [art-direction.md](docs/art-direction.md) | How does it look, and why? |
-| [assets.md](docs/assets.md) | Which asset files exist, and how were they made? |
-| [technical.md](docs/technical.md) | How is the code built? |
-| [implementation-plan.md](docs/implementation-plan.md) | What gets built next, and when is each step done? |
+The design and technical documentation lives in [`docs/`](docs/README.md): start at [docs/README.md](docs/README.md), the game in one page and a map of the rest. The code layout is in [technical.md › Project structure](docs/technical.md#project-structure).
 
 ## License
 

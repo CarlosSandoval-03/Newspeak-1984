@@ -10,9 +10,9 @@ Airstrip One, 1984: a grey city under the four Ministries and the Party, permane
 
 | Character | Who | How they appear |
 | --------- | --- | --------------- |
-| **Pilot 6079** | The player: a skilled Party pilot who starts loyal. Never speaks. | `player.png` in flight; `pilot-portrait.png` in the Ministry and endings; the automatic ID in the high scores. |
+| **The pilot** | The player: a skilled Party pilot who starts loyal, known only by a four-digit number drawn for each run (`PILOT 6079`). Never speaks. | `player.png` in flight; `pilot-portrait.png` in the Ministry and endings; the ID in briefings, game over, endings, and the honor roll. |
 | **The Leader** | The face of the Party. Never speaks directly; only watches. | Rooftop murals, telescreens, the obedient ending. |
-| **The Officer** | An Inner Party officer who briefs the pilot before each level and comments on the record after it. The regime's human voice. | `officer-portrait.png` on the Dictionary and Ministry screens. Colder as suspicion rises. |
+| **The Officer** | An Inner Party officer who briefs the pilot before each level and comments on the record after it. The regime's human voice. | `officer-portrait.png` on the Dictionary and Ministry screens. Colder as the Ministry's verdict on the pilot worsens. |
 | **The erased pilot** | A former member of the squadron, vaporized before the game begins. He wrote the diaries. | The blank silhouette in `vaporized.png`; his handwriting in the diary pages. |
 | **The clerk** | A records clerk at the Ministry of Truth, rewriting the past at his typewriter. | `memory-hole.png`. |
 

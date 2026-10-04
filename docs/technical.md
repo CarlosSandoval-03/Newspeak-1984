@@ -43,18 +43,17 @@ newspeak-1984/
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
     ├── core/             # Scene, SceneManager, Input, Collisions (theme-agnostic)
-    ├── entities/         # Entity, Player, Bullet, Enemy, Eye, Boss, Pickup
+    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Boss, Pickup
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
-    ├── levels/           # levels.ts (level data), Background
+    ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (scanlines, glitch, typewriter)
     └── scenes/           # Menu, Dictionary, Game, Ministry, Ending
 ```
 
 ## Code conventions
 
-- **Language:** all code, comments, identifiers, file names, and commit messages are in English. Player-facing text lives in `src/i18n/` (English and Spanish).
-- **Every player-facing string comes from `src/i18n/`**, never inline; `es.ts` is typed against `en.ts`, so edit both together.
-- **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's corrections, `t()`), not drawing. Load assets with relative paths (`assets/...`), never `/assets/...`, or they break under the Pages path.
+- **Language:** all code, comments, identifiers, file names, and commit messages are in English. Every player-facing string comes from `src/i18n/` (English and Spanish), never inline; `es.ts` is typed against `en.ts`, so edit both together.
+- **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's corrections, `t()`, the city layout), not drawing.
 
 ## Architecture
 
@@ -64,7 +63,7 @@ newspeak-1984/
 - **The p5 instance is passed explicitly**, never stored globally.
 - **`core/` is theme-agnostic:** scenes, input, circles; nothing about 1984.
 - **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `apparentColor()`, `isLying()`), a pass-through until the lies exist.
-- **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and terrain.
+- **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and the terrain recipe. The code turns the recipe into a city ([City layout](#city-layout)).
 - **The scrolling background is drawn into `p5.Graphics`** (see [Background](#background)).
 
 | Value | Lives in |
@@ -72,29 +71,41 @@ newspeak-1984/
 | Tunable numbers (speeds, rates, thresholds, colors, sizes, weights) | `config.ts` |
 | Persistent state (lives, score, suspicion, words, stats, level) | `state.ts` |
 | Shared types | `types.ts` |
-| Level content (waves, eyes, pickups, diary, boss), as plain data | `levels/levels.ts` |
+| Level content (waves, eyes, pickups, diary, boss, terrain recipe), as plain data | `levels/levels.ts` |
 | Per-frame entity lists | `GameScene` fields |
 
 ### Global state
 
-The shape of `state` in `state.ts` (step 1 creates it; later steps extend it, for example with `runStats` for the whole run):
+The shape of `state` in `state.ts`. Step 1 creates the first block; each later step adds its fields:
 
 ```ts
 {
-  suspicion: number;          // 0–100
-  alertLevel: 0 | 1 | 2;      // normal, alert, pursuit
-  words: Set<Word>;           // "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER"
-  realLives: number;
-  realScore: number;
-  stats: { kills: number; eyesDestroyed: number; framesSeen: number; diaries: number };
+  pilotId: number;            // random four digits, drawn once per run
   level: number;
+  realLives: number;
+  realScore: number;          // whole run; shown only in the rebel ending
+  suspicion: number;          // 0–100; the Ministry rewrites it between levels
+  alertLevel: 0 | 1 | 2 | 3;  // normal, alert, pursuit, Thought Police
+  words: Set<Word>;           // available words: "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER"
+  stats: { kills: number; eyesDestroyed: number; framesSeen: number; diaries: number };  // this level
+
+  // step 3
+  bombs: number;
+  wordLevels: Record<Word, number>;  // 1–3; kept when a word is removed
+  restoredWord: Word | null;  // restored by a diary, for this level only
+  runStats: { kills: number; officialKills: number; eyesDestroyed: number; framesSeen: number; diaries: number; pagesRead: number[] };
+
+  // step 4
+  levelStartScore: number;    // realScore when the level began
+  officialScore: number;      // whole run; the only score the regime shows
+  verdict: 0 | 1 | 2;         // the Ministry's verdict on the last level: hero, under review, suspect
 }
 ```
 
 ## Runtime conventions
 
-- **Time is in frames.** `p.frameRate(60)`, one tick per `draw()`, no `deltaTime`. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
-- **Canvas:** 480 × 640, centered, unscaled. `(0, 0)` is top-left; `y` grows downward.
+- **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
+- **Canvas:** 480 × 640 logical pixels, centered, displayed at the largest integer scale that fits the window (CSS only; the game never sees the scale). `(0, 0)` is top-left; `y` grows downward.
 - **Level coordinates** are scroll distance: something at `at: 1200` enters at the top edge once the background has scrolled 1200 px.
 - **Vectors:** a plain `Vec = { x, y }` instead of `p5.Vector`, which keeps `core/` free of p5. Collisions compare squared distances: `dx*dx + dy*dy < (ra + rb)^2`.
 - **Input:** keys by `KeyboardEvent.code` (layout-independent), with `preventDefault()` on game keys so arrows and Space don't scroll the page. Bindings: [gameplay.md › Controls](gameplay.md#controls), mirrored in `config.ts`.
@@ -103,7 +114,7 @@ The shape of `state` in `state.ts` (step 1 creates it; later steps extend it, fo
 
 ### Loading
 
-p5 2.x has no `preload()`. `await` every asset once in an async setup:
+p5 2.x has no `preload()`. `await` every asset once in an async setup. Use relative paths (`assets/...`), never `/assets/...`, or they break under the Pages path:
 
 ```ts
 p.setup = async () => {
@@ -124,17 +135,48 @@ p.setup = async () => {
 - All player-facing text comes from `src/i18n/` through `t(path, params)`; language detection runs once at startup. Files, placeholders, and the detection order: [text-and-language.md › Translation files](text-and-language.md#translation-files).
 - Fonts, sizes, colors, strike-throughs, and the typewriter reveal: [text-and-language.md › Typography](text-and-language.md#typography).
 - Canvas text is always antialiased, regardless of `noSmooth()`; that's fine at those sizes.
-- Measure with `p.textWidth()` and wrap long paragraphs: Spanish runs about 20% longer than English.
+- Measure with `p.textWidth()` and wrap long paragraphs (briefings, corrections, diary pages); never assume English widths.
+
+### City layout
+
+`levels/layout.ts` turns a level's terrain recipe into a city. It is a pure function with no p5, so it can be tested. Terrain never collides with anything, so a generated map can't break the game: the generator only has to look believable and give ground elements sensible places to stand.
+
+The recipe, `LevelDef.terrain`, describes intent, not tiles:
+
+```ts
+interface TerrainDef {
+  seed: number;
+  blocks: { plaza: number; rubble: number };   // share of city blocks; the rest stay open asphalt
+  river?: { at: number; bridges: number };     // a band of water at this scroll distance
+  railway?: { from: number; to: number };
+  landmark?: { at: number };                   // the level's ministry
+}
+```
+
+The level is cut into chunks of 480 × `CHUNK_HEIGHT` px (15 columns of 32 px cells). Each chunk is generated from `seed + chunkIndex` by a small seeded generator of its own (mulberry32, a few lines), separate from `p.random`, so gameplay randomness never changes the map and a level always looks the same. The rules, in order:
+
+1. **Streets.** Vertical streets keep the same columns for the whole level (chosen once from `seed`), so they continue across chunks. Every chunk begins and ends on a horizontal street, so no block crosses a chunk edge. Blocks are at least `MIN_BLOCK_CELLS` on each side.
+2. **Blocks.** Each block between streets becomes plaza, rubble, or open asphalt, by the recipe's shares. Most plazas get a procedural building, inset one cell; some buildings have a skylight or a Party banner.
+3. **Craters** on random asphalt cells.
+4. **River:** a band of water across the full width at `at`, with a street row on each side. `bridges` of the vertical streets continue over it on `bridge.png`.
+5. **Railway:** one vertical street widens into a two-cell corridor from `from` to `to`, with `railway.png` tiled along it.
+6. **Landmark:** a plaza block sized for the 128 px ministry, centered at `at`.
+
+Streets keep asphalt between any two other terrains, which is what the Wang tilesets need: a cell can mix asphalt with only *one* of plaza, rubble, or water.
+
+A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind (`street`, `plaza`, `rooftop`, `skylight`, `bridge`, `railway`, `landmark`), in level space (`y` is scroll distance).
+
+**Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(level, kind, at)` generates the chunk it needs if it doesn't exist yet, and caches it. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates.
 
 ### Background
 
-The background is prerendered into `p5.Graphics` **chunks**, 480 px wide and taller than the canvas. A chunk is built when the scroll reaches it, and each frame draws only the current and next chunk: two `image()` calls, however much a chunk holds.
+The background is prerendered into `p5.Graphics` **chunks**, one per layout chunk, 480 px wide and `CHUNK_HEIGHT` tall (taller than the canvas). A chunk is built when the scroll reaches it, and each frame draws only the current and next chunk: two `image()` calls, however much a chunk holds.
 
-Layers per chunk:
+Layers per chunk, all read from its layout:
 
-1. **Ground (Wang tiles).** Store terrain on tile *corners* (`asphalt`, `plaza`, `rubble`). For each 32×32 cell, find the tile whose `corners` match (`lower` = asphalt, `upper` = plaza or rubble) and copy its rect. A cell mixes asphalt with only *one* other terrain, so keep asphalt between plazas and rubble.
-2. **Decals:** a few `crater.png` on asphalt.
-3. **Buildings:** procedural rooftops on part of the plazas.
+1. **Ground (Wang tiles).** For each 32×32 cell, find the tile whose `corners` match (`lower` = asphalt; `upper` = plaza, rubble, or water, each from its own tileset) and copy its rect.
+2. **Decals and tracks:** craters, bridges, and the railway strip.
+3. **Buildings:** procedural rooftops, with their skylights and banners.
 4. **Landmarks and messages:** the level's ministry, rooftop murals, ground slogans.
 
 **Text is not baked into chunks.** Draw changing slogans each frame at their scrolled position, or redraw only that region when the text flips. Towed banners move, so they are drawn every frame.
