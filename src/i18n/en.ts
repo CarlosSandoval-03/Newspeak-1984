@@ -1,8 +1,8 @@
-// Player-facing text, English. This file defines the shape every language must follow.
-// Placeholders in braces are replaced at runtime: {id} pilot number, {word} a Newspeak word,
-// {enemy} the current enemy, {from}/{to} numbers, {ordinal} an edition ordinal.
-// Rules: regime text is UPPERCASE; slogans are at most 22 characters per line and 2 lines;
-// no arrows or "№" (the fonts lack them). See docs/text-and-language.md.
+/**
+ * The source language: `Strings` is derived from it, so every other language must match its shape.
+ * Placeholders are filled at runtime: {id} pilot number, {word} a Newspeak word, {enemy} the
+ * current enemy, {from}/{to} numbers, {ordinal} an edition ordinal, {language} a language name.
+ */
 
 export const en = {
   meta: {
@@ -109,7 +109,7 @@ export const en = {
   },
 
   slogans: {
-    // Rooftop murals: at most 22 characters per line, 2 lines.
+    // The band under each rooftop portrait fits 2 lines of 22 characters.
     murals: [
       'HE SEES YOU CLEARLY',
       'VIGILANCE IS AFFECTION',
@@ -118,7 +118,7 @@ export const en = {
       'FEWER WORDS\nCLEARER MINDS',
       'YOUR DOUBTS\nARE NOTED',
     ],
-    // Painted on plazas at 40-60 px: keep each one short.
+    // Painted on plazas at 40-60 px, so 12 characters at most.
     ground: ['HE SEES', 'LOOK UP', 'REPORT', 'OBEY'],
     // Blimp banners that flip mid-level: [before, after].
     banners: [
@@ -206,7 +206,7 @@ export const en = {
         'Every evening he sits under the telescreen. He has come to like the Leader\'s face.',
       ],
     },
-    // The rebel ending does not shout: no uppercase, no red.
+    // The rebel ending does not shout, so its text is in sentence case.
     rebel: {
       title: 'The record, uncorrected',
       lines: [

@@ -1,5 +1,3 @@
-# Checks every push to main and every pull request; a vX.Y.Z tag also deploys to GitHub Pages.
-
 name: CI
 
 on:

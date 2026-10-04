@@ -1,3 +1,2 @@
 #!/bin/sh
-# Every commit must typecheck (docs/technical.md > Git).
 exec pnpm --silent typecheck

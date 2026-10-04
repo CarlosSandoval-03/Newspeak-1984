@@ -1,5 +1,4 @@
-// Checks the rules the Strings type can't: list lengths, placeholders, glyphs, and slogan
-// lengths (docs/text-and-language.md).
+// The Strings type only checks keys; list lengths, placeholders, and text limits need runtime checks.
 
 import { describe, expect, it } from 'vitest';
 import { en } from './en';

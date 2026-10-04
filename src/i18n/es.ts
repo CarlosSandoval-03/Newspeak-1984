@@ -1,7 +1,3 @@
-// Player-facing text, Spanish. Must match the shape of `en` (checked by the type).
-// Same rules as en.ts: regime text UPPERCASE with accents, slogans at most 22 characters
-// per line and 2 lines, no arrows or "№".
-
 import type { Strings } from './en';
 
 export const es: Strings = {
