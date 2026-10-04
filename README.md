@@ -30,8 +30,8 @@ You fly for the Party. The longer you fly, the more you see, and the more you se
 ### Run locally
 
 ```sh
-git clone <repo-url>
-cd newspeak-1984
+git clone https://github.com/CarlosSandoval-03/Newspeak-1984.git
+cd Newspeak-1984
 pnpm install
 pnpm dev
 ```
