@@ -22,8 +22,6 @@ export const en = {
     score: 'SCORE',
     lives: 'LIVES',
     suspicion: 'SUSPICION',
-    bombs: 'BOMBS',
-    truth: 'TRUTH',
     states: {
       normal: 'NORMAL',
       alert: 'ALERT',

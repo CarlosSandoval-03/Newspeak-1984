@@ -18,8 +18,6 @@ export const es: Strings = {
     score: 'PUNTOS',
     lives: 'VIDAS',
     suspicion: 'SOSPECHA',
-    bombs: 'BOMBAS',
-    truth: 'VERDAD',
     states: {
       normal: 'NORMAL',
       alert: 'ALERTA',
