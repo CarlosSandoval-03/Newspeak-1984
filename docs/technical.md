@@ -24,6 +24,7 @@ newspeak-1984/
 ├── pnpm-lock.yaml
 ├── tsconfig.json
 ├── pnpm-workspace.yaml   # pnpm settings (saveExact)
+├── .prettierrc           # Prettier with its defaults
 ├── .githooks/            # commit-msg, pre-commit
 ├── .github/workflows/    # ci.yml: checks, and deploys tags to GitHub Pages
 ├── README.md             # project overview and how to run it
@@ -42,7 +43,7 @@ newspeak-1984/
     ├── state.ts          # global game state + resetLevelState()
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
-    ├── core/             # Scene, SceneManager, Input, Collisions (theme-agnostic)
+    ├── core/             # Scene, SceneManager, Input, Collisions, display (theme-agnostic)
     ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Boss, Pickup
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
@@ -53,6 +54,7 @@ newspeak-1984/
 ## Code conventions
 
 - **Language:** all code, comments, identifiers, file names, and commit messages are in English. Every player-facing string comes from `src/i18n/` (English and Spanish), never inline; `es.ts` is typed against `en.ts`, so edit both together.
+- **Formatting:** Prettier with its defaults: double quotes, semicolons, 2-space indent, trailing commas, 80 columns. `.prettierrc` pins them for every editor, the editor formats on save, and code in docs follows the same style.
 - **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's corrections, `t()`, the city layout), not drawing.
 
 ## Architecture
@@ -61,7 +63,7 @@ newspeak-1984/
 - **Scenes** implement `enter()`, `update()`, `draw()`, `exit()`. `SceneManager.change(next)` calls `exit()` then `enter()`.
 - **Entities** extend `Entity` (`pos`, `vel`, `radius`, `alive`, `update()`, `draw(p)`).
 - **The p5 instance is passed explicitly**, never stored globally.
-- **`core/` is theme-agnostic:** scenes, input, circles; nothing about 1984.
+- **`core/` is theme-agnostic:** scenes, input, circles, canvas scaling; nothing about 1984.
 - **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `apparentColor()`, `isLying()`), a pass-through until the lies exist.
 - **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and the terrain recipe. The code turns the recipe into a city ([City layout](#city-layout)).
 - **The scrolling background is drawn into `p5.Graphics`** (see [Background](#background)).
@@ -118,7 +120,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 ## Runtime conventions
 
 - **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. When the cap is hit, the leftover time is dropped, so a slow machine slows down instead of catching up in bursts later. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
-- **Canvas:** 480 × 640 logical pixels, centered, displayed at the largest integer scale that fits the window (CSS only; the game never sees the scale). `(0, 0)` is top-left; `y` grows downward.
+- **Canvas:** 480 × 640 logical pixels with `pixelDensity(1)`, centered, displayed at the largest integer scale that fits the window. `core/display.ts` sets only the canvas's CSS size, computing the factor in device pixels so pixel art stays crisp at 125% or 150% OS zoom; the game never sees the scale. `(0, 0)` is top-left; `y` grows downward.
 - **Level coordinates** are scroll distance: something at `at: 1200` enters at the top edge once the background has scrolled 1200 px.
 - **Vectors:** a plain `Vec = { x, y }` instead of `p5.Vector`, which keeps `core/` free of p5. Collisions compare squared distances: `dx*dx + dy*dy < (ra + rb)^2`.
 - **Input:** keys by `KeyboardEvent.code` (layout-independent), with `preventDefault()` on game keys so arrows and Space don't scroll the page. Bindings: [gameplay.md › Controls](gameplay.md#controls), mirrored in `config.ts`.
@@ -142,8 +144,8 @@ p5 2.x has no `preload()`. `await` every asset once in an async setup. Use relat
 
 ```ts
 p.setup = async () => {
-  const player = await p.loadImage('assets/sprites/player.png');
-  const machineFont = await p.loadFont('assets/fonts/VT323-Regular.ttf');
+  const player = await p.loadImage("assets/sprites/player.png");
+  const machineFont = await p.loadFont("assets/fonts/VT323-Regular.ttf");
 };
 ```
 

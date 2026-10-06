@@ -7,7 +7,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | Step | Delivers | Version |
 | ---- | -------- | ------- |
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` (done) |
-| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` |
+| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` (in progress) |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` |
@@ -33,16 +33,18 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
+**Progress:** the page shell, the canvas, and its integer scaling are done. Next: scenes and the `SceneManager` tick.
+
 ### Files
 
 Create every file from the structure in [technical.md › Project structure](technical.md#project-structure). Files that are not part of this step are **typed stubs**: they export the class, function, or type with the right name, and the body is empty or returns a neutral value. Later steps fill them in without changing any imports.
 
 | File | In this step |
 | ---- | ------------ |
-| `index.html`, `style.css` | **Already written.** The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
-| `core/` or `main.ts` | Scale the canvas by the largest integer factor that fits the window minus the frame: set the canvas element's CSS width and height to 480 × 640 times that factor, at start and on `resize`. Measure the frame as `#game`'s size minus the canvas's, so its thickness lives only in the CSS. The game itself always works in 480 × 640. |
-| `main.ts` | Creates the p5 instance. `setup`: canvas, `frameRate(60)`, `SceneManager` starting on `MenuScene`. `draw`: `manager.frame(p.deltaTime)`. |
-| `config.ts` | Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `index.html`, `style.css` | **Done.** The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
+| `core/display.ts` | **Done.** `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
+| `main.ts` | **Started:** creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, and fits it on start and on `resize`; `draw` clears to ink. **Still to do:** an async `setup` that loads the assets, the `SceneManager` starting on `MenuScene`, and `draw` calling `manager.frame(p.deltaTime)`. |
+| `config.ts` | **Started** with the canvas size and ink. Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
 | `types.ts` | `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | **Already written.** Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts` | Language detection and `t()` (see **Language** below) |
@@ -163,9 +165,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 ```ts
 type Vec = { x: number; y: number };
-type Word = 'FREE' | 'ESCAPE' | 'TRUTH' | 'REMEMBER';
+type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 type AlertLevel = 0 | 1 | 2 | 3;   // normal, alert, pursuit, Thought Police
-type EnemyKind = 'straight' | 'sine' | 'bomber';   // later steps add 'homing'
+type EnemyKind = "straight" | "sine" | "bomber"; // later steps add "homing"
 
 interface WaveDef {
   at: number;          // scroll distance
@@ -196,7 +198,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 ### Done when
 
 - [ ] `pnpm typecheck` and `pnpm build` pass.
-- [ ] The canvas stays centered and crisp at every window size, scaled by a whole number.
+- [x] The canvas stays centered and crisp at every window size, scaled by a whole number.
 - [ ] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
 - [ ] The player moves in 8 directions, stays on screen, and shoots by holding the button.
 - [ ] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.
@@ -490,7 +492,7 @@ displayedLives(): number
 displayedScore(): number
 displayedSuspicion(): number
 apparentColor(enemy: Enemy): string
-isLying(field: 'lives' | 'score' | 'suspicion' | 'ticker' | 'enemyColor'): boolean
+isLying(field: "lives" | "score" | "suspicion" | "ticker" | "enemyColor"): boolean
 ```
 
 The HUD and the enemy rendering go only through this API. While TRUTH is active, every method returns the real value and `isLying()` returns `false`.
@@ -499,7 +501,7 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 
 | From level | Lie |
 | ---------- | --- |
-| 1 | The ticker's alliance flips mid-level ("We are at war with X. We have always been at war with X."), and the earlier text is rewritten without acknowledgment. |
+| 1 | The ticker's alliance flips mid-level (`OCEANIA FIGHTS {enemy}. THE RECORD CONFIRMS IT ALWAYS HAS.`), and the earlier text is rewritten without acknowledgment. |
 | 2 | The score shown is inflated by a factor in `[SCORE_INFLATION_MIN, SCORE_INFLATION_MAX]`. |
 | 3 | An extra life is shown intermittently: `displayedLives = realLives + 1` for a few seconds at random intervals. |
 | 4 | Some enemies are drawn in the "allied" color but still shoot. |

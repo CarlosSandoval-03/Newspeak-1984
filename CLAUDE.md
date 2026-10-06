@@ -27,6 +27,7 @@ A vertical shmup inspired by *1942*, set in Orwell's *1984*. This file holds onl
 - Before large changes, briefly explain the plan and which files you'll touch.
 - Work in small, playable increments.
 - Run `pnpm typecheck` after changes and fix all type errors.
+- Format every code snippet and edit as Prettier's defaults would: double quotes, semicolons, trailing commas (docs/technical.md › Code conventions).
 - Don't add dependencies or change the architecture without asking.
 
 ## Invariants (always check code and proposals against these)
