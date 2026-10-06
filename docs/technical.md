@@ -19,7 +19,7 @@ Dependencies are pinned exactly (`pnpm-workspace.yaml`: `saveExact: true`; pnpm 
 
 ```
 newspeak-1984/
-├── index.html            # page shell; links public/favicon.png
+├── index.html            # page shell: the #game frame between two decorative walls
 ├── package.json          # scripts, exact dependency versions, packageManager
 ├── pnpm-lock.yaml
 ├── tsconfig.json
@@ -37,7 +37,7 @@ newspeak-1984/
 │       └── sounds/       # (empty)
 └── src/
     ├── main.ts           # creates the p5 instance, delegates to SceneManager
-    ├── style.css         # page styles (canvas centering, background)
+    ├── style.css         # page styles: the telescreen wall, frame, and crisp canvas
     ├── config.ts         # every tunable number
     ├── state.ts          # global game state + resetLevelState()
     ├── types.ts          # shared types

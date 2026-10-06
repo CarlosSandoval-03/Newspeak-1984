@@ -78,7 +78,7 @@ One per level. Hitboxes and weak points live in the level data.
 | `ministry-peace-topdown.png` | 128×128 | Ministry of Peace: star fort with artillery, the war ministry. Level 3 landmark. |
 | `ministry-love-topdown.png` | 128×128 | Ministry of Love: windowless block, barbed wire, red-lit guard towers. Level 5 landmark and the stage for the final boss. |
 | `propaganda-blimp.png` | 96×48 | The regime's voice in the sky, nose right. Tows the slogan banners across the screen; it can't be shot and doesn't collide. Mirror it to fly left. |
-| `poster-leader.png` | 64×64 | Leader's portrait on red, for rooftop murals. |
+| `poster-leader.png` | 64×64 | Leader's portrait on red, for rooftop murals and the walls of the page around the game. |
 | `ministry-illustration.png` | 128×128 | The pyramid in 3/4 view: scenes only, never the map. |
 
 Tileset `.json`: 16 entries `{ corners: { NW, NE, SW, SE }, x, y }`; each corner is `"lower"` or `"upper"`, and `x`, `y` locate the tile in the sheet. Usage: [technical.md › Background](technical.md#background).

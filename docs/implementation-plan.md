@@ -39,7 +39,8 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 | File | In this step |
 | ---- | ------------ |
-| `index.html`, `style.css` | Remove the "under construction" page (the `<main>` and its styles, including the `@font-face` rules: the game loads fonts with `p.loadFont`). The page centers the canvas and scales it by the largest integer factor that fits the window (the canvas element's CSS size, with `image-rendering: pixelated`), recomputed on resize. The game itself always works in 480 × 640. |
+| `index.html`, `style.css` | **Already written.** The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
+| `core/` or `main.ts` | Scale the canvas by the largest integer factor that fits the window minus the frame: set the canvas element's CSS width and height to 480 × 640 times that factor, at start and on `resize`. Measure the frame as `#game`'s size minus the canvas's, so its thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Creates the p5 instance. `setup`: canvas, `frameRate(60)`, `SceneManager` starting on `MenuScene`. `draw`: `manager.frame(p.deltaTime)`. |
 | `config.ts` | Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
 | `types.ts` | `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
@@ -194,7 +195,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Done when
 
-- [ ] `pnpm typecheck` and `pnpm build` pass, and the "under construction" page is gone.
+- [ ] `pnpm typecheck` and `pnpm build` pass.
+- [ ] The canvas stays centered and crisp at every window size, scaled by a whole number.
 - [ ] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
 - [ ] The player moves in 8 directions, stays on screen, and shoots by holding the button.
 - [ ] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.

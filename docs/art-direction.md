@@ -88,6 +88,10 @@ There is no backing band: every HUD text has a 1 px ink shadow at (+1, +1), so i
   </tr>
 </table>
 
+## The page around the game
+
+The game is a telescreen set into a concrete wall. The canvas sits in a concrete bezel with a red power lamp that never goes off. On wide windows the Leader's portrait (`poster-leader.png` at 3× or 4×, mirrored on the right) hangs on each side facing the screen; on narrow ones the portraits disappear before they crowd the game. Wall and portraits are dimmed so the game stays the brightest thing on the page. The page has no text: everything the player reads comes from `src/i18n/`, inside the game.
+
 ## The screen under strain
 
 Permanent scanlines, plus a glitch that grows with suspicion. Together with the red vignette, the player feels watched without reading the meter.
