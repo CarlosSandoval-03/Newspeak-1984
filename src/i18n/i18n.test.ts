@@ -45,4 +45,11 @@ describe.each([
       for (const line of lines) expect(line.length, path).toBeLessThanOrEqual(max);
     }
   });
+
+  // The band slides as the line is typed, so length is bounded by reading time, not width.
+  it('keeps diary lines to 80 characters', () => {
+    for (const [i, page] of language.diary.pages.entries()) {
+      expect(page.line.length, `diary.pages.${i}.line`).toBeLessThanOrEqual(80);
+    }
+  });
 });
