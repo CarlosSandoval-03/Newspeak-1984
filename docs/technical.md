@@ -66,6 +66,19 @@ newspeak-1984/
 - **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and the terrain recipe. The code turns the recipe into a city ([City layout](#city-layout)).
 - **The scrolling background is drawn into `p5.Graphics`** (see [Background](#background)).
 
+```mermaid
+flowchart TD
+    main["main.ts"] --> manager["SceneManager<br/>fixed 60 Hz tick"]
+    manager --> others["Menu, Dictionary,<br/>Ministry, Ending"]
+    manager --> game["GameScene"]
+    game --> entities["entities/<br/>Player, Enemy, Bullet, Eye, Boss, ..."]
+    game --> systems["systems/<br/>Spawner, Suspicion, Newspeak, Ministry"]
+    game --> background["Background"]
+    systems --> state[("state<br/>real values")]
+    state --> propaganda["Propaganda<br/>lies by level, off while TRUTH is active"]
+    propaganda --> hud["HUD and enemy colors"]
+```
+
 | Value | Lives in |
 | ----- | -------- |
 | Tunable numbers (speeds, rates, thresholds, colors, sizes, weights) | `config.ts` |
@@ -104,11 +117,22 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 
 ## Runtime conventions
 
-- **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
+- **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. When the cap is hit, the leftover time is dropped, so a slow machine slows down instead of catching up in bursts later. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
 - **Canvas:** 480 × 640 logical pixels, centered, displayed at the largest integer scale that fits the window (CSS only; the game never sees the scale). `(0, 0)` is top-left; `y` grows downward.
 - **Level coordinates** are scroll distance: something at `at: 1200` enters at the top edge once the background has scrolled 1200 px.
 - **Vectors:** a plain `Vec = { x, y }` instead of `p5.Vector`, which keeps `core/` free of p5. Collisions compare squared distances: `dx*dx + dy*dy < (ra + rb)^2`.
 - **Input:** keys by `KeyboardEvent.code` (layout-independent), with `preventDefault()` on game keys so arrows and Space don't scroll the page. Bindings: [gameplay.md › Controls](gameplay.md#controls), mirrored in `config.ts`.
+
+The tick loop in `SceneManager.frame(ms)`:
+
+```mermaid
+flowchart TD
+    frame["p5 draw()"] --> add["accumulator += deltaTime"]
+    add --> due{"At least 1/60 s stored,<br/>and fewer than 2 updates so far?"}
+    due -->|"yes"| step["scene.update()<br/>input.endFrame()<br/>accumulator -= 1/60 s"]
+    step --> due
+    due -->|"no"| render["scene.draw()<br/>if the cap was hit, drop the leftover time"]
+```
 
 ## Rendering
 
@@ -167,6 +191,16 @@ Streets keep asphalt between any two other terrains, which is what the Wang tile
 A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind (`street`, `plaza`, `rooftop`, `skylight`, `bridge`, `railway`, `landmark`), in level space (`y` is scroll distance).
 
 **Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(level, kind, at)` generates the chunk it needs if it doesn't exist yet, and caches it. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates.
+
+```mermaid
+flowchart LR
+    recipe["LevelDef.terrain<br/>the recipe"] --> layout["layout.ts<br/>seed + chunkIndex"]
+    layout --> chunk["Chunk layout<br/>corners, buildings,<br/>craters, anchors"]
+    chunk --> background["Background<br/>one p5.Graphics per chunk"]
+    chunk --> anchor["anchorNear()"]
+    ground["Ground elements in level data<br/>at + on"] --> anchor
+    anchor --> spawned["Towers, turrets, diary,<br/>ground boss, murals"]
+```
 
 ### Background
 
@@ -235,6 +269,15 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 ### CI and deploy
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request: install with the frozen lockfile, typecheck, test, build. Pushing a `vX.Y.Z` tag runs the same checks, fails if the tag doesn't match the `package.json` version, and deploys `dist/` to GitHub Pages, so the published game is always a release.
+
+```mermaid
+flowchart LR
+    push["Push to main<br/>or a pull request"] --> checks["Install, typecheck,<br/>test, build"]
+    tag["Push tag vX.Y.Z"] --> matches{"Tag matches<br/>package.json?"}
+    matches -->|"no"| failed["CI fails"]
+    matches -->|"yes"| release["Install, typecheck,<br/>test, build"]
+    release --> deploy["Deploy dist/<br/>to GitHub Pages"]
+```
 
 One-time setup on GitHub:
 - **Settings › Pages › Source:** GitHub Actions.

@@ -39,6 +39,20 @@ The ending depends on how many diary pages were read across the run (≥ 3 → r
 - **Obedient:** the official score, a closing Party message, and the "corrected" high score table. The pilot sits alone under the Leader's telescreen: defeat disguised as peace.
 - **Rebel:** the first time the game tells the truth. The real score next to the official one, what really happened next to what the Ministry recorded, and the diary pages read. The pilot flies out over open country toward a pale sky: the only bright scene, with no red.
 
+```mermaid
+flowchart LR
+    subgraph run["A run: one hidden page per level"]
+        direction LR
+        p1["Level 1<br/>page 1"] --> p2["Level 2<br/>page 2"] --> p3["Level 3<br/>page 3"] --> p4["Level 4<br/>page 4"] --> p5["Level 5<br/>page 5"]
+    end
+    run --> pages{"Pages read"}
+    pages -->|"0 to 2"| obedient["Obedient ending<br/>official score, the Party's message,<br/>the corrected honor roll"]
+    pages -->|"3 or more"| rebel["Rebel ending<br/>real and official score side by side,<br/>the real record, the pages read, no red"]
+    run -.->|"last life lost"| vaporized["VAPORIZED<br/>no ending, no record"]
+```
+
+Every page is optional and costs +25 suspicion and a worse verdict, so the rebel ending is earned by taking risks, not by skill alone.
+
 The words themselves (briefings, ticker, diary pages, endings) are in `src/i18n/`; where and how each one appears is in [text-and-language.md › Channels](text-and-language.md#channels).
 
 ## Scenes

@@ -45,6 +45,7 @@ A vertical shmup in the tradition of Capcom's *1942*, set in Orwell's *Nineteen 
 
 **Keeping it current:**
 - A confirmed or changed decision goes into the plan, then into the document it belongs to.
+- Diagrams are [Mermaid](https://mermaid.js.org/) blocks, which GitHub renders; update a diagram in the same change as the text it illustrates.
 - Story changes go into [narrative.md](narrative.md) and the text itself into `src/i18n/`, in both languages.
 - The asset set is complete. A replaced asset goes into [assets.md](assets.md); new ones are the exception, for a concrete need.
 - Finished steps stay in the plan as history until `1.0.0`; after that, these documents are the reference.

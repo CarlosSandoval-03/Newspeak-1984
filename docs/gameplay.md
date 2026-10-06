@@ -27,11 +27,36 @@ Towers and drones sweep vision cones. Being seen raises **suspicion** (faster up
 
 Destroying an eye is allowed but costs +15: you can fight the system, but it notices. Suspicion is also felt without reading the meter: the screen glitches harder and a red vignette closes in.
 
+```mermaid
+stateDiagram-v2
+    direction LR
+    Normal: Normal, 0 to 33
+    Alert: Alert, 34 to 66
+    Pursuit: Pursuit, 67 to 99
+    Police: Thought Police, 100
+    [*] --> Normal: level starts, hero or under review
+    [*] --> Alert: level starts, suspect
+    Normal --> Alert: seen, or an eye shot down
+    Alert --> Pursuit: seen
+    Pursuit --> Police: reaches 100 with no boss on screen
+    Police --> Alert: killed or outlasted, set to 50
+    Pursuit --> Alert: decays out of sight
+    Alert --> Normal: decays out of sight
+```
+
 ## Newspeak: words as power-ups
 
 Abilities are words: `FREE` (spread shot), `ESCAPE` (dash), `TRUTH` (see through lies), `REMEMBER` (bomb). From level 2 the Party removes one per level: FREE → ESCAPE → REMEMBER → TRUTH. A removed word's pickup appears crossed out, gives nothing, and raises suspicion (+10), so players learn to stop reaching for what was taken.
 
 Upgrades last the whole run, so every removal takes away something the player built. A **diary** page restores the most recently removed word, at the level it had, for the rest of that level (+25 suspicion).
+
+```mermaid
+flowchart LR
+    l1["Level 1<br/>FREE · ESCAPE · REMEMBER · TRUTH"] -->|"FREE removed"| l2["Level 2<br/>ESCAPE · REMEMBER · TRUTH"]
+    l2 -->|"ESCAPE removed"| l3["Level 3<br/>REMEMBER · TRUTH"]
+    l3 -->|"REMEMBER removed"| l4["Level 4<br/>TRUTH"]
+    l4 -->|"TRUTH removed"| l5["Level 5<br/>no words"]
+```
 
 ## Doublethink: the lying HUD
 
@@ -40,6 +65,16 @@ The HUD shows what the Party wants believed. Each level adds a lie: (1) the tick
 ## Ministry of Truth: the rewritten score
 
 After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Only completed runs are recorded; a vaporized pilot leaves no entry. The real score appears only in the rebel ending.
+
+```mermaid
+flowchart LR
+    stats["Level stats<br/>kills, eyes destroyed,<br/>time seen, diaries"] --> obedience["Obedience factor"]
+    obedience --> score["Official score =<br/>real score × obedience"]
+    obedience --> verdict{"Verdict"}
+    verdict -->|"high"| hero["Hero<br/>kills rounded up · APPROVED<br/>calm briefing · suspicion 0"]
+    verdict -->|"middle"| review["Under review<br/>kills halved · CORRECTED<br/>wary briefing · suspicion ~20"]
+    verdict -->|"low"| suspect["Suspect<br/>kills erased · CORRECTED<br/>cold briefing · suspicion ~40"]
+```
 
 ## Feedback and damage
 
@@ -69,6 +104,27 @@ After each level the real score is crossed out and an "official" one typed in, s
 
 **Flow:** Menu → Dictionary → Game → Ministry → Dictionary → … → Ending. Losing every life shows VAPORIZED; `Enter` returns to the Menu. Between levels, the Ministry rewrites suspicion from its verdict. The scenes in this flow are described in [narrative.md › Scenes](narrative.md#scenes).
 
+```mermaid
+flowchart TD
+    menu["Menu"] -->|"BEGIN SERVICE"| dict["Dictionary + briefing<br/>this level's word struck out"]
+    menu -->|"HONOR ROLL"| roll["Honor roll"]
+    roll --> menu
+    menu -->|"LANGUAGE"| menu
+    dict -->|"Enter"| game["Game: level N"]
+    game -->|"P or Escape"| pause["Pause"]
+    pause --> game
+    game -->|"last life lost"| vaporized["VAPORIZED<br/>the run leaves no record"]
+    vaporized -->|"Enter"| menu
+    game -->|"boss destroyed"| ministry["Ministry of Truth<br/>score rewritten, verdict given"]
+    ministry -->|"after levels 1 to 4"| dict
+    ministry -->|"after level 5"| pages{"Diary pages read"}
+    pages -->|"fewer than 3"| obedient["Obedient ending"]
+    pages -->|"3 or more"| rebel["Rebel ending"]
+    obedient --> saved["Run saved to the honor roll"]
+    rebel --> saved
+    saved -->|"Enter"| menu
+```
+
 - **In a level:** fly, shoot, dodge, stay out of the eyes' sight, collect words, maybe risk a diary, beat the boss.
 - **Between levels:** the Ministry rewrites the score; the Dictionary and the Officer announce the next word to be removed.
 
@@ -95,6 +151,6 @@ After each level the real score is crossed out and an "official" one typed in, s
 
 Foreign enemies fire light bullets; only the regime's own forces fire red.
 
-## Open decisions
+## Decisions
 
 See [implementation-plan.md › Decisions](implementation-plan.md#decisions).

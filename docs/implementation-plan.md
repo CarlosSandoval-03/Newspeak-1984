@@ -71,7 +71,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 - `Scene` has four methods: `enter(): void`, `update(): void`, `draw(): void`, and `exit(): void`.
 - `SceneManager.change(next: Scene)` calls `exit()` on the current scene, swaps it out, and calls `enter()` on the new one. Scenes receive `p` and the manager in their constructor so they can switch scenes themselves.
-- **Decision:** a fixed 60 Hz tick. `SceneManager.frame(ms)` adds the elapsed time to an accumulator and, for every 1/60 s in it, calls the scene's `update()` and then `input.endFrame()`, at most `MAX_UPDATES_PER_FRAME` (2) times; then it calls the scene's `draw()` once. Game logic still counts frames, but the speed no longer depends on the monitor: p5 only draws on the screen's refreshes, so on a 75, 90, or 100 Hz screen it manages 45–50 draws per second, and one update per draw would run the game 15–25% slow. A slow machine still slows the game down instead of skipping ahead.
+- **Decision:** a fixed 60 Hz tick. `SceneManager.frame(ms)` adds the elapsed time to an accumulator and, for every 1/60 s in it, calls the scene's `update()` and then `input.endFrame()`, at most `MAX_UPDATES_PER_FRAME` (2) times, dropping any time left over when it hits the cap; then it calls the scene's `draw()` once. Game logic still counts frames, but the speed no longer depends on the monitor: p5 only draws on the screen's refreshes, so on a 75, 90, or 100 Hz screen it manages 45–50 draws per second, and one update per draw would run the game 15–25% slow. A slow machine still slows the game down instead of skipping ahead.
 
 **Input**
 
