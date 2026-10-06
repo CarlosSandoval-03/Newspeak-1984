@@ -32,7 +32,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Menu | Machine | Start screen, as a vertical list. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
 | Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level, by the Ministry's verdict on the last level: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
-| Diary line | Human | Bottom of the screen on pickup, without pausing. | One per level, in order. | `diary.pages[].line` | `These ruins were not made by the enemy.` |
+| Diary line | Human | Bottom of the screen on pickup, without pausing; typed, and slides left once it reaches the margin. | One per level, in order. | `diary.pages[].line` | `These ruins were not made by the enemy.` |
 | Pause | Machine | Over the pause telescreen. | — | `pause` | `THE TELESCREEN REMAINS ON` |
 | Ministry | Paperwork | After each boss. | One correction per non-zero stat; the kills line follows the Ministry's verdict. | `ministry` | `Surveillance towers lost: 3, corrected to 0. No towers were lost.` |
 | Stamps | Machine, red | Ministry, game over. | — | `ministry.stamps`, `gameOver.stamp` | `CORRECTED`, `VAPORIZED` |
@@ -44,7 +44,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 - **Original only**, in the regime's voice. Never quote Orwell. Orwell's world (Oceania, Eurasia, the Ministries, Newspeak) is the setting; the sentences are ours.
 - **The regime shouts:** everything it displays is UPPERCASE; only long prose (briefings, corrections, diary, endings) uses sentence case.
-- **Short:** at most 22 characters per line (a 176 px mural band) and two lines, in every language. Ground slogans: at most 12 characters.
+- **Short:** at most 22 characters per line (a 176 px mural band) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes.
 - **Contradictions come in pairs** stored together (`slogans.banners`); the flip replaces one with the other. For example, `ALWAYS OUR ALLY` / `NEVER OUR ALLY`.
 - **Placeholders** (`{id}`, `{word}`, `{enemy}`…) instead of hard-coded names, so the ticker can rewrite itself and the briefings name the right word in each language.
 
@@ -63,7 +63,8 @@ Every place where the player reads something: when it appears, in which voice, h
 | Menu title | VT323 | 60 | `#e8e4d8` | UPPER |
 | Menu options | VT323 | 20 | `#e8e4d8`; selected `#b3261e` | UPPER |
 | HUD score | VT323 | 20 | `#e8e4d8` | 6 digits, zero-padded (`004210`) |
-| HUD lives, suspicion label | VT323 | 20 | `#e8e4d8` | UPPER |
+| HUD lives, suspicion label, alert state | VT323 | 20 | `#e8e4d8` | UPPER |
+| HUD words | VT323 | 20 | `#e8e4d8`; recharging and removed `#7a7a7a`, removed also struck in red; active `#1a1a1a` on `#e8e4d8` | UPPER |
 | Ticker | VT323 | 20 | `#e8e4d8` on a `#6e1712` (dark red) strip | UPPER |
 | Word pickups | VT323 | 20 | `#e8e4d8`; removed: `#7a7a7a` + red strike-through | UPPER |
 | Mural slogan | VT323 | 20 | `#e8e4d8` on a `#1a1a1a` band | UPPER |

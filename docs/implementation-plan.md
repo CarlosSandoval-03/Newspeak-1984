@@ -86,7 +86,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 **Player**
 
-- Moves at a constant speed with 8 directions; diagonal movement is normalized. The player is clamped inside the canvas.
+- Moves at a constant speed with 8 directions; diagonal movement is normalized. The player is clamped inside the canvas and above `PLAYFIELD_BOTTOM` (588), so the ship never hides under the HUD's words row.
 - Holding Shoot fires straight up every `PLAYER_FIRE_COOLDOWN` frames.
 - When hit, the player loses one real life and respawns at the bottom center with `RESPAWN_INVULN_FRAMES` frames of invulnerability. While invulnerable, the ship blinks by skipping its draw every few frames.
 - When the last life is lost, the game is over (see **Game over** below).
@@ -148,6 +148,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 **HUD**
 
+- Layout and look: [art-direction.md › The HUD](art-direction.md#the-hud).
 - Shows score (top left) and lives (top right). It calls `propaganda.displayedScore()` and `propaganda.displayedLives()` and never reads `state` directly. In this step those methods return the real values.
 
 **GameScene**
@@ -262,7 +263,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **HUD**
 
-- Add a suspicion meter and the alert state (`hud.states`). The meter reads `propaganda.displayedSuspicion()`, a pass-through until step 5.
+- Add the suspicion meter and the alert state (`hud.states`), as laid out in [art-direction.md › The HUD](art-direction.md#the-hud). The meter reads `propaganda.displayedSuspicion()`, a pass-through until step 5.
 
 ### p5 additions on assets
 
@@ -341,7 +342,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 - There is one per level, on the skylight anchor nearest to the `at` in level data (`diary: { at }`), so players learn where to look. **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
 - Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word. In level 1 nothing has been removed yet, so it gives a score bonus instead.
-- Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed at the bottom of the screen without pausing ([narrative.md](narrative.md)). Record which pages were read in `runStats`.
+- Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed in the diary band without pausing, sliding left once it reaches the margin, and stays `DIARY_HOLD` frames after it is typed ([art-direction.md › The HUD](art-direction.md#the-hud)). Record which pages were read in `runStats`.
 
 **DictionaryScene** (shown before every level)
 
@@ -356,7 +357,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **HUD**
 
-- Add the available words and the bombs left, read through `Propaganda` pass-through methods like every other HUD value.
+- Add the words row ([art-direction.md › The HUD](art-direction.md#the-hud)): upgrade pips, recharge, REMEMBER's bombs as its pips, TRUTH's active state, restored and removed words. It reads through `Propaganda` pass-through methods like every other HUD value.
 
 **state.ts**
 
@@ -454,7 +455,7 @@ officialLevelScore = round(realLevelScore * obedience)
 
 Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-need-p5-additions).
 
-- **Every boss:** an hp bar, a hit flash using its `-flash` variant, and progressive damage from its damage map; optionally, smoke particles whose rate grows with the regions shown.
+- **Every boss:** an hp bar (HUD element 5), a hit flash using its `-flash` variant, and progressive damage from its damage map; optionally, smoke particles whose rate grows with the regions shown.
 - **The Eye** (`boss-eye.png`): a pupil drawn over the lens and shifted toward the player. Its bullets are red.
 - **Ministry:** `memory-hole.png` behind the score; the red `CORRECTED` / `APPROVED` stamp on the corrections; optionally `pilot-portrait.png` and `officer-portrait.png` facing each other.
 - **Endings:** the ending text typed below the illustration.

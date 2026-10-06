@@ -4,7 +4,7 @@ Every visual asset: size, use, and the p5 drawing it needs. Why it looks this wa
 
 **The asset set is complete.** Everything the game needs exists; don't regenerate an asset that is listed here. Replace one only to fix a concrete problem, and update this catalog in the same change.
 
-All images use only the game palette ([art-direction.md](art-direction.md)): the core colors everywhere, the regime red ramp only on regime assets (every red asset is shaded with it), and material tones where a real material helps (ground, the AA gun's sandbags, the diary). Aircraft stay in core colors. References: [boss lineup](art/boss-lineup.png), [messages seen from the sky](art/poster-mockup.png).
+All images use only the game palette ([art-direction.md](art-direction.md)): the core colors everywhere, the regime red ramp only on regime assets (every red asset is shaded with it), and material tones where a real material helps (ground, the AA gun's sandbags, the diary). Aircraft stay in core colors. References: [boss lineup](art/boss-lineup.png), [messages seen from the sky](art/poster-mockup.png), [the HUD](art-direction.md#the-hud).
 
 ## Index by scene
 

@@ -46,6 +46,48 @@ Wall posters would be invisible from above, so the regime writes for the sky ([m
 
 What they say: [text-and-language.md › Channels](text-and-language.md#channels).
 
+## The HUD
+
+The HUD is the Party's instrument panel: from level 1 some of it lies, so it looks like an official display. It is all machine voice, paper on ink, and red only where the regime marks something. The mockups below use the game's real sprites, tilesets, fonts, and palette at 480 × 640, shown at 2×.
+
+![HUD layout](art/hud-layout.png)
+
+| # | Element | Position (logical px) | Content and behavior |
+| - | ------- | --------------------- | -------------------- |
+| 1 | Score | x 8, baseline 20 | `hud.score` and 6 zero-padded digits. |
+| 2 | Lives | right edge at x 472, baseline 20 | `hud.lives` and the number. |
+| 3 | Suspicion meter | label at x 8, baseline 42; bar at x 88–208, y 32–40 | Steel outline, ink inside, red fill; ink ticks at 34 and 67 mark the alert thresholds. |
+| 4 | Alert state | x 216, baseline 42 | `hud.states`. Reserve 184 px: `POLICÍA DEL PENSAMIENTO` is the longest. |
+| 5 | Boss hp bar | x 8–472, y 50–54 | Only while a boss or the Thought Police are on screen. Paper for foreign bosses, red for the regime's own (the Thought Police and the Eye). |
+| 6 | Diary line | band at y 560–584, full width | Courier Prime 16 on leather, typed with a block cursor. Once the cursor reaches the right margin the line slides left, like a typewriter carriage, so a line can be longer than the band. Stays a few seconds after it is typed, then goes. |
+| 7 | Words | baseline 604, from x 8, two spaces apart; pips at y 608–610 | The four words and their state (below). |
+| 8 | Ticker | strip at y 616–640 | VT323 on dark red, scrolling left (step 5). |
+| 9 | Playfield bottom | y 588 | The player's sprite stays above it, so the ship never hides under the words. |
+
+There is no backing band: every HUD text has a 1 px ink shadow at (+1, +1), so it reads over plazas and sprites while the top of the screen stays open for incoming enemies. A lying value keeps its position; its tell is the flicker or the 1 px jitter, which a still can't show.
+
+**The words row** is the player's arsenal written as a dictionary entry, so losing a word is seen where the power was. Every state is shown on the word itself:
+
+| State | Look |
+| ----- | ---- |
+| Available | Paper. Pips under it show the upgrade level, 1 to 3. |
+| Recharging (ESCAPE, TRUTH) | Steel word and pips until it is ready again. |
+| REMEMBER | Its pips are the bombs: paper for the ones left, concrete for the ones spent this level. |
+| Active (TRUTH) | Inverted, ink on a paper box; a paper bar under it drains with the time left. |
+| Restored by a diary | Pips in leather (`#6e4a38`): the word was given back by the one human voice. |
+| Removed | Steel with a 2 px red strike-through. |
+
+<table>
+  <tr>
+    <td width="50%"><img src="art/hud-normal.png" alt="Level 1, normal suspicion"><br>Level 1: every word available, ESCAPE recharging, a tower's cone idle.</td>
+    <td width="50%"><img src="art/hud-pursuit.png" alt="Level 3, pursuit, in Spanish"><br>Level 3, in Spanish: a tower sees the pilot in pursuit, with the red vignette and the glitch; FREE and ESCAPE are struck out.</td>
+  </tr>
+  <tr>
+    <td><img src="art/hud-truth.png" alt="Level 4, TRUTH active and a diary line"><br>Level 4: TRUTH active, so the values are real; REMEMBER restored by the diary whose line is being typed.</td>
+    <td><img src="art/hud-thought-police.png" alt="Level 5, the Thought Police, in Spanish"><br>Level 5, in Spanish: the Thought Police at 100 suspicion, their red hp bar, every word struck out.</td>
+  </tr>
+</table>
+
 ## The screen under strain
 
 Permanent scanlines, plus a glitch that grows with suspicion. Together with the red vignette, the player feels watched without reading the meter.
