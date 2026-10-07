@@ -89,7 +89,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 ## Languages
 
-The game ships in **English and Spanish**, detected from the player's browser and switchable in the Menu. Both are first-class: Spanish is an adaptation, not a literal translation (the Officer addresses the pilot formally, as *usted*; *Newspeak* is *Neolengua*; *Eastasia* is *Estasia*). The four words are translated too (`LIBRE`, `ESCAPAR`, `VERDAD`, `RECORDAR`), because their removal must be read, not decoded.
+The game ships in **English and Spanish**. It starts in English and is switchable in the Menu, which remembers the choice. Both are first-class: Spanish is an adaptation, not a literal translation (the Officer addresses the pilot formally, as *usted*; *Newspeak* is *Neolengua*; *Eastasia* is *Estasia*). The four words are translated too (`LIBRE`, `ESCAPAR`, `VERDAD`, `RECORDAR`), because their removal must be read, not decoded.
 
 ### Glyphs and length
 
@@ -101,7 +101,7 @@ The game ships in **English and Spanish**, detected from the player's browser an
 
 - **Files:** `src/i18n/en.ts` defines every player-facing string and exports `type Strings = typeof en`; `src/i18n/es.ts` is typed `Strings`, so a missing or misnamed key in Spanish fails `pnpm typecheck`. Array lengths (briefings, pages) are not type-checked; keep them equal.
 - **Placeholders:** `{id}`, `{word}`, `{enemy}`, `{from}`, `{to}`, `{ordinal}`, `{language}`. Both languages must use the same set per string.
-- **Detection** (once, at startup): `?lang=` URL parameter, handy for testing → saved choice in `localStorage['newspeak1984.lang']` (`try/catch`) → first entry of `navigator.languages` whose primary subtag is supported (`es-CO` gives `es`) → `en`. Set `document.documentElement.lang`.
+- **Detection** (once, at startup): `?lang=` URL parameter, handy for testing → saved choice in `localStorage['newspeak1984.lang']` (`try/catch`) → `en`. The browser's language is ignored on purpose: the game starts in English unless the player chose otherwise. Set `document.documentElement.lang`.
 - **`t(path, params)`** looks up the current language and replaces placeholders. Lists (briefings, ticker, slogans, diary pages) are read directly from the current language's strings object. Store data, never rendered text (high scores keep the pilot ID and an `unperson` flag), so everything follows a language switch.
 - **Word keys** (`FREE`, …) stay in English in code; the display name comes from `words`.
 - **Ticker rewrites itself:** lines use `{enemy}`, so when the alliance flips, re-rendering the history with the new enemy *is* the rewrite.

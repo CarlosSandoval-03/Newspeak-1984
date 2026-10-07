@@ -13,7 +13,7 @@ You fly for the Party. The longer you fly, the more you see, and the more you se
 - **Doublethink.** The HUD is propaganda. Your lives, your score, and even which enemies are allies may be false. Every lie has a subtle tell, and `TRUTH` exposes them all.
 - **Ministry of Truth.** At the end of each level, your score is crossed out and replaced with an "official" score that rewards obedience. Past high scores can quietly change or disappear.
 - **Two endings.** One for the obedient pilot and one for the pilot who defects.
-- **English and Spanish.** The game follows your browser's language, and you can switch it in the menu.
+- **English and Spanish.** The game starts in English, and you can switch it in the menu; it remembers your choice.
 
 ## Tech stack
 

@@ -5,6 +5,7 @@ import { fitCanvas } from "./core/display";
 import { Input } from "./core/Input";
 import { SceneManager } from "./core/SceneManager";
 import { loadAssets } from "./assets";
+import { initLanguage } from "./i18n";
 import { MenuScene } from "./scenes/MenuScene";
 
 // The checks cost time every frame, and minified names trip false warnings.
@@ -12,6 +13,8 @@ p5.disableFriendlyErrors = import.meta.env.PROD;
 
 const frame = document.getElementById("game");
 if (!frame) throw new Error("#game is missing from the DOM");
+
+initLanguage();
 
 const sketch = (p: p5) => {
   let manager: SceneManager;

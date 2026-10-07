@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Next: language detection, `state.ts`, and the Menu.
+**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection and `t()` are done. Next: `state.ts` and the Menu.
 
 ### Files
 
@@ -48,7 +48,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. **Still to do:** `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
-| `i18n/index.ts` | Not started | Language detection and `t()` (see **Language** below) |
+| `i18n/index.ts`, `index.test.ts` | Done | Language detection and `t()` (see **Language** below); `main.ts` calls `initLanguage()` once. `t()` only accepts paths to a single string, so a misspelled key fails the typecheck |
 | `state.ts` | Not started | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
 | `core/Scene.ts` | Done | `Scene` interface |
 | `core/SceneManager.ts`, `SceneManager.test.ts` | Done | Holds the current scene, switches between scenes, and runs the fixed tick; the tests cover the tick loop |
@@ -210,7 +210,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [ ] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
 - [ ] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
 - [ ] Every file from the structure exists, and the stubs typecheck.
-- [ ] The browser language picks Spanish or English; `?lang=` overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
+- [ ] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
 - [ ] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.
 
 ---
@@ -602,7 +602,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 20 | Boss damage is progressive, revealed region by region from a damage map | 4 | Confirmed |
 | 21 | Palette widened into core, regime red ramp, and material tones; aircraft stay in core colors | 1 | Confirmed |
 | 22 | More red from code: rooftop banners, lamps, red vignette, red regime bullets, stamps | 1–5 | Confirmed |
-| 23 | Two languages (en, es) from typed data files; detected from URL, saved choice, then browser; switchable in the Menu | 1 | Confirmed |
+| 23 | Two languages (en, es) from typed data files; picked from the URL, then the saved choice, else English (the browser's language is ignored); switchable in the Menu | 1 | Confirmed |
 | 24 | The Menu is a vertical list; Up/Down select, Enter or Shoot activates; Shoot confirms only in the Menu | 1 | Confirmed |
 | 25 | Between levels the Ministry rewrites suspicion from its verdict (0, ~20, or ~40), never into pursuit | 4 | Confirmed |
 | 26 | One verdict per level, from obedience, sets the kills correction, the stamp, the next briefing's tone, and the starting suspicion | 4 | Confirmed |
