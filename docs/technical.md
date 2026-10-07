@@ -120,7 +120,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 
 ## Runtime conventions
 
-- **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. When the cap is hit, the leftover time is dropped, so a slow machine slows down instead of catching up in bursts later. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
+- **Time is in frames.** Game logic runs on a fixed 60 Hz tick and never reads `deltaTime`; `SceneManager` uses it only to count how many ticks to run per draw (at most 2), so the speed doesn't depend on the monitor's refresh rate. When the cap is hit and whole ticks are still owed, they are dropped, so a slow machine slows down instead of catching up in bursts later; a partial tick always carries over, so a screen between 30 and 60 Hz still runs at full speed. Seconds are converted in `config.ts` (`0.5 s` → `30`). Slow machines slow the game down instead of skipping frames, like arcade hardware.
 - **Canvas:** 480 × 640 logical pixels with `pixelDensity(1)`, centered, displayed at the largest integer scale that fits the window. `core/display.ts` sets only the canvas's CSS size, computing the factor in device pixels so pixel art stays crisp at 125% or 150% OS zoom; the game never sees the scale. `(0, 0)` is top-left; `y` grows downward.
 - **Level coordinates** are scroll distance: something at `at: 1200` enters at the top edge once the background has scrolled 1200 px.
 - **Vectors:** a plain `Vec = { x, y }` instead of `p5.Vector`, which keeps `core/` free of p5. Collisions compare squared distances: `dx*dx + dy*dy < (ra + rb)^2`.
@@ -134,7 +134,7 @@ flowchart TD
     add --> due{"At least 1/60 s stored,<br/>and fewer than 2 updates so far?"}
     due -->|"yes"| step["scene.update()<br/>input.endFrame()<br/>accumulator -= 1/60 s"]
     step --> due
-    due -->|"no"| render["scene.draw()<br/>if the cap was hit, drop the leftover time"]
+    due -->|"no"| render["scene.draw()<br/>if a whole tick is still owed, drop the stored time"]
 ```
 
 ## Rendering

@@ -15,3 +15,7 @@ export const KEYS = {
   confirm: ["Enter"],
   pause: ["KeyP", "Escape"],
 } as const;
+
+export const TICK_MS = 1000 / 60;
+// Past this, a slow machine slows the game down instead of catching up in bursts.
+export const MAX_UPDATES_PER_FRAME = 2;

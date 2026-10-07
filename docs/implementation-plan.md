@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, the canvas, and its integer scaling are done. Next: scenes and the `SceneManager` tick.
+**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Next: language detection, `state.ts`, and the Menu.
 
 ### Files
 
@@ -43,15 +43,15 @@ Create every file from the structure in [technical.md › Project structure](tec
 | ---- | ------ | ------------ |
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
-| `main.ts` | In progress | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, and fits it on start and on `resize`; `draw` clears to ink. `setup` is async and awaits `loadAssets`, but drops the result. **Still to do:** pass the loaded assets to the `SceneManager` starting on `MenuScene`, and `draw` calling `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size and ink. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
+| `config.ts` | In progress | Has the canvas size, ink, key bindings, and tick. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. **Still to do:** `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts` | Not started | Language detection and `t()` (see **Language** below) |
 | `state.ts` | Not started | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
-| `core/Scene.ts` | Not started | `Scene` interface |
-| `core/SceneManager.ts` | Not started | Holds the current scene and switches between scenes |
+| `core/Scene.ts` | Done | `Scene` interface |
+| `core/SceneManager.ts`, `SceneManager.test.ts` | Done | Holds the current scene, switches between scenes, and runs the fixed tick; the tests cover the tick loop |
 | `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
 | `core/Collisions.ts` | Not started | Circle–circle test |
 | `entities/Entity.ts` | Not started | Abstract base class |
@@ -65,7 +65,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `levels/Background.ts` | Not started | Scrolling background on a `p5.Graphics` |
 | `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
-| `scenes/MenuScene.ts` | Not started | `menu-city.png` with the title and the option list (see **Menu** below) |
+| `scenes/MenuScene.ts` | In progress | Clears to ink. **Still to do:** `menu-city.png` with the title and the option list (see **Menu** below) |
 | `scenes/GameScene.ts` | Not started | The game loop |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
@@ -75,7 +75,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 - `Scene` has four methods: `enter(): void`, `update(): void`, `draw(): void`, and `exit(): void`.
 - `SceneManager.change(next: Scene)` calls `exit()` on the current scene, swaps it out, and calls `enter()` on the new one. Scenes receive `p` and the manager in their constructor so they can switch scenes themselves.
-- **Decision:** a fixed 60 Hz tick. `SceneManager.frame(ms)` adds the elapsed time to an accumulator and, for every 1/60 s in it, calls the scene's `update()` and then `input.endFrame()`, at most `MAX_UPDATES_PER_FRAME` (2) times, dropping any time left over when it hits the cap; then it calls the scene's `draw()` once. Game logic still counts frames, but the speed no longer depends on the monitor: p5 only draws on the screen's refreshes, so on a 75, 90, or 100 Hz screen it manages 45–50 draws per second, and one update per draw would run the game 15–25% slow. A slow machine still slows the game down instead of skipping ahead.
+- **Decision:** a fixed 60 Hz tick. `SceneManager.frame(ms)` adds the elapsed time to an accumulator and, for every 1/60 s in it, calls the scene's `update()` and then `input.endFrame()`, at most `MAX_UPDATES_PER_FRAME` (2) times; if whole ticks are still owed after the cap, it drops them, but a partial tick always carries over, or a 35 Hz screen would lose a fraction of a tick every draw and run the game at about 52 Hz; then it calls the scene's `draw()` once. Game logic still counts frames, but the speed no longer depends on the monitor: p5 only draws on the screen's refreshes, so on a 75, 90, or 100 Hz screen it manages 45–50 draws per second, and one update per draw would run the game 15–25% slow. A slow machine still slows the game down instead of skipping ahead.
 
 **Input**
 
