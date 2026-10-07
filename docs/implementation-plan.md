@@ -4,15 +4,15 @@ This document says **what** to build in each step, **how the pieces fit together
 
 Every step ends with a playable game. Each one finishes with a version bump (see [technical.md › Git](technical.md#git)).
 
-| Step | Delivers | Version |
-| ---- | -------- | ------- |
-| 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` (done) |
-| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` (in progress) |
-| 2 | Surveillance Eyes and Suspicion | `0.3.0` |
-| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` |
-| 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` |
-| 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` |
-| — | Content and balance for all 5 levels, polish | `1.0.0` |
+| Step | Delivers | Version | Status |
+| ---- | -------- | ------- | ------ |
+| 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
+| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | In progress |
+| 2 | Surveillance Eyes and Suspicion | `0.3.0` | Not started |
+| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Not started |
+| 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
+| 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
+| — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
 
 ---
 
@@ -39,35 +39,35 @@ The conventions every step relies on are documented outside this plan:
 
 Create every file from the structure in [technical.md › Project structure](technical.md#project-structure). Files that are not part of this step are **typed stubs**: they export the class, function, or type with the right name, and the body is empty or returns a neutral value. Later steps fill them in without changing any imports.
 
-| File | In this step |
-| ---- | ------------ |
-| `index.html`, `style.css` | **Done.** The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
-| `core/display.ts` | **Done.** `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
-| `main.ts` | **Started:** creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, and fits it on start and on `resize`; `draw` clears to ink. **Still to do:** an async `setup` that loads the assets, the `SceneManager` starting on `MenuScene`, and `draw` calling `manager.frame(p.deltaTime)`. |
-| `config.ts` | **Started** with the canvas size and ink. Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
-| `assets.ts`, `assets.test.ts` | **Done.** Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
-| `types.ts` | **Started** with `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
-| `i18n/en.ts`, `i18n/es.ts` | **Already written.** Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
-| `i18n/index.ts` | Language detection and `t()` (see **Language** below) |
-| `state.ts` | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
-| `core/Scene.ts` | `Scene` interface |
-| `core/SceneManager.ts` | Holds the current scene and switches between scenes |
-| `core/Input.ts` | Keyboard state |
-| `core/Collisions.ts` | Circle–circle test |
-| `entities/Entity.ts` | Abstract base class |
-| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Real implementations |
-| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Stubs |
-| `systems/Spawner.ts` | Reads waves from level data |
-| `systems/Propaganda.ts` | **Pass-through version**: returns the real values and never lies |
-| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Stubs |
-| `levels/levels.ts` | Level 1: terrain recipe and waves |
-| `levels/layout.ts`, `layout.test.ts` | City generator: streets, blocks, buildings, craters (see **Background** below) |
-| `levels/Background.ts` | Scrolling background on a `p5.Graphics` |
-| `ui/HUD.ts` | Lives and score, read **through `Propaganda`**; labels from `t()` |
-| `ui/Ticker.ts`, `ui/effects.ts` | Stubs |
-| `scenes/MenuScene.ts` | `menu-city.png` with the title and the option list (see **Menu** below) |
-| `scenes/GameScene.ts` | The game loop |
-| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Stubs |
+| File | Status | In this step |
+| ---- | ------ | ------------ |
+| `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
+| `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
+| `main.ts` | In progress | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, and fits it on start and on `resize`; `draw` clears to ink. `setup` is async and awaits `loadAssets`, but drops the result. **Still to do:** pass the loaded assets to the `SceneManager` starting on `MenuScene`, and `draw` calling `manager.frame(p.deltaTime)`. |
+| `config.ts` | In progress | Has the canvas size and ink. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
+| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. **Still to do:** `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
+| `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
+| `i18n/index.ts` | Not started | Language detection and `t()` (see **Language** below) |
+| `state.ts` | Not started | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
+| `core/Scene.ts` | Not started | `Scene` interface |
+| `core/SceneManager.ts` | Not started | Holds the current scene and switches between scenes |
+| `core/Input.ts` | Not started | Keyboard state |
+| `core/Collisions.ts` | Not started | Circle–circle test |
+| `entities/Entity.ts` | Not started | Abstract base class |
+| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Not started | Real implementations |
+| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
+| `systems/Spawner.ts` | Not started | Reads waves from level data |
+| `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
+| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Not started | Stubs |
+| `levels/levels.ts` | Not started | Level 1: terrain recipe and waves |
+| `levels/layout.ts`, `layout.test.ts` | Not started | City generator: streets, blocks, buildings, craters (see **Background** below) |
+| `levels/Background.ts` | Not started | Scrolling background on a `p5.Graphics` |
+| `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
+| `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
+| `scenes/MenuScene.ts` | Not started | `menu-city.png` with the title and the option list (see **Menu** below) |
+| `scenes/GameScene.ts` | Not started | The game loop |
+| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification
 
