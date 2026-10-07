@@ -20,6 +20,7 @@ const sprites = import.meta.glob<string>("/public/assets/sprites/*.png", {
 function pngSize(name: string): { width: number; height: number } {
   const dataUrl = sprites[`/public/assets/sprites/${name}.png`];
   if (!dataUrl) throw new Error(`no sprite named ${name}`);
+
   const bytes = atob(dataUrl.slice(dataUrl.indexOf(",") + 1));
   const u32 = (at: number) =>
     ((bytes.charCodeAt(at) << 24) |
@@ -27,6 +28,7 @@ function pngSize(name: string): { width: number; height: number } {
       (bytes.charCodeAt(at + 2) << 8) |
       bytes.charCodeAt(at + 3)) >>>
     0;
+
   return { width: u32(16), height: u32(20) };
 }
 
@@ -35,6 +37,7 @@ function json<T>(name: string): T {
     eager: true,
     import: "default",
   });
+
   const file = files[`/public/assets/sprites/${name}.json`];
   if (!file) throw new Error(`no JSON named ${name}`);
   return file as T;
@@ -65,10 +68,12 @@ describe("asset data", () => {
   it.each(tilesets)("%s has each corner combination exactly once", (name) => {
     const tileset = json<TilesetDef>(name);
     const sheet = pngSize(name);
+
     const combos = tileset.tiles.map(
       ({ corners }) => `${corners.NW}${corners.NE}${corners.SW}${corners.SE}`,
     );
     expect(new Set(combos).size).toBe(16);
+
     for (const { x, y } of tileset.tiles) {
       expect(x + tileset.tileSize).toBeLessThanOrEqual(sheet.width);
       expect(y + tileset.tileSize).toBeLessThanOrEqual(sheet.height);
@@ -78,9 +83,11 @@ describe("asset data", () => {
   it.each(damageMaps)("%s fits its boss sprite", (name) => {
     const map = json<DamageMap>(name);
     const boss = name.replace(/-damage$/, "");
+
     expect(map.sprite).toBe(`${boss}.png`);
     expect(map.damaged).toBe(`${boss}-damaged.png`);
     expect(pngSize(`${boss}-damaged`)).toEqual(pngSize(boss));
+
     const { width, height } = pngSize(boss);
     expect(map.regions.length).toBeGreaterThan(0);
     for (const r of map.regions) {
@@ -93,8 +100,10 @@ describe("asset data", () => {
   it("launch-platform lifts off ahead of the eye and touches down behind it", () => {
     const platform = json<PlatformDef>("launch-platform");
     const { width, height } = pngSize("launch-platform");
+
     expect(platform.liftoff.y).toBeLessThan(platform.park.y);
     expect(platform.park.y).toBeLessThan(platform.touchdown.y);
+
     for (const point of [
       platform.park,
       platform.liftoff,

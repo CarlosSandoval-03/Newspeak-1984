@@ -23,6 +23,7 @@ export class SceneManager {
   // Game logic counts frames, so it runs on a fixed tick; ms only decides how many ticks this draw owes.
   frame(ms: number): void {
     if (!this.scene) return;
+
     this.accumulator += ms;
     let updates = 0;
     while (this.accumulator >= TICK_MS && updates < MAX_UPDATES_PER_FRAME) {
@@ -31,8 +32,10 @@ export class SceneManager {
       this.accumulator -= TICK_MS;
       updates++;
     }
+
     // Only whole ticks still owed are dropped; a partial tick carries over, or a 35 Hz screen would run the game slow.
     if (this.accumulator >= TICK_MS) this.accumulator = 0;
+
     this.scene.draw();
   }
 }

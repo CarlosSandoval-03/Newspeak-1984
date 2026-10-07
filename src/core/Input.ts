@@ -13,13 +13,16 @@ export class Input {
       const { code } = event as KeyboardEvent;
       if (!gameKeys.has(code)) return;
       event.preventDefault();
+
       // Auto-repeat sends keydown again while the key stays held; only the first one is a press.
       if (!this.held.has(code)) this.pressed.add(code);
       this.held.add(code);
     });
+
     target.addEventListener("keyup", (event) => {
       this.held.delete((event as KeyboardEvent).code);
     });
+
     // A key released while the page has no focus never sends its keyup.
     target.addEventListener("blur", () => this.held.clear());
   }

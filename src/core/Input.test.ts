@@ -25,6 +25,7 @@ describe("Input", () => {
     target.dispatchEvent(key("keydown", "ArrowUp"));
     input.endFrame();
     expect(input.isDown("up")).toBe(true);
+
     target.dispatchEvent(key("keyup", "ArrowUp"));
     expect(input.isDown("up")).toBe(false);
   });
@@ -32,6 +33,7 @@ describe("Input", () => {
   it("reports a press only until the end of the frame", () => {
     target.dispatchEvent(key("keydown", "Enter"));
     expect(input.wasPressed("confirm")).toBe(true);
+
     input.endFrame();
     expect(input.wasPressed("confirm")).toBe(false);
   });
@@ -39,6 +41,7 @@ describe("Input", () => {
   it("ignores auto-repeat as a new press", () => {
     target.dispatchEvent(key("keydown", "Enter"));
     input.endFrame();
+
     target.dispatchEvent(key("keydown", "Enter"));
     expect(input.wasPressed("confirm")).toBe(false);
   });
@@ -52,8 +55,10 @@ describe("Input", () => {
   it("blocks the browser default for game keys only", () => {
     const space = key("keydown", "Space");
     const tab = key("keydown", "Tab");
+
     target.dispatchEvent(space);
     target.dispatchEvent(tab);
+
     expect(space.defaultPrevented).toBe(true);
     expect(tab.defaultPrevented).toBe(false);
   });
