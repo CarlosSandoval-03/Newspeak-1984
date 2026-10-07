@@ -45,7 +45,8 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/display.ts` | **Done.** `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | **Started:** creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, and fits it on start and on `resize`; `draw` clears to ink. **Still to do:** an async `setup` that loads the assets, the `SceneManager` starting on `MenuScene`, and `draw` calling `manager.frame(p.deltaTime)`. |
 | `config.ts` | **Started** with the canvas size and ink. Canvas size, palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
-| `types.ts` | `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
+| `assets.ts`, `assets.test.ts` | **Done.** Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
+| `types.ts` | **Started** with `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. `Vec`, `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | **Already written.** Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts` | Language detection and `t()` (see **Language** below) |
 | `state.ts` | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |

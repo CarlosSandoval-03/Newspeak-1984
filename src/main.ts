@@ -2,7 +2,10 @@ import "./style.css";
 import p5 from "p5";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, INK } from "./config";
 import { fitCanvas } from "./core/display";
-import { loadAssets } from "./entities/assets";
+import { loadAssets } from "./assets";
+
+// The checks cost time every frame, and minified names trip false warnings.
+p5.disableFriendlyErrors = import.meta.env.PROD;
 
 const frame = document.getElementById("game");
 if (!frame) throw new Error("#game is missing from the DOM");
@@ -19,8 +22,7 @@ const sketch = (p: p5) => {
     fit();
     window.addEventListener("resize", fit);
 
-    const assets = await loadAssets(p);
-    console.log("Assets loaded:", assets);
+    await loadAssets(p);
   };
 
   p.draw = () => {

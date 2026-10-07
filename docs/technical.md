@@ -9,7 +9,7 @@ Stack, architecture, conventions, rendering, and tooling: how the code is built.
 | TypeScript | 6.0.3 | `strict`; `vite/client` types come from `tsconfig.json` (no `vite-env.d.ts`). |
 | Vite | 8.3.2 | `vanilla-ts`; serves `public/` at the site root. Builds with a relative base (`--base=./`), so the game runs under any path, such as GitHub Pages. |
 | Vitest | 5.0.3 | Tests; uses Vite's resolution, so tests import modules as the game does. |
-| p5.js | 2.3.4 | **Instance mode only** (`new p5(sketch)`). |
+| p5.js | 2.3.4 | **Instance mode only** (`new p5(sketch)`). Friendly errors are off in production builds: their checks cost time every frame, and minified names trip false warnings. |
 | pnpm | 12.3.4 | Pinned via `packageManager`. |
 | Node.js | ≥ 22.12 | Required by Vite 8. |
 
@@ -40,6 +40,7 @@ newspeak-1984/
     ├── main.ts           # creates the p5 instance, delegates to SceneManager
     ├── style.css         # page styles: the telescreen wall, frame, and crisp canvas
     ├── config.ts         # every tunable number
+    ├── assets.ts         # the asset list and the loader
     ├── state.ts          # global game state + resetLevelState()
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
@@ -55,7 +56,7 @@ newspeak-1984/
 
 - **Language:** all code, comments, identifiers, file names, and commit messages are in English. Every player-facing string comes from `src/i18n/` (English and Spanish), never inline; `es.ts` is typed against `en.ts`, so edit both together.
 - **Formatting:** Prettier with its defaults: double quotes, semicolons, 2-space indent, trailing commas, 80 columns. `.prettierrc` pins them for every editor, the editor formats on save, and code in docs follows the same style.
-- **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's corrections, `t()`, the city layout), not drawing.
+- **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's verdict and corrections, the tick loop, `t()`, the city layout) and the asset data, not drawing.
 
 ## Architecture
 
@@ -140,12 +141,20 @@ flowchart TD
 
 ### Loading
 
-p5 2.x has no `preload()`. `await` every asset once in an async setup. Use relative paths (`assets/...`), never `/assets/...`, or they break under the Pages path:
+p5 2.x has no `preload()`. `src/assets.ts` loads every asset once, in an async `setup`, all in parallel:
+
+- Every file is named once in `assets.ts`, grouped by folder; the path follows from the folder, and the loader returns objects keyed by file name (`assets.image["enemy-fighter"]`), so a misspelled name fails the typecheck. `assets.test.ts` checks the lists against the files on disk, so a file added or removed without updating them fails `pnpm test`.
+- `Promise.all`, never `Promise.allSettled`: a missing file rejects the whole load, and p5 logs which file failed. A load that skips failures would hand the game an `undefined` typed as an image.
+- `loadJSON` returns a plain `object`; `assets.ts` keeps one list per JSON shape (`TilesetDef`, `DamageMap`, `PlatformDef`, in `types.ts`), and `assets.test.ts` checks the data the code relies on: every tileset has each corner combination once, damage regions fit their boss, the platform lifts off ahead of the eye and touches down behind it.
+- Paths are relative (`assets/...`), never `/assets/...`, or they break under the Pages path.
+- `setup` creates and fits the canvas before it awaits the assets, so the frame has its size while they load. p5 starts `draw` only after `setup` resolves, so no `noLoop()` / `loop()` pair is needed.
+- The loaded assets go to the `SceneManager`, and from it to the scenes, never into a global.
 
 ```ts
 p.setup = async () => {
-  const player = await p.loadImage("assets/sprites/player.png");
-  const machineFont = await p.loadFont("assets/fonts/VT323-Regular.ttf");
+  // create and fit the canvas first
+  const assets = await loadAssets(p);
+  // build the SceneManager with p and assets
 };
 ```
 
