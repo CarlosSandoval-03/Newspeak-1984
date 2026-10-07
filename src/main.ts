@@ -2,24 +2,30 @@ import "./style.css";
 import p5 from "p5";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, INK } from "./config";
 import { fitCanvas } from "./core/display";
+import { loadAssets } from "./entities/assets";
 
 const frame = document.getElementById("game");
 if (!frame) throw new Error("#game is missing from the DOM");
 
-new p5((sketch: p5) => {
-  sketch.setup = () => {
-    const canvas = sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).elt;
+const sketch = (p: p5) => {
+  p.setup = async () => {
+    const canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).elt;
 
-    sketch.pixelDensity(1);
-    sketch.noSmooth();
+    // Disable pixel density scaling and smoothing to keep the pixel art crisp
+    p.pixelDensity(1);
+    p.noSmooth();
 
     const fit = () => fitCanvas(canvas, frame, CANVAS_WIDTH, CANVAS_HEIGHT);
     fit();
-
     window.addEventListener("resize", fit);
+
+    const assets = await loadAssets(p);
+    console.log("Assets loaded:", assets);
   };
 
-  sketch.draw = () => {
-    sketch.background(INK);
+  p.draw = () => {
+    p.background(INK);
   };
-}, frame);
+};
+
+new p5(sketch, frame);
