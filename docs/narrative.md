@@ -36,8 +36,8 @@ The squadron photo closes the loop: on game over, the photo shows one pilot eras
 
 The ending depends on how many diary pages were read across the run (≥ 3 → rebel).
 
-- **Obedient:** the official score, a closing Party message, and the "corrected" high score table. The pilot sits alone under the Leader's telescreen: defeat disguised as peace.
-- **Rebel:** the first time the game tells the truth. The real score next to the official one, what really happened next to what the Ministry recorded, and the diary pages read. The pilot flies out over open country toward a pale sky: the only bright scene, with no red.
+- **Obedient:** the pilot lands at the Ministry of Love like every other time and is corrected one last time. Then the official score, a closing Party message, and the "corrected" high score table. The pilot sits alone under the Leader's telescreen: defeat disguised as peace.
+- **Rebel:** the pilot never lands. After the Eye falls, no platform comes: the plane climbs off the screen, and the Ministry never gets to correct the last level. Then the first time the game tells the truth. The real score next to the official one, what really happened next to what the Ministry recorded, and the diary pages read. The pilot flies out over open country toward a pale sky: the only bright scene, with no red.
 
 ```mermaid
 flowchart LR
@@ -46,8 +46,10 @@ flowchart LR
         p1["Level 1<br/>page 1"] --> p2["Level 2<br/>page 2"] --> p3["Level 3<br/>page 3"] --> p4["Level 4<br/>page 4"] --> p5["Level 5<br/>page 5"]
     end
     run --> pages{"Pages read"}
-    pages -->|"0 to 2"| obedient["Obedient ending<br/>official score, the Party's message,<br/>the corrected honor roll"]
-    pages -->|"3 or more"| rebel["Rebel ending<br/>real and official score side by side,<br/>the real record, the pages read, no red"]
+    pages -->|"0 to 2"| lands["Lands at the Ministry of Love,<br/>corrected one last time"]
+    lands --> obedient["Obedient ending<br/>official score, the Party's message,<br/>the corrected honor roll"]
+    pages -->|"3 or more"| leaves["Never lands:<br/>the official record stops at level 4"]
+    leaves --> rebel["Rebel ending<br/>real and official score side by side,<br/>the real record, the pages read, no red"]
     run -.->|"last life lost"| vaporized["VAPORIZED<br/>no ending, no record"]
 ```
 
@@ -62,6 +64,7 @@ The words themselves (briefings, ticker, diary pages, endings) are in `src/i18n/
 | Menu | At start, and after game over or an ending. | The Ministry's pyramid over the city at night; title, options, high scores. | `menu-city.png` | The regime dominates the skyline before play begins. |
 | Dictionary + briefing | Before every level. | The official dictionary, the edition for this level; this level's word struck out in red. The Officer gives one or two lines of orders. | `dictionary-cover.png`, `officer-portrait.png` | Censorship as a ritual, announced in advance, by a human voice. |
 | Game | During each level. | The city from above, enemies, the HUD, the ticker, the regime's messages. | Sprites, tilesets, landmarks | The war, and the surveillance inside it. |
+| Takeoff and landing | At the start and end of every level. | The plane rolls off the eye painted on the Party's launch platform and climbs; after the boss, it lands on another. | `launch-platform.png` | The regime launches its pilot and recovers him to be judged. The rebel is the only one who doesn't come back. |
 | Diary page | When a diary is picked up, without pausing. | One line of the erased pilot's page typed at the bottom of the screen. | `diary.png` | The hidden story, told in fragments. |
 | Pause | When the player pauses. | A telescreen eye with a red iris; "PAUSED". | `pause-telescreen.png` | Even stopping the game is observed. |
 | Ministry | After each boss. | The real score crossed out and sent down the memory hole, the official score typed in, the corrections, the high scores. | `memory-hole.png`, `pilot-portrait.png`, `officer-portrait.png` | The past is rewritten in front of the player. |

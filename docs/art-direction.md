@@ -32,6 +32,7 @@ Red is everywhere the regime is, and nowhere else: nothing the player owns is re
 | City | Rooftop murals in red frames; the blimp's banners trimmed in red. | 5 |
 | Surveillance | Eye lenses; cones turn red while detecting; destroyed eyes burst in red sparks. | 2 |
 | Suspicion | The meter fills in red; a red vignette at the screen edges pulses when seen and grows with suspicion; in pursuit it beats like a pulse. | 2, 5 |
+| Airfield | The launch platform's eye; its runway lamps chase in red during takeoff and landing. | 4 |
 | Regime forces | Thought Police and the Eye fire red bullets. Foreign enemies' bullets stay light, so a red bullet always means the Party is shooting at you. | 2, 4 |
 | Paperwork | Strike-throughs; `CORRECTED` / `APPROVED` stamps in the Ministry; the `VAPORIZED` stamp. | 1, 3, 4 |
 | Telescreens | Ticker on a dark-red strip; telescreen frames lit red. | 5 |

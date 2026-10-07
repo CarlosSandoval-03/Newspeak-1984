@@ -110,22 +110,27 @@ flowchart TD
     menu -->|"HONOR ROLL"| roll["Honor roll"]
     roll --> menu
     menu -->|"LANGUAGE"| menu
-    dict -->|"Enter"| game["Game: level N"]
+    dict -->|"Enter"| takeoff["Takeoff from the launch platform"]
+    takeoff --> game["Game: level N"]
     game -->|"P or Escape"| pause["Pause"]
     pause --> game
     game -->|"last life lost"| vaporized["VAPORIZED<br/>the run leaves no record"]
     vaporized -->|"Enter"| menu
-    game -->|"boss destroyed"| ministry["Ministry of Truth<br/>score rewritten, verdict given"]
-    ministry -->|"after levels 1 to 4"| dict
-    ministry -->|"after level 5"| pages{"Diary pages read"}
-    pages -->|"fewer than 3"| obedient["Obedient ending"]
-    pages -->|"3 or more"| rebel["Rebel ending"]
+    game -->|"boss destroyed, levels 1 to 4"| landing["Landing on a platform"]
+    landing --> ministry["Ministry of Truth<br/>score rewritten, verdict given"]
+    ministry --> dict
+    game -->|"the Eye destroyed"| pages{"Diary pages read"}
+    pages -->|"fewer than 3"| lastLanding["Landing at the Ministry of Love"]
+    lastLanding --> lastMinistry["Ministry of Truth, last visit"]
+    lastMinistry --> obedient["Obedient ending"]
+    pages -->|"3 or more"| departure["Never lands:<br/>flies off the screen"]
+    departure --> rebel["Rebel ending"]
     obedient --> saved["Run saved to the honor roll"]
     rebel --> saved
     saved -->|"Enter"| menu
 ```
 
-- **In a level:** fly, shoot, dodge, stay out of the eyes' sight, collect words, maybe risk a diary, beat the boss.
+- **In a level:** take off from the Party's launch platform, fly, shoot, dodge, stay out of the eyes' sight, collect words, maybe risk a diary, beat the boss, and land on another platform. The plane flies itself during takeoff and landing.
 - **Between levels:** the Ministry rewrites the score; the Dictionary and the Officer announce the next word to be removed.
 
 | Level | Word removed | New lie | Boss | Terrain and landmark |

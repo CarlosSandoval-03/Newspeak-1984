@@ -12,7 +12,7 @@ All images use only the game palette ([art-direction.md](art-direction.md)): the
 | ----- | ------ |
 | Menu | `menu-city.png` |
 | Dictionary + briefing | `dictionary-cover.png`, `officer-portrait.png` |
-| Game | Player, enemies, bosses (+ damage), terrain, landmarks, `poster-leader.png`, `propaganda-blimp.png`, `diary.png`, variants |
+| Game | Player, enemies, bosses (+ damage), terrain, landmarks, `launch-platform.png`, `poster-leader.png`, `propaganda-blimp.png`, `diary.png`, variants |
 | Pause | `pause-telescreen.png` |
 | Ministry | `memory-hole.png`, `pilot-portrait.png`, `officer-portrait.png` |
 | Game over | `vaporized.png` |
@@ -28,7 +28,7 @@ All images use only the game palette ([art-direction.md](art-direction.md)): the
 | 4 | `rubble-tileset`, `crater` | — (the ruins are the landmark) | `boss-wing` | `enemy-fighter-allied` (the "ally" lie). |
 | 5 | `ground-tileset` | `ministry-love-topdown` | `boss-eye` | Every lie at once. |
 
-Every level also uses the regular enemies, surveillance (eye towers, drones, AA guns), the gyros and Thought Police when suspicion calls them, `poster-leader.png` murals, the propaganda blimp, and one `diary.png`.
+Every level also uses the regular enemies, surveillance (eye towers, drones, AA guns), the gyros and Thought Police when suspicion calls them, `poster-leader.png` murals, the propaganda blimp, one `diary.png`, and `launch-platform.png` for the takeoff and the landing (the rebel's last level has no landing).
 
 ## Sprites (`public/assets/sprites/`)
 
@@ -73,6 +73,7 @@ One per level. Hitboxes and weak points live in the level data.
 | `bridge.png` | 48×96 | Vertical bridge laid over the river. Bridges are bottlenecks: the only ground the AA guns can cover. |
 | `railway.png` | 48×32 | Track strip that tiles seamlessly along y (made locally): grey ballast, wooden sleepers, steel rails. Level 3: the land battleship rides it. Tiled along the railway corridor, between rubble blocks. |
 | `crater.png` | 48×48 | Bomb crater decal on asphalt. |
+| `launch-platform.png` + `.json` | 112×256 | The Party's launch deck, made locally: a concrete runway with threshold bars at both ends and the regime's eye in red at the center, where the plane parks. The runway is concrete, not ink, so the plane's shadow shows as it lifts off. The lamp sockets are dark; code lights them. The JSON gives `park` (the eye), `liftoff` and `touchdown` (the threshold lines), and `lamps`, in sprite pixels. |
 | `ministry-truth-topdown.png` | 128×128 | Ministry of Truth: white stepped pyramid. Level 1 landmark; the only bright building, as in Orwell ("glittering white concrete"). |
 | `ministry-plenty-topdown.png` | 128×128 | Ministry of Plenty: warehouse and grain silos, the rationing machine. Level 2 landmark. |
 | `ministry-peace-topdown.png` | 128×128 | Ministry of Peace: star fort with artillery, the war ministry. Level 3 landmark. |
@@ -143,6 +144,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `propaganda-blimp.png` | **Towed banner**: tow line and a light banner with dark VT323 text behind the blimp. | Banner sways slightly. | 5 |
 | `boss-*-damaged.png` | Reveal damage regions progressively from `boss-*-damage.json`, never a single swap. | Smoke: grey particles from the revealed holes, more as more regions show. | 4 |
 | `player-bank-*.png` | Use while the horizontal input is held. | — | Polish |
+| `launch-platform.png` | **Runway lamps:** light the sockets from the JSON in `#e0503a`, chasing toward the direction of travel (forward on takeoff, backward on landing). | — | 4 |
 | `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as the Ministry's verdict worsens. | Thin frame, rank caption. | 3, 4 |
 | `memory-hole.png` | The crossed-out real score slides into the slot before the official one is typed. | Papers fluttering into the slot. | 4 |
 | `pause-telescreen.png` | "PAUSED" in VT323. | Suspicion creeps up slowly while paused. | 5 |
@@ -198,6 +200,7 @@ Local scripts (Pillow), kept out of the repo:
 - **Damage map** (`boss-*-damage.json`): diff the clean and damaged sprites, group changed pixels within 3 px into regions, drop regions under 3 px, then order them: holes (≥ 40 px) first, cracks last, shuffled within each group with seed `1984` so damage spreads over the hull.
 - **Battle damage** (`boss-*-damaged.png`): pick 5–6 points well inside the silhouette (opaque in a ±6 px box, ≥22 px apart). Each gets a ragged hole (transparent, radius 2.5–4.5 px with jitter), a 1.5 px `#1a1a1a` burnt rim, and a scorch ring of random dark pixels; then add 6 short random-walk cracks. Regime red is never overwritten. Seed `1984`.
 - **Banking frames:** keep the fuselage columns, foreshorten the lowered wing to ~62% width and darken it one step, lighten a few mid-grey pixels on the raised wing; mirror for the other side.
+- **Launch platform:** 112×256, drawn with Pillow in core colors and the red ramp. A `#3a3a3a` slab with a `#1a1a1a` outline and a `#7a7a7a` lit edge; a concrete runway between 2 px ink edges, `#7a7a7a` threshold bars and dashed centerline; at the center the eye: `#7a7a7a` almond lids, ink rim, `#b3261e` iris shaded `#6e1712` (bottom right) and `#e0503a` (top left), ink pupil with a `#e8e4d8` glint; 3×3 ink lamp sockets every 24 px along both runway edges; hatched aprons beyond the thresholds.
 - **Railway strip:** 48×32, gravel bed (`#3a3a3a` with 28% `#1a1a1a` speckle), two wooden sleepers (`#4a3426` with `#33251f` edges), two 2 px `#7a7a7a` rails with a dark shadow. Independent per-pixel noise keeps it seamless along y.
 - **Red ramp** (every asset with `#b3261e`): find each 4-connected red region. A region touching the image edge is a background: dither it toward `#6e1712` with a 4×4 Bayer matrix, starting 55% of the way from the center to the edge (a printed-poster vignette). Regions of 4+ px: bottom-right rim pixels → `#6e1712`, top-left rim → `#e0503a`. Regions under 4 px (lamps) → `#e0503a`. Rerun the damage map afterwards if a boss changed.
 - **Material recolor** (diary, AA gun): map `#7a7a7a` / `#3a3a3a` to material tones — the diary cover to leather (`#6e4a38` / `#5a3c2e`), and only the AA gun's sandbag ring (outside radius 12.5 px) to burlap (`#6e4a38` / `#4a3426`).
@@ -208,5 +211,5 @@ Local scripts (Pillow), kept out of the repo:
 ## Source and license
 
 - **Project license:** [PolyForm Noncommercial 1.0.0](../LICENSE), noncommercial use only; see the [README](../README.md#license). The items below keep their own terms on top of it.
-- **Images:** generated with [PixelLab](https://pixellab.ai) with the palette forced, then post-processed with ImageMagick. The damaged bosses, banking frames, railway, red-ramp shading, and material recolors were made locally with scripts ([how they were made](#how-the-assets-were-made)). [PixelLab's terms](https://pixellab.ai/termsofservice) (section 3.3) leave the outputs owned by the user and free to use, modify, and distribute for any purpose, except to train other models.
+- **Images:** generated with [PixelLab](https://pixellab.ai) with the palette forced, then post-processed with ImageMagick. The damaged bosses, banking frames, railway, launch platform, red-ramp shading, and material recolors were made locally with scripts ([how they were made](#how-the-assets-were-made)). [PixelLab's terms](https://pixellab.ai/termsofservice) (section 3.3) leave the outputs owned by the user and free to use, modify, and distribute for any purpose, except to train other models.
 - **Fonts:** from the [Google Fonts repository](https://github.com/google/fonts), SIL OFL 1.1. The license files must ship with them.

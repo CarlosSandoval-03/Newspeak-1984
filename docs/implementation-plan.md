@@ -392,15 +392,29 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`entities/Boss.ts` (level bosses), `systems/Ministry.ts`, `scenes/MinistryScene.ts`, `scenes/EndingScene.ts`, and updates to `levels/levels.ts`, `scenes/GameScene.ts`, `state.ts`, and `config.ts`.
+`entities/Boss.ts` (level bosses), `systems/Ministry.ts`, `scenes/MinistryScene.ts`, `scenes/EndingScene.ts`, and updates to `entities/Player.ts` (altitude and autopilot), `levels/layout.ts` (the airfield), `levels/levels.ts`, `scenes/GameScene.ts`, `state.ts`, and `config.ts`.
 
 ### Specification
 
 **Level end**
 
-- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss ends the level and switches to `MinistryScene`. This replaces the step 1 loop.
+- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss starts the landing (below), and the landing ends the level. This replaces the step 1 loop.
 - **Bosses are data:** sprite, hp, hitbox, whether it is a ground boss (moves with the scroll and stands on an anchor, `on: 'railway'` for the land battleship) or an air boss, and a list of attack phases (for example: aimed bursts → spread fan → enrage below 30% hp). One `Boss` class runs any of them. Each level has its own sprite (see [assets.md](assets.md)).
 - **Progressive damage:** the boss shows its wounds hole by hole as it loses hp, never in one swap. Its `boss-*-damage.json` lists the damage regions in reveal order. At load, copy the clean sprite into a `p5.Graphics`. Whenever the number of regions that should be visible (`ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END))`, capped at `n`, where `DAMAGE_END` ≈ 0.2 is the hp fraction at which all damage is shown) grows, reveal the new ones: `erase()` the rect, `noErase()`, then draw that rect from `boss-*-damaged.png`. Draw the boss from the graphics. Work happens only when a region appears, never per frame. See [technical.md › Progressive damage](technical.md#progressive-damage).
+
+**Takeoff and landing** (`GameScene`, `entities/Player.ts`)
+
+![Takeoff (1–4) and landing (5–8)](art/takeoff-landing.png)
+
+- **Decision:** as in *1942*, every level starts with a takeoff from the Party's launch platform (`launch-platform.png`) and ends with a landing on another. The regime launches its pilot, and recovers him to be judged. The player has no control during either; the plane is invulnerable, and nothing spawns.
+- **Altitude:** `Player.altitude` is 0 on the ground and 1 in flight. The sprite never grows, because pixel art only takes integer scales; the height is the shadow, drawn at `altitude × (6, 10)` with alpha `0.4 / max(1, altitude)`. The platform's runway is concrete, not ink, so the shadow shows as it separates.
+- The layout puts a platform on the airfield at the level start and at `length + LANDING_LEAD` (rule 7 in [technical.md › City layout](technical.md#city-layout)). `launch-platform.json` gives the parking spot (the eye), the lift-off and touchdown lines, and the lamp sockets.
+- **Takeoff (1–4):** the plane starts parked on the eye at the player's start position. The scroll ramps from 0 to `SCROLL_SPEED` over `TAKEOFF_RAMP_FRAMES` while the plane holds its screen position, so the runway rolls under it. When the lift-off line passes under the plane, altitude eases from 0 to 1 over `LIFTOFF_FRAMES`; then control returns and the waves begin.
+- **Landing (5–8):** when the boss dies, enemy bullets are cleared, nothing more spawns, and the scroll resumes. The autopilot eases the plane to the runway's x and the start y. Altitude eases from 1 to 0, timed to reach 0 as the touchdown line reaches the plane; then the scroll slows evenly so the eye stops under the plane. After `LANDING_HOLD_FRAMES`, the MinistryScene.
+- A pilot who loses a life respawns in the air, as before; there is no new takeoff.
+- **Decision:** after level 5 the ending decides the last sequence. Below `REBEL_DIARY_THRESHOLD` pages, the pilot lands at the Ministry of Love as usual, visits the Ministry one last time, and gets the obedient ending. With enough pages the pilot never lands: no platform comes, the plane climbs off the top of the screen while altitude rises past 1 (the shadow drifts and fades), and the rebel ending follows at once. The Ministry never processes level 5, so the official record stops at level 4 while the real one includes it.
+
+![The rebel's departure: no platform, the shadow drifting and fading](art/rebel-departure.png)
 
 **Obedience factor and official score** (`Ministry.ts`)
 
@@ -424,7 +438,7 @@ officialLevelScore = round(realLevelScore * obedience)
 3. The official score is typed in beneath it.
 4. A list of corrections (`ministry.corrections`) is typed line by line: one per stat that is not zero, with frames observed shown as seconds. Every stat except kills is corrected to 0.
 5. The honor roll appears and is tampered with in front of the player (see **Honor roll**).
-6. `Enter` goes to the next DictionaryScene, or to the Ending after level 5.
+6. `Enter` goes to the next DictionaryScene, or to the obedient ending after level 5.
 
 **The Party's verdict.** **Decision:** at the end of each level the Ministry judges the pilot by the level's obedience factor, and the verdict, not the facts, decides what follows. Obedience sums up the whole level, so the verdict doesn't depend on how much suspicion decayed during the boss fight. Store it in `state.verdict` (0, 1, or 2).
 
@@ -451,14 +465,16 @@ officialLevelScore = round(realLevelScore * obedience)
 
 **Endings** (`EndingScene` with a `variant`)
 
-- **Decision:** the ending is chosen by how many diaries the player read during the run. With `runStats.diaries >= REBEL_DIARY_THRESHOLD` (default 3) the player gets the rebel ending; otherwise the obedient one.
+- **Decision:** the ending is chosen by how many diaries the player read during the run, as soon as the Eye is destroyed. With `runStats.diaries >= REBEL_DIARY_THRESHOLD` (default 3) the player gets the rebel ending; otherwise the obedient one (see **Takeoff and landing**).
 - **Obedient:** the official score, a closing Party message, and the honor roll, already "corrected".
-- **Rebel:** the first time the game shows the truth. It shows the real score next to the official one, the run totals (kills, towers destroyed, time observed, diaries read) next to what the Ministry recorded, and the full diary pages read. No regime red is used on this screen.
+- **Rebel:** the first time the game shows the truth. It shows the real score (all five levels) next to the official one (which stops at level 4), the run totals (kills, towers destroyed, time observed, diaries read) next to what the Ministry recorded, and the full diary pages read. No regime red is used on this screen.
 
 ### p5 additions on assets
 
 Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-need-p5-additions).
 
+- **Launch platform:** light its lamp sockets (from the JSON) in `#e0503a`, chasing toward the direction of travel: forward on takeoff, backward on landing.
+- **Player:** the shadow follows `altitude`.
 - **Every boss:** an hp bar (HUD element 5), a hit flash using its `-flash` variant, and progressive damage from its damage map; optionally, smoke particles whose rate grows with the regions shown.
 - **The Eye** (`boss-eye.png`): a pupil drawn over the lens and shifted toward the player. Its bullets are red.
 - **Ministry:** `memory-hole.png` behind the score; the red `CORRECTED` / `APPROVED` stamp on the corrections; optionally `pilot-portrait.png` and `officer-portrait.png` facing each other.
@@ -471,6 +487,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [ ] Official score = real score × obedience, with the factor clamped to [0.1, 2.0]. Check this by hand for one level.
 - [ ] The MinistryScene shows the crossed-out real score, the typed official score, and the correction lines. The verdict sets the kills correction, the stamp, the next briefing's tone, and the next level's starting suspicion.
 - [ ] Only completed runs reach the honor roll. Entries persist across reloads, change at every Ministry visit, and the game still runs with storage blocked (test it in a private window or with an exception thrown in DevTools).
+- [ ] Every level starts with a takeoff and ends with a landing; the shadow shows the height, and the player has no control during either.
+- [ ] After the Eye, an obedient pilot lands and sees the Ministry; a rebel climbs off the screen and goes straight to the rebel ending.
 - [ ] Both endings can be reached.
 
 ---
@@ -590,3 +608,5 @@ These are the gaps this plan filled in. An open decision can still change before
 | 28 | The honor roll is tampered with at every Ministry visit, not only when a score is saved | 4 | Confirmed |
 | 29 | Terrain is generated by rules from a per-level recipe (streets, blocks, river, railway, landmark); ground elements stand on anchors it generates | 1 | Confirmed |
 | 30 | Word upgrades last the whole run and survive removal; REMEMBER's level is the bombs per level | 3 | Confirmed |
+| 31 | Every level starts with a takeoff and ends with a landing on the Party's launch platform; height is shown by the shadow, never by scaling | 4 | Confirmed |
+| 32 | The rebel never lands: after the Eye the plane leaves, and the official record stops at level 4 | 4 | Confirmed |

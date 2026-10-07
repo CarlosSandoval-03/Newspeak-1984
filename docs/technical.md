@@ -187,10 +187,11 @@ The level is cut into chunks of 480 × `CHUNK_HEIGHT` px (15 columns of 32 px ce
 4. **River:** a band of water across the full width at `at`, with a street row on each side. `bridges` of the vertical streets continue over it on `bridge.png`.
 5. **Railway:** one vertical street widens into a two-cell corridor from `from` to `to`, with `railway.png` tiled along it.
 6. **Landmark:** a plaza block sized for the 128 px ministry, centered at `at`.
+7. **Airfield:** at the level start and at `length + LANDING_LEAD`, a plaza strip down the middle with no buildings, where `launch-platform.png` lies centered at x 240. The rebel's last level has no landing airfield.
 
 Streets keep asphalt between any two other terrains, which is what the Wang tilesets need: a cell can mix asphalt with only *one* of plaza, rubble, or water.
 
-A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind (`street`, `plaza`, `rooftop`, `skylight`, `bridge`, `railway`, `landmark`), in level space (`y` is scroll distance).
+A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind (`street`, `plaza`, `rooftop`, `skylight`, `bridge`, `railway`, `landmark`, `platform`), in level space (`y` is scroll distance).
 
 **Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(level, kind, at)` generates the chunk it needs if it doesn't exist yet, and caches it. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates.
 
