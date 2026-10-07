@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection and `t()` are done. Next: `state.ts` and the Menu.
+**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection, `t()`, and `state.ts` are done. Next: the Menu.
 
 ### Files
 
@@ -44,12 +44,12 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, ink, key bindings, and tick. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `config.ts` | In progress | Has the canvas size, ink, key bindings, tick, and starting lives. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
-| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, and `PlatformDef`. **Still to do:** `Word`, `AlertLevel`, `EnemyKind`, `GameState`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
+| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `EnemyKind`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts`, `index.test.ts` | Done | Language detection and `t()` (see **Language** below); `main.ts` calls `initLanguage()` once. `t()` only accepts paths to a single string, so a misspelled key fails the typecheck |
-| `state.ts` | Not started | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
+| `state.ts`, `state.test.ts` | Done | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()`. Both reset `state` in place, so every module that imported it sees the new run |
 | `core/Scene.ts` | Done | `Scene` interface |
 | `core/SceneManager.ts`, `SceneManager.test.ts` | Done | Holds the current scene, switches between scenes, and runs the fixed tick; the tests cover the tick loop |
 | `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
@@ -98,7 +98,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 **Pilot ID**
 
-- **Decision:** `resetGame()` draws `state.pilotId`, a random four-digit number, once per run. Every `{id}` placeholder uses it, so each run is a different pilot and the honor roll doesn't repeat one name.
+- **Decision:** `resetGame()` draws `state.pilotId`, a random number from 1 to 9999 stored zero-padded (`0042`), once per run. Every `{id}` placeholder uses it, so each run is a different pilot and the honor roll doesn't repeat one name.
 
 **Bullet**
 
@@ -168,7 +168,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 ```ts
 type Vec = { x: number; y: number };
 type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
-type AlertLevel = 0 | 1 | 2 | 3;   // normal, alert, pursuit, Thought Police
+// Ordered, so code can ask for "at least pursuit": state.alertLevel >= ALERT.pursuit.
+const ALERT = { normal: 0, alert: 1, pursuit: 2, thoughtPolice: 3 } as const;
+type AlertLevel = (typeof ALERT)[keyof typeof ALERT];
 type EnemyKind = "straight" | "sine" | "bomber"; // later steps add "homing"
 
 interface WaveDef {
@@ -592,7 +594,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 10 | The run starts with all words at level 1 | 3 | Confirmed |
 | 11 | The diary restores the most recently removed word (a score bonus in level 1) | 3 | Confirmed |
 | 12 | Separate `runStats` for run totals | 3 | Confirmed |
-| 13 | A random four-digit pilot ID per run instead of a name-entry screen | 1 | Confirmed |
+| 13 | A random four-digit pilot ID per run (0001–9999, zero-padded) instead of a name-entry screen | 1 | Confirmed |
 | 14 | Ending chosen by diaries read during the run (≥ 3 → rebel) | 4 | Confirmed |
 | 15 | Two fonts: VT323 (machine voice) and Courier Prime (paperwork), both OFL | 1 | Confirmed |
 | 16 | Pixel-art sprites for shapes; p5 drawing for geometry, animation, and text (see [assets.md](assets.md)) | 1 | Confirmed |
@@ -612,3 +614,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 30 | Word upgrades last the whole run and survive removal; REMEMBER's level is the bombs per level | 3 | Confirmed |
 | 31 | Every level starts with a takeoff and ends with a landing on the Party's launch platform; height is shown by the shadow, never by scaling | 4 | Confirmed |
 | 32 | The rebel never lands: after the Eye the plane leaves, and the official record stops at level 4 | 4 | Confirmed |
+| 33 | Three real lives per run (`STARTING_LIVES`) | 1 | Confirmed |

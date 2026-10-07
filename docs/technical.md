@@ -57,6 +57,7 @@ newspeak-1984/
 - **Language:** all code, comments, identifiers, file names, and commit messages are in English. Every player-facing string comes from `src/i18n/` (English and Spanish), never inline; `es.ts` is typed against `en.ts`, so edit both together.
 - **Formatting:** Prettier with its defaults: double quotes, semicolons, 2-space indent, trailing commas, 80 columns. `.prettierrc` pins them for every editor, the editor formats on save, and code in docs follows the same style.
 - **Blank lines** split a body into its logical steps: a guard, setup, the work, the result. In tests, they separate arrange, act, and assert, or each act-and-check round. Short bodies of one or two statements stay together.
+- **Named values:** no TypeScript `enum`, since `erasableSyntaxOnly` forbids syntax that emits code. Use an `as const` object and derive the type from it: `const ALERT = { normal: 0, alert: 1 } as const; type AlertLevel = (typeof ALERT)[keyof typeof ALERT];`. Code reads `ALERT.pursuit`, never a bare `2`.
 - **Tests** sit next to the module they test (`Collisions.test.ts` beside `Collisions.ts`). Test pure logic (collisions, suspicion, the Ministry's verdict and corrections, the tick loop, `t()`, the city layout) and the asset data, not drawing.
 
 ## Architecture
@@ -97,12 +98,12 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 
 ```ts
 {
-  pilotId: number;            // random four digits, drawn once per run
+  pilotId: string;            // 0001–9999, zero-padded, drawn once per run
   level: number;
   realLives: number;
   realScore: number;          // whole run; shown only in the rebel ending
   suspicion: number;          // 0–100; the Ministry rewrites it between levels
-  alertLevel: 0 | 1 | 2 | 3;  // normal, alert, pursuit, Thought Police
+  alertLevel: AlertLevel;     // ALERT.normal, alert, pursuit, thoughtPolice
   words: Set<Word>;           // available words: "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER"
   stats: { kills: number; eyesDestroyed: number; framesSeen: number; diaries: number };  // this level
 
@@ -115,7 +116,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
   // step 4
   levelStartScore: number;    // realScore when the level began
   officialScore: number;      // whole run; the only score the regime shows
-  verdict: 0 | 1 | 2;         // the Ministry's verdict on the last level: hero, under review, suspect
+  verdict: Verdict;           // the Ministry's verdict on the last level: VERDICT.hero, underReview, suspect
 }
 ```
 

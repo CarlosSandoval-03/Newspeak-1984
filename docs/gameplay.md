@@ -6,7 +6,7 @@ How *Newspeak 1984* plays: the rules, the controls, the levels, and the enemies.
 
 | Mechanic | Rule |
 | -------- | ---- |
-| Lives | A few real lives; getting hit costs one and respawns the pilot with blinking invulnerability. Losing the last one is game over (VAPORIZED). |
+| Lives | Three real lives; getting hit costs one and respawns the pilot with blinking invulnerability. Losing the last one is game over (VAPORIZED). |
 | Shooting | Hold to fire straight up; FREE turns it into a spread. |
 | Dash | ESCAPE: a short dash with 0.5 s of invulnerability, on a cooldown. |
 | Bomb | REMEMBER: clears normal enemies and bullets, damages bosses; one per level for each upgrade level. |
