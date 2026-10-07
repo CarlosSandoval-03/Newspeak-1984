@@ -124,7 +124,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 - **Canvas:** 480 × 640 logical pixels with `pixelDensity(1)`, centered, displayed at the largest integer scale that fits the window. `core/display.ts` sets only the canvas's CSS size, computing the factor in device pixels so pixel art stays crisp at 125% or 150% OS zoom; the game never sees the scale. `(0, 0)` is top-left; `y` grows downward.
 - **Level coordinates** are scroll distance: something at `at: 1200` enters at the top edge once the background has scrolled 1200 px.
 - **Vectors:** a plain `Vec = { x, y }` instead of `p5.Vector`, which keeps `core/` free of p5. Collisions compare squared distances: `dx*dx + dy*dy < (ra + rb)^2`.
-- **Input:** keys by `KeyboardEvent.code` (layout-independent), with `preventDefault()` on game keys so arrows and Space don't scroll the page. Bindings: [gameplay.md › Controls](gameplay.md#controls), mirrored in `config.ts`.
+- **Input:** keys by `KeyboardEvent.code` (layout-independent), with `preventDefault()` on game keys so arrows and Space don't scroll the page, and every key released on `blur`. Bindings: [gameplay.md › Controls](gameplay.md#controls), mirrored in `config.ts`.
 
 The tick loop in `SceneManager.frame(ms)`:
 

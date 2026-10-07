@@ -52,7 +52,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `state.ts` | Not started | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()` |
 | `core/Scene.ts` | Not started | `Scene` interface |
 | `core/SceneManager.ts` | Not started | Holds the current scene and switches between scenes |
-| `core/Input.ts` | Not started | Keyboard state |
+| `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
 | `core/Collisions.ts` | Not started | Circle–circle test |
 | `entities/Entity.ts` | Not started | Abstract base class |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Not started | Real implementations |
@@ -80,8 +80,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Input**
 
 - Listens to `keydown` and `keyup` on `window` and keeps a `Set<string>` of the codes that are held down. Call `preventDefault()` for the game keys so the arrow keys and Space don't scroll the page.
-- `isDown(code)` reports whether a key is held. `wasPressed(code)` is true only on the frame the key went down. `endFrame()` clears the "pressed this frame" set.
-- Add helpers for actions, such as `isDown('shoot')`, that map to the bindings in [gameplay.md › Controls](gameplay.md#controls). The key mapping lives in `config.ts`.
+- `isDown(action)` reports whether any key bound to the action is held, for example `isDown('shoot')`. `wasPressed(action)` is true only on the tick the key went down; auto-repeat doesn't count as a new press. `endFrame()` clears the "pressed this tick" set.
+- The bindings follow [gameplay.md › Controls](gameplay.md#controls); the key mapping lives in `config.ts` (`KEYS`).
+- On `blur`, release every held key: a key released while the page has no focus never sends its `keyup`.
 
 **Entity**
 
