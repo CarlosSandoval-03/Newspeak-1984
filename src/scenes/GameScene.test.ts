@@ -132,14 +132,15 @@ describe("GameScene collisions", () => {
     expect(state.realLives).toBe(0);
   });
 
-  it("starts the level over once every wave is spawned and cleared", () => {
-    scene["scroll"] = Number.MAX_SAFE_INTEGER;
+  it("starts the waves over once they are all cleared, without rewinding the city", () => {
+    scene["scroll"] = 1_000_000;
     scene.update();
-    expect(scene["enemies"].length).toBeGreaterThan(0);
+    expect(scene["spawner"].done).toBe(true);
 
     scene["enemies"] = [];
     scene.update();
 
-    expect(scene["scroll"]).toBe(0);
+    expect(scene["spawner"].done).toBe(false);
+    expect(scene["scroll"]).toBeGreaterThan(1_000_000);
   });
 });

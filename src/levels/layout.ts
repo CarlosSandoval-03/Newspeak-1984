@@ -175,9 +175,16 @@ function pureAsphalt(corners: Terrain[][], row: number, column: number) {
 
 // The sprite is wider than a cell, so the whole ring of cells around it must be asphalt too:
 // crater.png is made to blend into asphalt and would look pasted onto a plaza's curb.
-// The top and bottom rows are skipped, since a crater there would be cut by the chunk's edge.
+// The top and bottom rows are skipped, since a crater there would be cut by the chunk's edge,
+// and no two craters are neighbors, so they never pile onto each other.
 function craters(rng: () => number, corners: Terrain[][]): Vec[] {
   const found: Vec[] = [];
+  const near = (row: number, column: number) =>
+    found.some(
+      (crater) =>
+        Math.abs(Math.floor(crater.y / CELL_SIZE) - row) <= 1 &&
+        Math.abs(Math.floor(crater.x / CELL_SIZE) - column) <= 1,
+    );
 
   for (let row = 1; row < ROWS - 1; row++)
     for (let column = 0; column < COLUMNS; column++) {
@@ -190,7 +197,7 @@ function craters(rng: () => number, corners: Terrain[][]): Vec[] {
         )
           if (!pureAsphalt(corners, r, c)) clear = false;
 
-      if (clear && rng() < CRATER_CHANCE)
+      if (clear && !near(row, column) && rng() < CRATER_CHANCE)
         found.push({
           x: (column + 0.5) * CELL_SIZE,
           y: (row + 0.5) * CELL_SIZE,

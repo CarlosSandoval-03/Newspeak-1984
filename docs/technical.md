@@ -194,7 +194,7 @@ The level is cut into chunks of 480 × `CHUNK_HEIGHT` px (15 columns of 32 px ce
 
 1. **Streets.** Vertical streets keep the same columns for the whole level (chosen once from `seed`), so they continue across chunks. Every chunk begins and ends on a horizontal street, so no block crosses a chunk edge. Blocks are at least `MIN_BLOCK_CELLS` on each side.
 2. **Blocks.** Each block between streets becomes plaza, rubble, or open asphalt, by the recipe's shares. Most plazas get a procedural building, inset one cell; some buildings have a skylight or a Party banner.
-3. **Craters** on random asphalt cells whose eight neighbors are asphalt too. `crater.png` is 48 px, wider than a cell, and made to blend into asphalt, so it never spills onto a curb or a roof; craters also skip a chunk's top and bottom rows, where its edge would cut them.
+3. **Craters** on random asphalt cells whose eight neighbors are asphalt too. `crater.png` is 48 px, wider than a cell, and made to blend into asphalt, so it never spills onto a curb or a roof; craters also skip a chunk's top and bottom rows, where its edge would cut them, and no two are neighbors, so they never pile up.
 4. **River:** a band of water across the full width at `at`, with a street row on each side. `bridges` of the vertical streets continue over it on `bridge.png`.
 5. **Railway:** one vertical street widens into a two-cell corridor from `from` to `to`, with `railway.png` tiled along it.
 6. **Landmark:** a plaza block sized for the 128 px ministry, centered at `at`.
@@ -218,7 +218,7 @@ flowchart LR
 
 ### Background
 
-The background is prerendered into `p5.Graphics` **chunks**, one per layout chunk, 480 px wide and `CHUNK_HEIGHT` tall (taller than the canvas). A chunk is built when the scroll reaches it, and each frame draws only the current and next chunk: two `image()` calls, however much a chunk holds.
+The background is prerendered into `p5.Graphics` **chunks**, one per layout chunk, 480 px wide and `CHUNK_HEIGHT` tall (taller than the canvas). A chunk is built while the one below it is on screen, so its cost never lands on a frame that shows it, and freed once it has scrolled past; each frame draws only the current and next chunk: two `image()` calls, however much a chunk holds. The screen's top edge sits at level distance `scroll`, so at the start the screen shows chunk −1, generated like any other.
 
 Layers per chunk, all read from its layout:
 

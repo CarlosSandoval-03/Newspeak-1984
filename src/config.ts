@@ -52,7 +52,7 @@ export const SKYLIGHT_CHANCE = 0.3;
 export const BANNER_CHANCE = 0.25;
 // crater.png's size, which the layout keeps clear of curbs and chunk edges.
 export const CRATER_SIZE = 48;
-export const CRATER_CHANCE = 0.065;
+export const CRATER_CHANCE = 0.04;
 
 // The words row starts below this, so the ship never hides under it.
 export const PLAYFIELD_BOTTOM = 588;

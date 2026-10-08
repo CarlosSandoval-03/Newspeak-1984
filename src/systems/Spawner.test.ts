@@ -55,17 +55,20 @@ describe("Spawner", () => {
     ]);
   });
 
-  it("is done after the last wave, and starts over on reset", () => {
+  it("is done after the last wave, and starts over from where it restarts", () => {
     spawner.update(199);
     expect(spawner.done).toBe(false);
 
     spawner.update(200);
     expect(spawner.done).toBe(true);
 
-    spawner.reset();
+    spawner.restart(1000);
     spawned = [];
-    spawner.update(100);
+    spawner.update(1099);
     expect(spawner.done).toBe(false);
+    expect(spawned).toHaveLength(0);
+
+    spawner.update(1100);
     expect(spawned).toHaveLength(3);
   });
 });

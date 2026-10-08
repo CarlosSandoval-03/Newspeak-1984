@@ -2,7 +2,6 @@ import type p5 from "p5";
 import {
   ENEMY_STATS,
   GAME_OVER_DELAY,
-  INK,
   PLAYER_HALF_SIZE,
   SCROLL_SPEED,
 } from "../config";
@@ -13,6 +12,7 @@ import type { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
 import { Player } from "../entities/Player";
+import { Background } from "../levels/Background";
 import { LEVELS } from "../levels/levels";
 import { resetLevelState, state } from "../state";
 import { Propaganda } from "../systems/Propaganda";
@@ -26,6 +26,7 @@ export class GameScene implements Scene {
   private readonly player: Player;
   private readonly spawner: Spawner;
   private readonly hud: HUD;
+  private readonly background: Background;
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
@@ -34,13 +35,15 @@ export class GameScene implements Scene {
 
   constructor(p: p5, manager: SceneManager) {
     const { input, assets } = manager;
+    const level = LEVELS[state.level - 1];
     const fire = (bullet: Bullet) => this.bullets.push(bullet);
 
     this.p = p;
     this.manager = manager;
     this.hud = new HUD(p, assets.font.machine, new Propaganda());
+    this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
-    this.spawner = new Spawner(LEVELS[state.level - 1], (kind, pos) =>
+    this.spawner = new Spawner(level, (kind, pos) =>
       this.enemies.push(
         new Enemy(kind, pos, () => this.player.pos, assets.image, fire),
       ),
@@ -73,19 +76,16 @@ export class GameScene implements Scene {
     this.bullets = this.bullets.filter((bullet) => bullet.alive);
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
 
-    // Levels have no end yet, so a cleared level starts over.
-    if (this.spawner.done && this.enemies.length === 0) {
-      this.scroll = 0;
-      this.spawner.reset();
-    } else {
-      this.scroll += SCROLL_SPEED;
-    }
+    // Levels have no end yet, so a cleared level starts its waves over while the city flies on.
+    if (this.spawner.done && this.enemies.length === 0)
+      this.spawner.restart(this.scroll);
+    this.scroll += SCROLL_SPEED;
   }
 
   draw(): void {
     const { p } = this;
 
-    p.background(INK);
+    this.background.draw(this.scroll);
     for (const enemy of this.enemies) enemy.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);

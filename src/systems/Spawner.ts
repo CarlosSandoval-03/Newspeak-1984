@@ -5,6 +5,8 @@ export class Spawner {
   private readonly level: LevelDef;
   private readonly spawn: (kind: EnemyKind, pos: Vec) => void;
   private next = 0;
+  // The scroll at which the current pass began; the scroll itself never goes back, so the city never jumps.
+  private start = 0;
 
   constructor(level: LevelDef, spawn: (kind: EnemyKind, pos: Vec) => void) {
     this.level = level;
@@ -19,7 +21,10 @@ export class Spawner {
   update(scroll: number): void {
     const { waves } = this.level;
 
-    while (this.next < waves.length && scroll >= waves[this.next].at) {
+    while (
+      this.next < waves.length &&
+      scroll - this.start >= waves[this.next].at
+    ) {
       const wave = waves[this.next++];
       const y = -ENEMY_STATS[wave.kind].halfSize;
 
@@ -28,7 +33,8 @@ export class Spawner {
     }
   }
 
-  reset(): void {
+  restart(scroll: number): void {
     this.next = 0;
+    this.start = scroll;
   }
 }

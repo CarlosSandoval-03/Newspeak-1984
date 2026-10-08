@@ -154,4 +154,14 @@ describe("chunkLayout", () => {
 
     expect(total).toBeGreaterThan(0);
   });
+
+  it("never piles craters onto each other", () => {
+    everyChunk(({ craters }) => {
+      for (const [i, a] of craters.entries())
+        for (const b of craters.slice(i + 1))
+          expect(
+            Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)),
+          ).toBeGreaterThanOrEqual(CRATER_SIZE);
+    });
+  });
 });
