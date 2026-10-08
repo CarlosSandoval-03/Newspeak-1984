@@ -149,7 +149,7 @@ flowchart TD
 | Bomber | Heavy | Slower, tougher, more bullets. |
 | Autogyro | Pursuit | Spawns at high suspicion, homes in. |
 | AA gun | Ground turret | Aims its twin barrels at the player. |
-| Eye tower, drone | Surveillance | Don't shoot; being seen raises suspicion. |
+| Eye tower, drone | Surveillance | Don't shoot and never collide; being seen raises suspicion. |
 | Thought Police + escort | Mini-boss | Arrives at suspicion 100. Red bullets. |
 | Bosses | One per level | See the level table; the Eye fires red bullets. |
 | Propaganda blimp | Not an enemy | Crosses the screen towing slogan banners; can't be shot, doesn't collide. |
