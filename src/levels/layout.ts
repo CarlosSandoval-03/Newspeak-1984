@@ -5,6 +5,8 @@ import {
   CELL_SIZE,
   CHUNK_HEIGHT,
   CRATER_CHANCE,
+  FIXTURE_DENSITY,
+  LAMP_CHANCE,
   MAX_BLOCK_CELLS,
   MIN_BLOCK_CELLS,
   SKYLIGHT_CHANCE,
@@ -20,9 +22,16 @@ export interface Rect {
   h: number;
 }
 
+export interface Fixture extends Rect {
+  kind: "vent" | "hatch" | "tank";
+}
+
 export interface Building extends Rect {
   skylight: Rect | null;
   banner: Rect | null;
+  fixtures: Fixture[];
+  // Blinks, so it is drawn every frame instead of baked into the chunk; `phase` keeps lamps out of step.
+  lamp: (Vec & { phase: number }) | null;
 }
 
 // Positions are in chunk pixels, with y = 0 at the chunk's top edge.
@@ -36,10 +45,19 @@ export interface ChunkLayout {
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
 export const ROWS = CHUNK_HEIGHT / CELL_SIZE;
 
+// The roof's ink rim; everything on the roof keeps clear of it.
+export const PARAPET = 2;
+const ROOF_MARGIN = PARAPET + 2;
 const SKYLIGHT_SIZE = 24;
-const BANNER_WIDTH = 8;
+const BANNER_WIDTH = 10;
 // A banner hangs two to four folds long.
-const BANNER_FOLD = 12;
+export const BANNER_FOLD = 8;
+const SLOT = 16;
+const FIXTURE_SIZES = {
+  vent: { w: 6, h: 4 },
+  hatch: { w: 8, h: 8 },
+  tank: { w: 10, h: 10 },
+} as const;
 
 // mulberry32: a few lines of seeded randomness, apart from p5's, so gameplay never changes the map.
 function random(seed: number): () => number {
@@ -150,18 +168,89 @@ function building(
         }
       : null;
 
-  // Hangs down one side wall from the parapet.
+  // Hangs from the parapet, just inside one side wall.
   const banner =
     rng() < BANNER_CHANCE
       ? {
-          x: rng() < 0.5 ? rect.x : rect.x + rect.w - BANNER_WIDTH,
-          y: rect.y,
+          x:
+            rng() < 0.5
+              ? rect.x + ROOF_MARGIN
+              : rect.x + rect.w - ROOF_MARGIN - BANNER_WIDTH,
+          y: rect.y + PARAPET,
           w: BANNER_WIDTH,
           h: between(rng, 2, 4) * BANNER_FOLD,
         }
       : null;
 
-  return { ...rect, skylight, banner };
+  // In a roof corner the banner and skylight leave free.
+  const taken = [skylight, banner].filter((part): part is Rect => !!part);
+  const corners = [
+    { x: rect.x + ROOF_MARGIN, y: rect.y + ROOF_MARGIN },
+    { x: rect.x + rect.w - ROOF_MARGIN - 2, y: rect.y + ROOF_MARGIN },
+    { x: rect.x + ROOF_MARGIN, y: rect.y + rect.h - ROOF_MARGIN - 2 },
+    {
+      x: rect.x + rect.w - ROOF_MARGIN - 2,
+      y: rect.y + rect.h - ROOF_MARGIN - 2,
+    },
+  ].filter(
+    (corner) =>
+      !taken.some((part) => overlaps({ ...corner, w: 2, h: 2 }, part)),
+  );
+  const lamp =
+    corners.length > 0 && rng() < LAMP_CHANCE
+      ? { ...corners[Math.floor(rng() * corners.length)], phase: rng() }
+      : null;
+  if (lamp) taken.push({ x: lamp.x, y: lamp.y, w: 2, h: 2 });
+
+  return {
+    ...rect,
+    skylight,
+    banner,
+    fixtures: fixtures(rng, rect, taken),
+    lamp,
+  };
+}
+
+function overlaps(a: Rect, b: Rect): boolean {
+  return (
+    a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+  );
+}
+
+// Each fixture is centered in its own free slot, so none touch each other or anything already on the roof.
+function fixtures(rng: () => number, roof: Rect, taken: Rect[]): Fixture[] {
+  const slots: Rect[] = [];
+  for (
+    let y = roof.y + ROOF_MARGIN;
+    y + SLOT <= roof.y + roof.h - ROOF_MARGIN;
+    y += SLOT
+  )
+    for (
+      let x = roof.x + ROOF_MARGIN;
+      x + SLOT <= roof.x + roof.w - ROOF_MARGIN;
+      x += SLOT
+    ) {
+      const slot = { x, y, w: SLOT, h: SLOT };
+      if (!taken.some((part) => overlaps(slot, part))) slots.push(slot);
+    }
+
+  const count = Math.max(1, Math.round(slots.length * FIXTURE_DENSITY));
+  const found: Fixture[] = [];
+
+  while (found.length < count && slots.length > 0) {
+    const [slot] = slots.splice(Math.floor(rng() * slots.length), 1);
+    const roll = rng();
+    const kind = roll < 0.6 ? "vent" : roll < 0.85 ? "hatch" : "tank";
+    const { w, h } = FIXTURE_SIZES[kind];
+    found.push({
+      kind,
+      x: slot.x + (SLOT - w) / 2,
+      y: slot.y + (SLOT - h) / 2,
+      w,
+      h,
+    });
+  }
+  return found;
 }
 
 function pureAsphalt(corners: Terrain[][], row: number, column: number) {

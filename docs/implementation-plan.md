@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The ground (tiles and craters) is drawn from `layout.ts`. Next: the procedural rooftops, with their banners and lamps.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The city is drawn from `layout.ts`: ground tiles, craters, and procedural rooftops with skylights, fixtures, Party banners, and blinking lamps. Next: typed stubs for the files later steps fill in.
 
 ### Files
 
@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, and city layout numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)) |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, city layout, and rooftop numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)) |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | Done | `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `WaveDef`, `TerrainDef` (seed and block shares; later steps add the river, railway, and landmark), `LevelDef`, `ALERT` with `AlertLevel`, and `GameState` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -62,7 +62,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Not started | Stubs |
 | `levels/levels.ts`, `levels.test.ts` | Done | Level 1: its terrain recipe and waves; the tests keep the waves sorted and on screen |
 | `levels/layout.ts`, `layout.test.ts` | Done | City generator: streets, blocks, buildings, craters (see **Background** below); the tests run 30 mixed recipes over 8 chunks each |
-| `levels/Background.ts`, `Background.test.ts` | In progress | Scrolling background, one `p5.Graphics` per chunk: ground tiles and craters. The tests cover which chunks are on screen and that every cell finds its tile. **Still to do:** the procedural rooftops, banners, and lamps |
+| `levels/Background.ts`, `Background.test.ts` | Done | Scrolling background, one `p5.Graphics` per chunk: ground tiles, craters, and procedural rooftops with skylights, fixtures, and banners; lamps blink on top every frame. The tests cover which chunks are on screen and that every cell finds its tile |
 | `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |

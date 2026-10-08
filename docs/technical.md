@@ -227,7 +227,7 @@ Layers per chunk, all read from its layout:
 3. **Buildings:** procedural rooftops, with their skylights and banners.
 4. **Landmarks and messages:** the level's ministry, rooftop murals, ground slogans.
 
-**Text is not baked into chunks.** Draw changing slogans each frame at their scrolled position, or redraw only that region when the text flips. Towed banners move, so they are drawn every frame.
+**Text is not baked into chunks.** Draw changing slogans each frame at their scrolled position, or redraw only that region when the text flips. Towed banners move, so they are drawn every frame. The same holds for the rooftop lamps: they blink, so each chunk keeps their positions and they are drawn over it every frame, each with its own phase so they never blink in step.
 
 Keep the ground dark (`#1a1a1a` asphalt, `#3a3a3a` plazas and rubble) so moving sprites (`#7a7a7a`, `#e8e4d8`) always stand out.
 

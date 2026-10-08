@@ -50,6 +50,11 @@ export const MAX_BLOCK_CELLS = 7;
 export const BUILDING_CHANCE = 0.8;
 export const SKYLIGHT_CHANCE = 0.3;
 export const BANNER_CHANCE = 0.25;
+export const LAMP_CHANCE = 0.4;
+// Vents, hatches, and tanks per 16 px slot of roof.
+export const FIXTURE_DENSITY = 0.04;
+// Each lamp is on for this many frames, then off as long.
+export const LAMP_BLINK_FRAMES = 40;
 // crater.png's size, which the layout keeps clear of curbs and chunk edges.
 export const CRATER_SIZE = 48;
 export const CRATER_CHANCE = 0.04;

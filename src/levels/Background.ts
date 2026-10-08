@@ -1,14 +1,32 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
-import { CANVAS_HEIGHT, CELL_SIZE, CHUNK_HEIGHT } from "../config";
+import {
+  CANVAS_HEIGHT,
+  CELL_SIZE,
+  CHUNK_HEIGHT,
+  CONCRETE,
+  INK,
+  LAMP_BLINK_FRAMES,
+  RED,
+  RED_DARK,
+  RED_LIGHT,
+  STEEL,
+} from "../config";
 import type { TerrainDef, TilesetDef } from "../types";
 import {
+  BANNER_FOLD,
+  type Building,
   chunkLayout,
   COLUMNS,
+  PARAPET,
   ROWS,
   type ChunkLayout,
   type Terrain,
 } from "./layout";
+
+type Lamp = NonNullable<Building["lamp"]>;
+const LAMP_SIZE = 2;
+const SKYLIGHT_PANE = 6;
 
 type TilesetName = "ground-tileset" | "rubble-tileset";
 
@@ -58,7 +76,10 @@ export class Background {
   private readonly p: p5;
   private readonly terrain: TerrainDef;
   private readonly assets: Assets;
-  private readonly chunks = new Map<number, p5.Graphics>();
+  private readonly chunks = new Map<
+    number,
+    { graphics: p5.Graphics; lamps: Lamp[] }
+  >();
   private tiles: Record<
     TilesetName,
     Map<string, { x: number; y: number }>
@@ -79,25 +100,42 @@ export class Background {
     // The chunk above is built while still off screen, so its cost never lands on a frame that shows it.
     for (const { index } of visible) this.chunk(index);
     this.chunk(above);
-    for (const [index, graphics] of this.chunks)
+    for (const [index, chunk] of this.chunks)
       if (index < visible[0].index) {
-        graphics.remove();
+        chunk.graphics.remove();
         this.chunks.delete(index);
       }
 
     p.imageMode(p.CORNER);
     for (const { index, y } of visible)
-      p.image(this.chunk(index), 0, Math.round(y));
+      p.image(this.chunk(index).graphics, 0, Math.round(y));
+
+    // The scroll moves one step per tick, so it doubles as the lamps' clock.
+    p.noStroke();
+    for (const { index, y } of visible)
+      for (const lamp of this.chunk(index).lamps) {
+        const on = Math.floor(scroll / LAMP_BLINK_FRAMES + lamp.phase * 2) % 2;
+        p.fill(on ? RED_LIGHT : RED_DARK);
+        p.rect(lamp.x, Math.round(y) + lamp.y, LAMP_SIZE, LAMP_SIZE);
+      }
   }
 
-  private chunk(index: number): p5.Graphics {
+  private chunk(index: number) {
     const built = this.chunks.get(index);
     if (built) return built;
 
+    const layout = chunkLayout(this.terrain, index);
     const graphics = this.p.createGraphics(COLUMNS * CELL_SIZE, CHUNK_HEIGHT);
-    this.paint(graphics, chunkLayout(this.terrain, index));
-    this.chunks.set(index, graphics);
-    return graphics;
+    this.paint(graphics, layout);
+
+    const chunk = {
+      graphics,
+      lamps: layout.buildings.flatMap((building) =>
+        building.lamp ? [building.lamp] : [],
+      ),
+    };
+    this.chunks.set(index, chunk);
+    return chunk;
   }
 
   private paint(graphics: p5.Graphics, layout: ChunkLayout): void {
@@ -126,6 +164,9 @@ export class Background {
     graphics.imageMode(graphics.CENTER);
     for (const crater of layout.craters)
       graphics.image(image.crater, crater.x, crater.y);
+
+    graphics.noStroke();
+    for (const building of layout.buildings) roof(graphics, building);
   }
 
   // Built on first use, so a scene that never draws needs no tilesets.
@@ -144,5 +185,60 @@ export class Background {
       };
     }
     return this.tiles;
+  }
+}
+
+function roof(g: p5.Graphics, building: Building): void {
+  const { x, y, w, h } = building;
+
+  g.fill(INK);
+  g.rect(x, y, w, h);
+  g.fill(CONCRETE);
+  g.rect(x + PARAPET, y + PARAPET, w - PARAPET * 2, h - PARAPET * 2);
+  // A lit top edge lifts the roof off the plaza around it.
+  g.fill(STEEL);
+  g.rect(x + PARAPET, y + PARAPET, w - PARAPET * 2, 1);
+
+  const { skylight, banner } = building;
+  if (skylight) {
+    g.fill(INK);
+    g.rect(skylight.x, skylight.y, skylight.w, skylight.h);
+    g.fill(CONCRETE);
+    for (let at = SKYLIGHT_PANE; at < skylight.w; at += SKYLIGHT_PANE) {
+      g.rect(skylight.x + at, skylight.y, 1, skylight.h);
+      g.rect(skylight.x, skylight.y + at, skylight.w, 1);
+    }
+  }
+
+  for (const fixture of building.fixtures) {
+    const { x, y, w, h } = fixture;
+
+    if (fixture.kind === "tank") {
+      g.fill(INK);
+      g.circle(x + w / 2, y + h / 2, w);
+      g.fill(STEEL);
+      g.circle(x + w / 2, y + h / 2, w - 2);
+      continue;
+    }
+
+    g.fill(INK);
+    g.rect(x, y, w, h);
+    g.fill(STEEL);
+    g.rect(x + 1, y + 1, w - 2, h - 2);
+    // A hatch's handle, so it reads as a door and not a vent.
+    if (fixture.kind === "hatch") {
+      g.fill(INK);
+      g.rect(x + 2, y + h / 2, w - 4, 1);
+    }
+  }
+
+  // The Party's banner: base red, with its folds and its shaded edge in the dark red.
+  if (banner) {
+    g.fill(RED);
+    g.rect(banner.x, banner.y, banner.w, banner.h);
+    g.fill(RED_DARK);
+    g.rect(banner.x + banner.w - 1, banner.y, 1, banner.h);
+    for (let at = BANNER_FOLD; at < banner.h; at += BANNER_FOLD)
+      g.rect(banner.x, banner.y + at - 1, banner.w, 1);
   }
 }

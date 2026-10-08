@@ -10,6 +10,7 @@ import {
   chunkLayout,
   COLUMNS,
   type ChunkLayout,
+  PARAPET,
   ROWS,
   streetColumns,
   type Terrain,
@@ -115,6 +116,52 @@ describe("chunkLayout", () => {
         }
       }
     });
+  });
+
+  it("keeps roof fixtures and lamps clear of the parapet and of each other", () => {
+    let fixtures = 0;
+    let lamps = 0;
+
+    everyChunk(({ buildings }) => {
+      for (const building of buildings) {
+        const parts = [
+          building.skylight,
+          building.banner,
+          building.lamp && {
+            x: building.lamp.x,
+            y: building.lamp.y,
+            w: 2,
+            h: 2,
+          },
+          ...building.fixtures,
+        ].filter((part) => part !== null);
+        fixtures += building.fixtures.length;
+        if (building.lamp) lamps++;
+
+        for (const part of parts) {
+          expect(part.x).toBeGreaterThanOrEqual(building.x + PARAPET);
+          expect(part.y).toBeGreaterThanOrEqual(building.y + PARAPET);
+          expect(part.x + part.w).toBeLessThanOrEqual(
+            building.x + building.w - PARAPET,
+          );
+          expect(part.y + part.h).toBeLessThanOrEqual(
+            building.y + building.h - PARAPET,
+          );
+        }
+
+        for (const [i, a] of parts.entries())
+          for (const b of parts.slice(i + 1))
+            expect(
+              a.x < b.x + b.w &&
+                b.x < a.x + a.w &&
+                a.y < b.y + b.h &&
+                b.y < a.y + a.h,
+            ).toBe(false);
+      }
+    });
+
+    expect(fixtures).toBeGreaterThan(0);
+    expect(lamps).toBeGreaterThan(0);
   });
 
   it("keeps every crater's whole sprite on asphalt, inside its chunk", () => {
