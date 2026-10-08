@@ -7,7 +7,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | Step | Delivers | Version | Status |
 | ---- | -------- | ------- | ------ |
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
-| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | In progress |
+| 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` | Not started |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Not started |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The city is drawn from `layout.ts`: ground tiles, craters, and procedural rooftops with skylights, fixtures, Party banners, and blinking lamps. Every file from the structure exists; the ones later steps fill in are typed stubs. Next: the `0.2.0` release.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The city is drawn from `layout.ts`: ground tiles, craters, and procedural rooftops with skylights, fixtures, Party banners, and blinking lamps. Every file from the structure exists; the ones later steps fill in are typed stubs. **Step 1 is done** and released as `0.2.0`. Next: step 2.
 
 ### Files
 
@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, city layout, and rooftop numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)) |
+| `config.ts` | Done | The canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, city layout, and rooftop numbers. The material tones ([art-direction.md](art-direction.md)) are added with their first use: the AA gun's sandbags in step 2, the diary in step 3 |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | Done | `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `WaveDef`, `TerrainDef` (seed and block shares; later steps add the river, railway, and landmark), `LevelDef`, `ALERT` with `AlertLevel`, and `GameState` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -202,7 +202,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Done when
 
-- [ ] `pnpm typecheck` and `pnpm build` pass.
+- [x] `pnpm typecheck` and `pnpm build` pass.
 - [x] The canvas stays centered and crisp at every window size, scaled by a whole number.
 - [x] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
 - [x] The player moves in 8 directions, stays on screen, and shoots by holding the button.
@@ -214,7 +214,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [x] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
 - [x] Every file from the structure exists, and the stubs typecheck.
 - [x] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
-- [ ] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.
+- [x] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.
 
 ---
 
@@ -571,7 +571,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 - Write the content for levels 1–5 in `levels.ts`: waves, eyes, turrets, pickups, diary, boss, and terrain recipe (rubble in levels 3–4, the river and bridges in level 2, the railway in level 3, a landmark in every level but 4; see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
 - Balance the obedience weights, suspicion rates, and alert multipliers.
-- Polish: the banking frames (`player-bank-*.png`) while moving sideways, and the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
+- Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
 - Sound is optional. Assets go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
 - `1.0.0` = the full game can be played through both endings ([technical.md › Git](technical.md#git)).
 
