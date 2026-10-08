@@ -1,5 +1,11 @@
 import type p5 from "p5";
-import { ENEMY_STATS, INK, PLAYER_HALF_SIZE, SCROLL_SPEED } from "../config";
+import {
+  ENEMY_STATS,
+  GAME_OVER_DELAY,
+  INK,
+  PLAYER_HALF_SIZE,
+  SCROLL_SPEED,
+} from "../config";
 import { circlesOverlap } from "../core/Collisions";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
@@ -12,7 +18,7 @@ import { resetLevelState, state } from "../state";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { HUD } from "../ui/HUD";
-import { MenuScene } from "./MenuScene";
+import { GameOverScene } from "./GameOverScene";
 
 export class GameScene implements Scene {
   private readonly p: p5;
@@ -24,6 +30,7 @@ export class GameScene implements Scene {
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private scroll = 0;
+  private gameOverIn = 0;
 
   constructor(p: p5, manager: SceneManager) {
     const { input, assets } = manager;
@@ -45,7 +52,12 @@ export class GameScene implements Scene {
   }
 
   update(): void {
-    this.player.update();
+    if (this.gameOverIn > 0 && --this.gameOverIn === 0) {
+      this.manager.change(new GameOverScene(this.p, this.manager));
+      return;
+    }
+
+    if (this.player.alive) this.player.update();
     this.spawner.update(this.scroll);
 
     for (const enemy of this.enemies) enemy.update();
@@ -73,7 +85,7 @@ export class GameScene implements Scene {
     p.background(INK);
     for (const enemy of this.enemies) enemy.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
-    this.player.draw(p);
+    if (this.player.alive) this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
     this.hud.draw();
   }
@@ -82,6 +94,8 @@ export class GameScene implements Scene {
 
   private collide(): void {
     const { player } = this;
+    // Re-checked on every pair: a hit earlier in the same tick changes it.
+    const exposed = () => player.alive && !player.invulnerable;
 
     for (const bullet of this.bullets) {
       if (!bullet.alive) continue;
@@ -94,7 +108,7 @@ export class GameScene implements Scene {
 
         bullet.alive = false;
         if (enemy.hit()) this.kill(enemy);
-      } else if (!player.invulnerable && circlesOverlap(bullet, player)) {
+      } else if (exposed() && circlesOverlap(bullet, player)) {
         bullet.alive = false;
         this.hitPlayer();
       }
@@ -102,7 +116,7 @@ export class GameScene implements Scene {
 
     // A crash destroys the enemy too, but scores nothing: it isn't a kill.
     for (const enemy of this.enemies) {
-      if (!enemy.alive || player.invulnerable) continue;
+      if (!enemy.alive || !exposed()) continue;
       if (!circlesOverlap(enemy, player)) continue;
 
       enemy.alive = false;
@@ -128,9 +142,12 @@ export class GameScene implements Scene {
     this.explosions.push(new Explosion(player.pos, PLAYER_HALF_SIZE * 2));
     state.realLives--;
 
-    // Respawning first makes the player invulnerable, so a second hit on the same tick can't count.
-    player.respawn();
-    if (state.realLives <= 0)
-      this.manager.change(new MenuScene(this.p, this.manager));
+    if (state.realLives > 0) {
+      player.respawn();
+      return;
+    }
+
+    player.alive = false;
+    this.gameOverIn = GAME_OVER_DELAY;
   }
 }

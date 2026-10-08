@@ -1,7 +1,12 @@
 import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
-import { ENEMY_STATS, PLAYER_SPAWN, STARTING_LIVES } from "../config";
+import {
+  ENEMY_STATS,
+  GAME_OVER_DELAY,
+  PLAYER_SPAWN,
+  STARTING_LIVES,
+} from "../config";
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
@@ -9,7 +14,7 @@ import { Enemy } from "../entities/Enemy";
 import { resetGame, state } from "../state";
 import type { EnemyKind, Vec } from "../types";
 import { GameScene } from "./GameScene";
-import { MenuScene } from "./MenuScene";
+import { GameOverScene } from "./GameOverScene";
 
 // Each image is stood in for by its own name; nothing here draws.
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
@@ -101,14 +106,30 @@ describe("GameScene collisions", () => {
     expect(state.realLives).toBe(STARTING_LIVES - 1);
   });
 
-  it("returns to the Menu when the last life is lost", () => {
+  it("lets the crash play out, then vaporizes the pilot", () => {
     const change = vi.spyOn(manager, "change");
     state.realLives = 1;
     bulletAt("enemy", PLAYER_SPAWN);
 
     scene.update();
+    expect(scene["player"].alive).toBe(false);
 
-    expect(change).toHaveBeenCalledWith(expect.any(MenuScene));
+    for (let i = 1; i < GAME_OVER_DELAY; i++) scene.update();
+    expect(change).not.toHaveBeenCalled();
+
+    scene.update();
+    expect(change).toHaveBeenCalledWith(expect.any(GameOverScene));
+  });
+
+  it("can't be hit again once the last life is gone", () => {
+    state.realLives = 1;
+    bulletAt("enemy", PLAYER_SPAWN);
+    scene.update();
+
+    bulletAt("enemy", scene["player"].pos);
+    scene.update();
+
+    expect(state.realLives).toBe(0);
   });
 
   it("starts the level over once every wave is spawned and cleared", () => {

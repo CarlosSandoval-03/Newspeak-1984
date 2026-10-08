@@ -31,6 +31,10 @@ export const TICK_MS = 1000 / 60;
 export const MAX_UPDATES_PER_FRAME = 2;
 
 export const STARTING_LIVES = 3;
+// The game keeps running this long after the last life, so the player sees the plane go down.
+export const GAME_OVER_DELAY = 60;
+export const STAMP_DELAY = 45;
+export const GAME_OVER_TEXT_DELAY = 30;
 
 export const SCROLL_SPEED = 1;
 

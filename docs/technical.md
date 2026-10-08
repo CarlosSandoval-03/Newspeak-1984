@@ -49,7 +49,7 @@ newspeak-1984/
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (scanlines, glitch, typewriter)
-    └── scenes/           # Menu, Dictionary, Game, Ministry, Ending
+    └── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
 ```
 
 ## Code conventions
