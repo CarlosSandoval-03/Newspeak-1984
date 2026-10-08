@@ -1,9 +1,10 @@
 import type p5 from "p5";
-import { BULLET_RADIUS, PAPER } from "../config";
+import { BULLET_RADIUS, PAPER, RED } from "../config";
 import type { Vec } from "../types";
 import { Entity } from "./Entity";
 
-export type Owner = "player" | "enemy";
+// "regime" is the Party's own fire: red, so a red bullet always means the Party is shooting at you.
+export type Owner = "player" | "enemy" | "regime";
 
 export class Bullet extends Entity {
   readonly owner: Owner;
@@ -24,9 +25,9 @@ export class Bullet extends Entity {
     const y = Math.round(this.pos.y);
 
     p.noStroke();
-    p.fill(PAPER);
+    p.fill(this.owner === "regime" ? RED : PAPER);
 
-    if (this.owner === "enemy") {
+    if (this.owner !== "player") {
       p.circle(x, y, this.radius * 2);
       return;
     }

@@ -6,6 +6,8 @@ import {
   BOMBER_FAN_COUNT,
   BOMBER_FAN_SPREAD_DEGREES,
   BOMBER_FIRE_INTERVAL,
+  ESCORT_FIRE_INTERVAL,
+  ESCORT_OFFSET,
   CANVAS_HEIGHT,
   ENEMY_BULLET_SPEED,
   ENEMY_FIRE_INTERVAL,
@@ -268,6 +270,60 @@ describe("Enemy", () => {
 
       expect(rotate).toHaveBeenCalledWith(headingOf(gyro) - Math.PI / 2);
       expect(calls.filter((call) => call === "line")).toHaveLength(2);
+    });
+  });
+
+  describe("escort", () => {
+    const leader = { pos: { x: 240, y: 130 }, holding: true };
+    const escort = (side: -1 | 1) =>
+      new Enemy(
+        "escort",
+        leader.pos,
+        () => ({ x: 240, y: 540 }),
+        images,
+        (b) => fired.push(b),
+        { leader, side },
+      );
+
+    beforeEach(() => {
+      leader.pos = { x: 240, y: 130 };
+      leader.holding = true;
+    });
+
+    it("keeps its side of the leader as it moves", () => {
+      const left = escort(-1);
+      const right = escort(1);
+
+      leader.pos.x = 300;
+      left.update();
+      right.update();
+
+      expect(left.pos).toEqual({
+        x: 300 - ESCORT_OFFSET.x,
+        y: 130 + ESCORT_OFFSET.y,
+      });
+      expect(right.pos.x).toBe(300 + ESCORT_OFFSET.x);
+    });
+
+    it("fires the regime's red bullets", () => {
+      const left = escort(-1);
+
+      ticks(left, ESCORT_FIRE_INTERVAL);
+
+      expect(fired).toHaveLength(1);
+      expect(fired[0].owner).toBe("regime");
+    });
+
+    it("withdraws off the top with its leader, without firing", () => {
+      const left = escort(-1);
+      leader.holding = false;
+
+      ticks(left, ESCORT_FIRE_INTERVAL);
+      expect(left.pos.y).toBeLessThan(130);
+      expect(fired).toHaveLength(0);
+
+      ticks(left, 200);
+      expect(left.alive).toBe(false);
     });
   });
 });

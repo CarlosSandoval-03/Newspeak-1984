@@ -4,6 +4,7 @@ import {
   SUSPICION_MAX,
   SUSPICION_RISE_FAR,
   SUSPICION_RISE_NEAR,
+  THOUGHT_POLICE_RESET,
 } from "../config";
 import type { Eye } from "../entities/Eye";
 import { resetGame, state } from "../state";
@@ -61,7 +62,8 @@ describe("Suspicion", () => {
     suspicion.update([eyeAt(0)], player);
     expect(state.suspicion).toBe(SUSPICION_MAX);
 
-    suspicion.add(15);
+    suspicion.release();
+    suspicion.add(SUSPICION_MAX * 2);
     expect(state.suspicion).toBe(SUSPICION_MAX);
   });
 
@@ -79,6 +81,22 @@ describe("Suspicion", () => {
     suspicion.update([eyeAt(10)], player);
 
     expect(state.stats.framesSeen).toBe(2);
+  });
+
+  it("freezes at the top, then settles back to the reset when released", () => {
+    suspicion.add(SUSPICION_MAX);
+
+    suspicion.update([], player);
+    suspicion.add(-30);
+    expect(state.suspicion).toBe(SUSPICION_MAX);
+    expect(state.alertLevel).toBe(ALERT.thoughtPolice);
+
+    suspicion.release();
+    expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
+    expect(state.alertLevel).toBe(ALERT.alert);
+
+    suspicion.update([], player);
+    expect(state.suspicion).toBeLessThan(THOUGHT_POLICE_RESET);
   });
 });
 

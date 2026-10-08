@@ -11,7 +11,10 @@ describe("HUD", () => {
     expect(source).not.toMatch(/\bstate\b/);
   });
 
-  const draw = (shown: Partial<Propaganda>) => {
+  const draw = (
+    shown: Partial<Propaganda>,
+    bossHealth: number | null = null,
+  ) => {
     const text = vi.fn();
     const rects: { color: unknown; w: number }[] = [];
     let color: unknown;
@@ -35,7 +38,7 @@ describe("HUD", () => {
       ...shown,
     } as Propaganda;
 
-    new HUD(p, {} as p5.Font, propaganda).draw();
+    new HUD(p, {} as p5.Font, propaganda).draw(bossHealth);
     return { shown: text.mock.calls.map((call) => call[0]), rects };
   };
 
@@ -62,5 +65,17 @@ describe("HUD", () => {
     expect(red(0)).toBe(0);
     expect(red(50)).toBe(59);
     expect(red(100)).toBe(118);
+  });
+
+  it("shows a red boss bar only while a boss is on screen", () => {
+    const reds = (bossHealth: number | null) =>
+      draw({}, bossHealth)
+        .rects.filter((rect) => rect.color === RED)
+        .map((rect) => rect.w);
+
+    // The meter's empty red fill is always there; the bar comes on top of it.
+    expect(reds(null)).toEqual([0]);
+    expect(reds(1)).toEqual([0, 464]);
+    expect(reds(0.5)).toEqual([0, 232]);
   });
 });

@@ -1,11 +1,13 @@
 import type p5 from "p5";
+import type { Assets } from "../assets";
 import {
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
-  TURRET_STATS,
   PLAYER_HALF_SIZE,
+  THOUGHT_POLICE_STATS,
+  TURRET_STATS,
   RED,
   SCROLL_SPEED,
 } from "../config";
@@ -17,6 +19,7 @@ import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
 import { Eye } from "../entities/Eye";
 import { Player } from "../entities/Player";
+import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { Background } from "../levels/Background";
 import { LEVELS } from "../levels/levels";
@@ -24,6 +27,7 @@ import { resetLevelState, state } from "../state";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
+import { ALERT } from "../types";
 import { Vignette } from "../ui/effects";
 import { HUD } from "../ui/HUD";
 import { GameOverScene } from "./GameOverScene";
@@ -37,9 +41,12 @@ export class GameScene implements Scene {
   private readonly background: Background;
   private readonly suspicion = new Suspicion();
   private readonly vignette: Vignette;
+  private readonly images: Assets["image"];
+  private readonly fire: (bullet: Bullet) => void;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
   private turrets: Turret[] = [];
+  private police: ThoughtPolice | null = null;
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private scroll = 0;
@@ -52,6 +59,8 @@ export class GameScene implements Scene {
 
     this.p = p;
     this.manager = manager;
+    this.images = assets.image;
+    this.fire = fire;
     this.hud = new HUD(p, assets.font.machine, new Propaganda());
     this.vignette = new Vignette(p);
     this.background = new Background(p, level.terrain, assets);
@@ -86,6 +95,7 @@ export class GameScene implements Scene {
     this.spawner.update(this.scroll, state.alertLevel);
 
     for (const enemy of this.enemies) enemy.update();
+    this.police?.update();
     for (const eye of this.eyes) eye.update();
     for (const turret of this.turrets) turret.update();
     for (const bullet of this.bullets) bullet.update();
@@ -101,6 +111,14 @@ export class GameScene implements Scene {
 
     this.watch();
 
+    // Killed or outlasted, it's over either way; after watching, so suspicion ends the tick right at the reset.
+    if (this.police && !this.police.alive) {
+      this.police = null;
+      this.suspicion.release();
+    }
+    if (!this.police && state.alertLevel === ALERT.thoughtPolice)
+      this.summonPolice();
+
     // Levels have no end yet, so a cleared level starts its waves over while the city flies on.
     if (this.spawner.done && this.enemies.length === 0)
       this.spawner.restart(this.scroll);
@@ -114,14 +132,37 @@ export class GameScene implements Scene {
     for (const turret of this.turrets) turret.draw(p);
     for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
+    this.police?.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
     this.vignette.draw();
-    this.hud.draw();
+    this.hud.draw(this.police?.health ?? null);
   }
 
   exit(): void {}
+
+  // Suspicion stays at the top while they hold the sky, so they come once until they're gone.
+  private summonPolice(): void {
+    const police = new ThoughtPolice(
+      () => this.player.pos,
+      this.images,
+      this.fire,
+    );
+
+    this.police = police;
+    for (const side of [-1, 1] as const)
+      this.enemies.push(
+        new Enemy(
+          "escort",
+          police.pos,
+          () => this.player.pos,
+          this.images,
+          this.fire,
+          { leader: police, side },
+        ),
+      );
+  }
 
   // A dead pilot can't be seen, so the cones go quiet during the crash.
   private watch(): void {
@@ -137,7 +178,12 @@ export class GameScene implements Scene {
 
   private collide(): void {
     const { player } = this;
-    const targets = [...this.enemies, ...this.turrets, ...this.eyes];
+    const targets = [
+      ...this.enemies,
+      ...(this.police ? [this.police] : []),
+      ...this.turrets,
+      ...this.eyes,
+    ];
     // Re-checked on every pair: a hit earlier in the same tick changes it.
     const exposed = () => player.alive && !player.invulnerable;
 
@@ -170,12 +216,21 @@ export class GameScene implements Scene {
       this.explode(enemy);
       this.hitPlayer();
     }
+
+    // Ramming the Thought Police costs a life and leaves them flying.
+    const { police } = this;
+    if (police?.alive && exposed() && circlesOverlap(police, player))
+      this.hitPlayer();
   }
 
-  private kill(target: Enemy | Turret): void {
+  private kill(target: Enemy | Turret | ThoughtPolice): void {
     state.realScore += target.score;
     state.stats.kills++;
-    if (target instanceof Turret)
+    if (target instanceof ThoughtPolice)
+      this.explosions.push(
+        new Explosion(target.pos, THOUGHT_POLICE_STATS.halfSize * 2, RED),
+      );
+    else if (target instanceof Turret)
       this.explosions.push(
         new Explosion(target.pos, TURRET_STATS.halfSize * 2),
       );

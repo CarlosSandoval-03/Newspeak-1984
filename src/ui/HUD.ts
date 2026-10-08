@@ -17,6 +17,7 @@ const SCORE_DIGITS = 6;
 const SECOND_BASELINE = 42;
 const METER = { x: 88, y: 32, w: 120, h: 8 };
 const STATE_X = 216;
+const BOSS_BAR = { x: 8, y: 50, w: 464, h: 4 };
 // Indexed by alert level.
 const STATES = ["normal", "alert", "pursuit", "thoughtPolice"] as const;
 
@@ -32,7 +33,8 @@ export class HUD {
     this.propaganda = propaganda;
   }
 
-  draw(): void {
+  // `bossHealth` is the boss's share of hp left, or null while no boss is on screen.
+  draw(bossHealth: number | null = null): void {
     const { p, propaganda } = this;
     const score = String(propaganda.displayedScore()).padStart(
       SCORE_DIGITS,
@@ -61,6 +63,15 @@ export class HUD {
       STATE_X,
       SECOND_BASELINE,
     );
+
+    // Red, because so far the only boss is the regime's own.
+    if (bossHealth !== null) {
+      const { x, y, w, h } = BOSS_BAR;
+      p.fill(INK);
+      p.rect(x, y, w, h);
+      p.fill(RED);
+      p.rect(x, y, Math.round(w * bossHealth), h);
+    }
   }
 
   // A steel frame around an ink well that fills in red, with ink ticks where the alert levels begin.

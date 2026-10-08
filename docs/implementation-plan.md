@@ -224,7 +224,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`entities/Eye.ts`, `entities/Turret.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (used for the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
+`entities/Eye.ts`, `entities/Turret.ts`, `entities/ThoughtPolice.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (the base of the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
 
 ### Specification
 
@@ -269,6 +269,11 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - **Decision:** autogyros come only from pursuit up, never in a level's waves, so their silhouette always means the regime is chasing you. `WaveDef.kind` excludes `homing`, so level data can't break the signal.
 - **Thought Police:** when suspicion reaches 100, `alertLevel` becomes 3 and the Thought Police spawn: a mini-boss built on `Boss` (hp bar, attack pattern, red accents) with a small escort. **Decision:** suspicion is frozen while they are on screen. If the player kills them, or survives `THOUGHT_POLICE_TIMEOUT` frames until they withdraw off the top of the screen, suspicion resets to **50**. Outlasting them counts as much as beating them, which matters once FREE is gone.
 - They never spawn while a level boss is alive: suspicion stays at 100, with the pursuit effects, until the boss dies. They come back in the same level if suspicion climbs to 100 again.
+- Suspicion freezes itself the moment it reaches 100, whatever moved it, and only `release()` (to `THOUGHT_POLICE_RESET`) unfreezes it. A jump to 100 from an eye shot down mid-tick can't decay away before the scene sees it, and the level-boss rule in step 4 holds it at 100 the same way.
+- **Decision:** the Thought Police (`entities/ThoughtPolice.ts`, on `Boss`) come down to hover near the top, sway side to side, and alternate an aimed triple with a wide fan of 7. They hold fire on the way in and while withdrawing; ramming them costs a life and leaves them flying. Shooting them down scores (`THOUGHT_POLICE_STATS`).
+- **Decision:** the escort is two `escort` enemies (`thought-police-escort.png`) flying in formation beside them. They can be shot down for points, and they withdraw with the Thought Police, without firing, once those stop holding the sky. Only the Thought Police need to fall for suspicion to reset. Like autogyros, escorts are kept out of `WaveDef.kind`.
+- **Decision:** the regime's bullets are a third `Bullet` owner, `regime`, drawn red; they hit the player like any enemy fire.
+- The boss hp bar's value is passed to `HUD.draw()` by the scene: a boss's hp is not game state, and no lie touches it.
 
 **AA guns** (`enemy-aa-gun.png`)
 

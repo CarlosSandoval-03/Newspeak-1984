@@ -10,6 +10,9 @@ import {
   PLAYER_SPAWN,
   STARTING_LIVES,
   SUSPICION_DECAY,
+  THOUGHT_POLICE_RESET,
+  THOUGHT_POLICE_STATS,
+  THOUGHT_POLICE_TIMEOUT,
   TURRET_STATS,
 } from "../config";
 import { Input } from "../core/Input";
@@ -271,6 +274,92 @@ describe("GameScene collisions", () => {
 
       expect(state.realLives).toBe(STARTING_LIVES);
       expect(scene["turrets"]).toHaveLength(1);
+    });
+  });
+
+  describe("the Thought Police", () => {
+    // The way an eye shot down at 90 would do it: all at once, mid-tick.
+    const fullSuspicion = () => scene["suspicion"].add(100);
+    const escorts = () =>
+      scene["enemies"].filter((enemy) => enemy.kind === "escort");
+
+    it("come at full suspicion, with their escort, and freeze it there", () => {
+      fullSuspicion();
+      scene.update();
+
+      expect(scene["police"]).not.toBeNull();
+      expect(escorts()).toHaveLength(2);
+
+      for (let i = 0; i < 60; i++) scene.update();
+      expect(state.suspicion).toBe(100);
+      expect(state.alertLevel).toBe(ALERT.thoughtPolice);
+    });
+
+    it("come once at a time", () => {
+      fullSuspicion();
+      scene.update();
+      const police = scene["police"];
+
+      scene.update();
+
+      expect(scene["police"]).toBe(police);
+      expect(escorts()).toHaveLength(2);
+    });
+
+    it("leave suspicion at the reset when shot down, and score", () => {
+      fullSuspicion();
+      scene.update();
+      const police = scene["police"]!;
+      // On screen, where a bullet can reach it.
+      police.pos = { x: 240, y: 200 };
+      for (let i = 1; i < THOUGHT_POLICE_STATS.hp; i++) police.hit();
+
+      bulletAt("player", police.pos);
+      scene.update();
+
+      expect(scene["police"]).toBeNull();
+      expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
+      expect(state.realScore).toBe(THOUGHT_POLICE_STATS.score);
+    });
+
+    it("leave suspicion at the reset when outlasted too", () => {
+      fullSuspicion();
+      scene.update();
+      // Out of their reach, so the wait is all that's tested.
+      scene["player"].alive = false;
+      scene["gameOverIn"] = 0;
+
+      for (let i = 0; i < THOUGHT_POLICE_TIMEOUT + 300; i++) {
+        scene.update();
+        if (!scene["police"]) break;
+      }
+
+      expect(scene["police"]).toBeNull();
+      expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
+      expect(state.realScore).toBe(0);
+    });
+
+    it("come back if suspicion climbs to the top again", () => {
+      fullSuspicion();
+      scene.update();
+      scene["police"]!.alive = false;
+      scene.update();
+      expect(scene["police"]).toBeNull();
+
+      fullSuspicion();
+      scene.update();
+      expect(scene["police"]).not.toBeNull();
+    });
+
+    it("cost a life when rammed, and fly on", () => {
+      fullSuspicion();
+      scene.update();
+      scene["police"]!.pos = { ...scene["player"].pos };
+
+      scene.update();
+
+      expect(state.realLives).toBe(STARTING_LIVES - 1);
+      expect(scene["police"]!.alive).toBe(true);
     });
   });
 });

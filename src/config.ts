@@ -88,6 +88,8 @@ export const ENEMY_STATS: Record<
   sine: { halfSize: 24, radius: 12, hp: 1, score: 100, speed: 2 },
   bomber: { halfSize: 32, radius: 20, hp: 6, score: 500, speed: 1 },
   homing: { halfSize: 24, radius: 12, hp: 2, score: 150, speed: 2.5 },
+  // Its speed is only used to withdraw; otherwise it holds its place beside the Thought Police.
+  escort: { halfSize: 24, radius: 12, hp: 3, score: 300, speed: 3 },
 };
 export const SINE_AMPLITUDE = 40;
 export const SINE_PERIOD = 120;
@@ -155,3 +157,26 @@ export const HOMING_FRAMES = 150;
 // A ground turret: it scrolls with the city, and the plane flies over it, so it can only be shot.
 export const TURRET_STATS = { halfSize: 24, radius: 16, hp: 4, score: 200 };
 export const TURRET_FIRE_INTERVAL = 75;
+
+// The regime's own mini-boss at full suspicion: it hovers near the top, swaying, and alternates
+// an aimed triple with a wide fan. Outlasting it takes THOUGHT_POLICE_TIMEOUT frames.
+export const THOUGHT_POLICE_STATS = {
+  halfSize: 48,
+  radius: 36,
+  hp: 40,
+  score: 2000,
+};
+export const THOUGHT_POLICE_SPEED = 1.5;
+export const THOUGHT_POLICE_HOVER_Y = 130;
+export const THOUGHT_POLICE_SWAY = 120;
+export const THOUGHT_POLICE_SWAY_PERIOD = 360;
+export const THOUGHT_POLICE_FIRE_INTERVAL = 60;
+export const THOUGHT_POLICE_TRIPLE_DEGREES = 8;
+export const THOUGHT_POLICE_FAN_COUNT = 7;
+export const THOUGHT_POLICE_FAN_DEGREES = 90;
+export const THOUGHT_POLICE_TIMEOUT = 1200;
+// Where suspicion settles once they are killed or outlasted: still on alert, short of pursuit.
+export const THOUGHT_POLICE_RESET = 50;
+// Each escort flies this far to one side of the Thought Police, and a little behind.
+export const ESCORT_OFFSET = { x: 80, y: 24 };
+export const ESCORT_FIRE_INTERVAL = 80;

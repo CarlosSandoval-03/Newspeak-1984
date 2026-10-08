@@ -7,6 +7,8 @@ import {
   BOMBER_FIRE_INTERVAL,
   CANVAS_HEIGHT,
   ENEMY_BULLET_SPEED,
+  ESCORT_FIRE_INTERVAL,
+  ESCORT_OFFSET,
   ENEMY_FIRE_INTERVAL,
   ENEMY_FIRE_JITTER,
   ENEMY_STATS,
@@ -27,7 +29,14 @@ const SPRITES = {
   sine: "enemy-fighter",
   bomber: "enemy-bomber",
   homing: "enemy-gyro",
+  escort: "thought-police-escort",
 } as const;
+
+// The escort flies in formation while its leader holds the sky, and withdraws when it stops.
+export interface Leader {
+  readonly pos: Vec;
+  readonly holding: boolean;
+}
 
 // The rotor turns over the hub, a little behind the sprite's center.
 const HUB_OFFSET = 4;
@@ -55,6 +64,9 @@ export class Enemy extends Entity {
   private readonly target: () => Vec;
   private readonly images: Assets["image"];
   private readonly fire: (bullet: Bullet) => void;
+  private readonly leader: Leader | null;
+  // Which side of the leader an escort keeps: -1 left, 1 right.
+  private readonly side: -1 | 1;
 
   constructor(
     kind: EnemyKind,
@@ -62,6 +74,7 @@ export class Enemy extends Entity {
     target: () => Vec,
     images: Assets["image"],
     fire: (bullet: Bullet) => void,
+    formation: { leader: Leader; side: -1 | 1 } | null = null,
   ) {
     const stats = ENEMY_STATS[kind];
     super(pos, stats.radius);
@@ -74,7 +87,13 @@ export class Enemy extends Entity {
     this.target = target;
     this.images = images;
     this.fire = fire;
+    this.leader = formation?.leader ?? null;
+    this.side = formation?.side ?? 1;
     this.fireTimer = this.nextFireDelay();
+  }
+
+  private get withdrawing(): boolean {
+    return this.leader !== null && !this.leader.holding;
   }
 
   // True only for the hit that killed it, so two bullets landing on one tick score it once.
@@ -94,6 +113,7 @@ export class Enemy extends Entity {
   update(): void {
     this.age++;
     if (this.kind === "homing") this.steer();
+    if (this.leader) this.keepFormation(this.leader);
     super.update();
     if (this.kind === "sine")
       this.pos.x =
@@ -102,10 +122,11 @@ export class Enemy extends Entity {
 
     if (this.flash > 0) this.flash--;
 
-    // Most enemies only fly down, so leaving means falling off the bottom; an autogyro can leave by any edge.
+    // Most enemies only fly down, so leaving means falling off the bottom;
+    // an autogyro can leave by any edge, and a withdrawing escort by the top.
     const half = ENEMY_STATS[this.kind].halfSize;
     const gone =
-      this.kind === "homing"
+      this.kind === "homing" || this.withdrawing
         ? this.isOffscreen(half)
         : this.pos.y - half > CANVAS_HEIGHT;
     if (gone) {
@@ -113,8 +134,8 @@ export class Enemy extends Entity {
       return;
     }
 
-    // An autogyro's weapon is itself.
-    if (this.kind === "homing") return;
+    // An autogyro's weapon is itself, and a withdrawing escort has stopped fighting.
+    if (this.kind === "homing" || this.withdrawing) return;
 
     // The clock only runs on screen, so nothing shoots from beyond the top edge.
     if (this.pos.y < 0) return;
@@ -177,9 +198,25 @@ export class Enemy extends Entity {
   }
 
   private nextFireDelay(): number {
-    return reloadDelay(
-      this.kind === "bomber" ? BOMBER_FIRE_INTERVAL : ENEMY_FIRE_INTERVAL,
-    );
+    const base =
+      this.kind === "bomber"
+        ? BOMBER_FIRE_INTERVAL
+        : this.kind === "escort"
+          ? ESCORT_FIRE_INTERVAL
+          : ENEMY_FIRE_INTERVAL;
+    return reloadDelay(base);
+  }
+
+  // Beside the leader while it holds the sky; straight up and away once it stops.
+  private keepFormation(leader: Leader): void {
+    if (!leader.holding) {
+      this.vel = { x: 0, y: -ENEMY_STATS[this.kind].speed };
+      return;
+    }
+
+    this.vel = { x: 0, y: 0 };
+    this.pos.x = leader.pos.x + this.side * ESCORT_OFFSET.x;
+    this.pos.y = leader.pos.y + ESCORT_OFFSET.y;
   }
 
   private aim(): number {
@@ -192,7 +229,9 @@ export class Enemy extends Entity {
       x: Math.cos(angle) * ENEMY_BULLET_SPEED,
       y: Math.sin(angle) * ENEMY_BULLET_SPEED,
     };
-    this.fire(new Bullet("enemy", this.pos, vel));
+    this.fire(
+      new Bullet(this.kind === "escort" ? "regime" : "enemy", this.pos, vel),
+    );
   }
 
   private fireFan(): void {

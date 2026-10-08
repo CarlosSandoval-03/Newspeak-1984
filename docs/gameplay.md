@@ -150,7 +150,7 @@ flowchart TD
 | Autogyro | Pursuit | Spawns only at high suspicion, never in a level's waves, so it always means you're being chased. Homes in, never fires. |
 | AA gun | Ground turret | Aims its twin barrels at the player. |
 | Eye tower, drone | Surveillance | Don't shoot and never collide; being seen raises suspicion. |
-| Thought Police + escort | Mini-boss | Arrives at suspicion 100. Red bullets. |
+| Thought Police + escort | Mini-boss | Arrives at suspicion 100 and holds it there. Hovers and sways, alternating an aimed triple with a wide fan; the escort flies beside it. Red bullets. |
 | Bosses | One per level | See the level table; the Eye fires red bullets. |
 | Propaganda blimp | Not an enemy | Crosses the screen towing slogan banners; can't be shot, doesn't collide. |
 

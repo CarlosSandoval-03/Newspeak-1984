@@ -1,5 +1,6 @@
 import type p5 from "p5";
 import { describe, expect, it, vi } from "vitest";
+import { PAPER, RED } from "../config";
 import { Bullet } from "./Bullet";
 
 describe("Bullet", () => {
@@ -31,5 +32,20 @@ describe("Bullet", () => {
     new Bullet("enemy", { x: 100, y: 100 }, { x: 0, y: 3 }).draw(p);
     expect(circle).toHaveBeenCalled();
     expect(rect).not.toHaveBeenCalled();
+  });
+
+  it("draws the regime's fire in red, and everyone else's in paper", () => {
+    const fills: unknown[] = [];
+    const p = {
+      noStroke: () => {},
+      fill: (color: unknown) => fills.push(color),
+      rect: () => {},
+      circle: () => {},
+    } as unknown as p5;
+
+    for (const owner of ["player", "enemy", "regime"] as const)
+      new Bullet(owner, { x: 100, y: 100 }, { x: 0, y: 3 }).draw(p);
+
+    expect(fills).toEqual([PAPER, PAPER, RED]);
   });
 });
