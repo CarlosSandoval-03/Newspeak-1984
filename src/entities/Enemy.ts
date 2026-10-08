@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
+  ALERT_FIRE_MULT,
   BOMBER_FAN_COUNT,
   BOMBER_FAN_SPREAD_DEGREES,
   BOMBER_FIRE_INTERVAL,
@@ -13,7 +14,8 @@ import {
   SINE_AMPLITUDE,
   SINE_PERIOD,
 } from "../config";
-import type { EnemyKind, Vec } from "../types";
+import { state } from "../state";
+import { ALERT, type EnemyKind, type Vec } from "../types";
 import { Bullet } from "./Bullet";
 import { Entity } from "./Entity";
 
@@ -102,9 +104,12 @@ export class Enemy extends Entity {
     this.drawAircraft(p, this.images[body], this.images[`${sprite}-shadow`]);
   }
 
+  // Read at every reload, so enemies already on screen speed up from their next shot.
   private nextFireDelay(): number {
-    const interval =
+    const base =
       this.kind === "bomber" ? BOMBER_FIRE_INTERVAL : ENEMY_FIRE_INTERVAL;
+    const interval =
+      state.alertLevel >= ALERT.alert ? base / ALERT_FIRE_MULT : base;
     return Math.round(interval + (Math.random() * 2 - 1) * ENEMY_FIRE_JITTER);
   }
 

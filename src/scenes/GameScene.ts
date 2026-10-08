@@ -76,7 +76,7 @@ export class GameScene implements Scene {
     }
 
     if (this.player.alive) this.player.update();
-    this.spawner.update(this.scroll);
+    this.spawner.update(this.scroll, state.alertLevel);
 
     for (const enemy of this.enemies) enemy.update();
     for (const eye of this.eyes) eye.update();

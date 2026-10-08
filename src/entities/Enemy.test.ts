@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  ALERT_FIRE_MULT,
   BOMBER_FAN_COUNT,
   BOMBER_FAN_SPREAD_DEGREES,
   BOMBER_FIRE_INTERVAL,
@@ -13,7 +14,8 @@ import {
   SINE_AMPLITUDE,
   SINE_PERIOD,
 } from "../config";
-import type { EnemyKind, Vec } from "../types";
+import { resetGame, state } from "../state";
+import { ALERT, type EnemyKind, type Vec } from "../types";
 import type { Bullet } from "./Bullet";
 import { Enemy } from "./Enemy";
 
@@ -43,6 +45,7 @@ describe("Enemy", () => {
   const angleOf = (v: Vec) => Math.atan2(v.y, v.x);
 
   beforeEach(() => {
+    resetGame();
     fired = [];
     // No jitter: every enemy fires exactly on its interval.
     vi.spyOn(Math, "random").mockReturnValue(0.5);
@@ -90,6 +93,22 @@ describe("Enemy", () => {
     expect(angleOf(bullet.vel)).toBeCloseTo(angleOf(toTarget));
 
     ticks(enemy, ENEMY_FIRE_INTERVAL);
+    expect(fired).toHaveLength(2);
+  });
+
+  it("reloads faster from alert up, from its next shot on", () => {
+    const enemy = make("straight", { x: 100, y: 0 });
+    const faster = Math.round(ENEMY_FIRE_INTERVAL / ALERT_FIRE_MULT);
+
+    ticks(enemy, ENEMY_FIRE_INTERVAL - 1);
+    state.alertLevel = ALERT.alert;
+    ticks(enemy, 1);
+    expect(fired).toHaveLength(1);
+
+    ticks(enemy, faster - 1);
+    expect(fired).toHaveLength(1);
+
+    ticks(enemy, 1);
     expect(fired).toHaveLength(2);
   });
 

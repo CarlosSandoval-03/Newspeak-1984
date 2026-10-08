@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  ALERT_SPAWN_MULT,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
@@ -15,8 +16,9 @@ import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Eye } from "../entities/Eye";
+import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
-import type { EnemyKind, Vec } from "../types";
+import { ALERT, type EnemyKind, type Vec } from "../types";
 import { GameScene } from "./GameScene";
 import { GameOverScene } from "./GameOverScene";
 
@@ -220,5 +222,18 @@ describe("GameScene collisions", () => {
 
     expect(state.realLives).toBe(STARTING_LIVES);
     expect(scene["eyes"]).toHaveLength(1);
+  });
+
+  it("sends bigger waves once the regime is on alert", () => {
+    const first = LEVELS[0].waves[0];
+    state.suspicion = 50;
+    state.alertLevel = ALERT.alert;
+    scene["scroll"] = first.at;
+
+    scene.update();
+
+    expect(scene["enemies"]).toHaveLength(
+      Math.ceil(first.count * ALERT_SPAWN_MULT),
+    );
   });
 });

@@ -138,3 +138,9 @@ export const ALERT_THRESHOLDS = {
 export const VIGNETTE_ALPHA = 0.5;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;
+
+// From alert up: each wave grows by this share, rounded up, and enemies reload this much faster.
+export const ALERT_SPAWN_MULT = 1.3;
+export const ALERT_FIRE_MULT = 1.5;
+// Between a wave and the row of reinforcements behind it.
+export const REINFORCEMENT_GAP = 16;

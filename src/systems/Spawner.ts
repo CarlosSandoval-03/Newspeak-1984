@@ -1,6 +1,18 @@
-import { ENEMY_STATS, EYE_STATS } from "../config";
+import {
+  ALERT_SPAWN_MULT,
+  ENEMY_STATS,
+  EYE_STATS,
+  REINFORCEMENT_GAP,
+} from "../config";
 import { anchorNear } from "../levels/layout";
-import type { EnemyKind, EyeDef, LevelDef, Vec } from "../types";
+import {
+  ALERT,
+  type AlertLevel,
+  type EnemyKind,
+  type EyeDef,
+  type LevelDef,
+  type Vec,
+} from "../types";
 
 type Spawn = {
   enemy: (kind: EnemyKind, pos: Vec) => void;
@@ -34,7 +46,7 @@ export class Spawner {
   }
 
   // Loops, not ifs: a big scroll step can pass several waves in one tick.
-  update(scroll: number): void {
+  update(scroll: number, alert: AlertLevel): void {
     const { waves } = this.level;
 
     while (
@@ -42,10 +54,22 @@ export class Spawner {
       scroll - this.start >= waves[this.next].at
     ) {
       const wave = waves[this.next++];
-      const y = -ENEMY_STATS[wave.kind].halfSize;
+      const half = ENEMY_STATS[wave.kind].halfSize;
+      const total =
+        alert >= ALERT.alert
+          ? Math.ceil(wave.count * ALERT_SPAWN_MULT)
+          : wave.count;
 
-      for (let i = 0; i < wave.count; i++)
-        this.spawn.enemy(wave.kind, { x: wave.x + i * wave.spacing, y });
+      // Reinforcements fly a row behind, over the first enemies' columns,
+      // so the wave never runs off the screen's side or stacks two on one spot.
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / wave.count);
+        const column = i % wave.count;
+        this.spawn.enemy(wave.kind, {
+          x: wave.x + column * wave.spacing,
+          y: -half - row * (half * 2 + REINFORCEMENT_GAP),
+        });
+      }
     }
 
     while (this.eyes.length > 0 && scroll >= this.eyes[0].due) {

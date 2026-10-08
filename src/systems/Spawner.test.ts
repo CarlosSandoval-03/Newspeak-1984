@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { ENEMY_STATS, EYE_STATS } from "../config";
+import { ENEMY_STATS, EYE_STATS, REINFORCEMENT_GAP } from "../config";
 import { anchorNear } from "../levels/layout";
-import type { EnemyKind, EyeDef, LevelDef, Vec } from "../types";
+import {
+  ALERT,
+  type EnemyKind,
+  type EyeDef,
+  type LevelDef,
+  type Vec,
+} from "../types";
 import { Spawner } from "./Spawner";
 
 const cone = { facing: 90, range: 100, sweepAmp: 0, sweepSpeed: 0 };
@@ -33,10 +39,10 @@ describe("Spawner", () => {
   });
 
   it("spawns a wave when the scroll reaches it, just above the top edge", () => {
-    spawner.update(99);
+    spawner.update(99, ALERT.normal);
     expect(spawned).toHaveLength(0);
 
-    spawner.update(100);
+    spawner.update(100, ALERT.normal);
     const y = -ENEMY_STATS.straight.halfSize;
     expect(spawned).toEqual([
       { kind: "straight", pos: { x: 50, y } },
@@ -46,15 +52,15 @@ describe("Spawner", () => {
   });
 
   it("spawns each wave only once", () => {
-    spawner.update(100);
-    spawner.update(101);
-    spawner.update(150);
+    spawner.update(100, ALERT.normal);
+    spawner.update(101, ALERT.normal);
+    spawner.update(150, ALERT.normal);
 
     expect(spawned).toHaveLength(3);
   });
 
   it("spawns every wave the scroll has passed in one tick", () => {
-    spawner.update(500);
+    spawner.update(500, ALERT.normal);
 
     expect(spawned.map((enemy) => enemy.kind)).toEqual([
       "straight",
@@ -70,27 +76,27 @@ describe("Spawner", () => {
     const ground = anchorNear(level.terrain, "street", 600).y;
     const last = ground - EYE_STATS.tower.halfSize;
 
-    spawner.update(last - 1);
+    spawner.update(last - 1, ALERT.normal);
     expect(spawner.done).toBe(false);
 
-    spawner.update(last);
+    spawner.update(last, ALERT.normal);
     expect(spawner.done).toBe(true);
 
     spawner.restart(10_000);
     spawned = [];
-    spawner.update(10_099);
+    spawner.update(10_099, ALERT.normal);
     expect(spawner.done).toBe(false);
     expect(spawned).toHaveLength(0);
 
-    spawner.update(10_100);
+    spawner.update(10_100, ALERT.normal);
     expect(spawned).toHaveLength(3);
   });
 
   it("flies a drone in above the top edge when the scroll reaches it", () => {
-    spawner.update(149);
+    spawner.update(149, ALERT.normal);
     expect(watching).toHaveLength(0);
 
-    spawner.update(150);
+    spawner.update(150, ALERT.normal);
     expect(watching).toEqual([
       {
         def: level.eyes[1],
@@ -103,10 +109,10 @@ describe("Spawner", () => {
     const anchor = anchorNear(level.terrain, "street", 600);
     const due = anchor.y - EYE_STATS.tower.halfSize;
 
-    spawner.update(due - 1);
+    spawner.update(due - 1, ALERT.normal);
     expect(watching.map(({ def }) => def.type)).toEqual(["drone"]);
 
-    spawner.update(due);
+    spawner.update(due, ALERT.normal);
     expect(watching[1]).toEqual({
       def: level.eyes[0],
       pos: { x: anchor.x, y: -EYE_STATS.tower.halfSize },
@@ -116,7 +122,7 @@ describe("Spawner", () => {
   it("keeps a late tower pinned to its spot on the ground", () => {
     const anchor = anchorNear(level.terrain, "street", 600);
 
-    spawner.update(anchor.y + 200);
+    spawner.update(anchor.y + 200, ALERT.normal);
 
     expect(watching[1].pos).toEqual({ x: anchor.x, y: 200 });
   });
@@ -125,11 +131,38 @@ describe("Spawner", () => {
     spawner.restart(5000);
     const anchor = anchorNear(level.terrain, "street", 5600);
 
-    spawner.update(anchor.y);
+    spawner.update(anchor.y, ALERT.normal);
 
     expect(watching.find(({ def }) => def.type === "tower")?.pos).toEqual({
       x: anchor.x,
       y: 0,
     });
+  });
+
+  it("sends reinforcements from alert up, a row behind the wave", () => {
+    spawner.update(100, ALERT.alert);
+
+    // Three grow to four: the extra one flies behind the first.
+    const half = ENEMY_STATS.straight.halfSize;
+    const behind = -half - (half * 2 + REINFORCEMENT_GAP);
+    expect(spawned.map(({ pos }) => pos)).toEqual([
+      { x: 50, y: -half },
+      { x: 90, y: -half },
+      { x: 130, y: -half },
+      { x: 50, y: behind },
+    ]);
+  });
+
+  it("doubles a lone bomber in line, never on the same spot", () => {
+    spawner.update(150, ALERT.normal);
+    spawned = [];
+    spawner.update(200, ALERT.pursuit);
+
+    const bombers = spawned.filter(({ kind }) => kind === "bomber");
+    expect(bombers).toHaveLength(2);
+    expect(bombers[0].pos.x).toBe(bombers[1].pos.x);
+    expect(bombers[0].pos.y).not.toBe(bombers[1].pos.y);
+    // Two sine enemies grow to three.
+    expect(spawned.filter(({ kind }) => kind === "sine")).toHaveLength(3);
   });
 });
