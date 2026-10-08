@@ -68,6 +68,6 @@ The words themselves (briefings, ticker, diary pages, endings) are in `src/i18n/
 | Diary page | When a diary is picked up, without pausing. | One line of the erased pilot's page typed at the bottom of the screen. | `diary.png` | The hidden story, told in fragments. |
 | Pause | When the player pauses. | A telescreen eye with a red iris; "PAUSED". | `pause-telescreen.png` | Even stopping the game is observed. |
 | Ministry | After each boss. | The real score crossed out and sent down the memory hole, the official score typed in, the corrections, the high scores. | `memory-hole.png`, `pilot-portrait.png`, `officer-portrait.png` | The past is rewritten in front of the player. |
-| VAPORIZED | When the last life is lost. | A squadron photo with one pilot erased, stamped `VAPORIZED`. | `vaporized.png` | Death is not enough: the player becomes an unperson, like the diarist. |
+| VAPORIZED | When the last life is lost, after the telescreen cuts the broadcast. | A squadron photo with one pilot erased, stamped `VAPORIZED`. | `vaporized.png` | Death is not enough: the player becomes an unperson, like the diarist. |
 | Obedient ending | After level 5 with fewer than 3 pages read. | A lone man in a café under the Leader's telescreen; the official score. | `ending-obedient.png` | Defeat disguised as peace. |
 | Rebel ending | After level 5 with 3 or more pages read. | A plane over open country toward a pale sky; real score, real record, diary pages. | `ending-rebel.png` | Escape, and the truth. |

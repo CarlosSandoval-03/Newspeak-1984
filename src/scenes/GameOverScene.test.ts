@@ -1,7 +1,11 @@
 import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
-import { GAME_OVER_TEXT_DELAY, STAMP_DELAY } from "../config";
+import {
+  GAME_OVER_TEXT_DELAY,
+  SIGNAL_OFF_FRAMES,
+  STAMP_DELAY,
+} from "../config";
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { resetGame, state } from "../state";
@@ -14,26 +18,33 @@ function press(target: EventTarget, code: string): void {
   target.dispatchEvent(Object.assign(new Event("keyup"), { code }));
 }
 
+// Each image is stood in for by its own name.
+const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
+const lastFrame = "last game frame" as unknown as p5.Image;
+
 describe("GameOverScene", () => {
-  const TEXT_AT = STAMP_DELAY + GAME_OVER_TEXT_DELAY;
+  const STAMP_AT = SIGNAL_OFF_FRAMES + STAMP_DELAY;
+  const TEXT_AT = STAMP_AT + GAME_OVER_TEXT_DELAY;
 
   let keys: EventTarget;
   let manager: SceneManager;
   let scene: GameOverScene;
   let shown: string[];
+  let pictures: unknown[];
 
-  // Any p5 call is a no-op, except text, which records what was written.
+  // Any p5 call is a no-op, except text and image, which record what was drawn.
   const p = new Proxy(
-    {},
+    { drawingContext: {} },
     {
-      get: (_, key) =>
-        key === "text"
-          ? (text: string) => shown.push(text)
-          : key === "textWidth"
-            ? () => 100
-            : () => {},
+      get: (target, key) => {
+        if (key === "drawingContext") return target.drawingContext;
+        if (key === "text") return (text: string) => shown.push(text);
+        if (key === "image") return (image: unknown) => pictures.push(image);
+        if (key === "textWidth") return () => 100;
+        return () => {};
+      },
     },
-  ) as p5;
+  ) as unknown as p5;
 
   // One tick, as the manager runs it: update, then the input frame ends.
   const ticks = (n: number) => {
@@ -43,32 +54,48 @@ describe("GameOverScene", () => {
     }
   };
 
-  const drawn = () => {
+  const draw = () => {
     shown = [];
+    pictures = [];
     scene.draw();
-    return shown;
   };
 
   beforeEach(() => {
     resetGame();
     keys = new EventTarget();
     manager = new SceneManager(
-      { image: {}, font: {} } as Assets,
+      { image: images, font: {} } as Assets,
       new Input(keys),
     );
-    scene = new GameOverScene(p, manager);
+    scene = new GameOverScene(p, manager, lastFrame);
     manager.change(scene);
   });
 
-  it("stamps the photo, then names the pilot who never existed", () => {
-    ticks(STAMP_DELAY - 1);
-    expect(drawn()).toEqual([]);
+  it("switches the game's last frame off before the photo appears", () => {
+    draw();
+    expect(pictures).toEqual([lastFrame]);
+
+    ticks(SIGNAL_OFF_FRAMES - 1);
+    draw();
+    expect(pictures).toEqual([]);
 
     ticks(1);
-    expect(drawn()).toEqual(["VAPORIZED"]);
+    draw();
+    expect(pictures).toEqual(["vaporized"]);
+  });
+
+  it("stamps the photo, then names the pilot who never existed", () => {
+    ticks(STAMP_AT - 1);
+    draw();
+    expect(shown).toEqual([]);
+
+    ticks(1);
+    draw();
+    expect(shown).toEqual(["VAPORIZED"]);
 
     ticks(GAME_OVER_TEXT_DELAY);
-    expect(drawn()).toEqual([
+    draw();
+    expect(shown).toEqual([
       "VAPORIZED",
       `PILOT ${state.pilotId} NEVER EXISTED.`,
       "PRESS ENTER",

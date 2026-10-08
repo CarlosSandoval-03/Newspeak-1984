@@ -101,6 +101,8 @@ The game is a telescreen set into a concrete wall. The canvas sits in a concrete
 
 Permanent scanlines, plus a glitch that grows with suspicion. Together with the red vignette, the player feels watched without reading the meter.
 
+When the pilot is vaporized, the telescreen cuts the broadcast like an old tube switching off: the picture collapses into a burning horizontal line, the line shrinks to a dot, and the dot fades out. The pilot isn't only dead; he is taken off the air.
+
 ## Sound
 
 Not designed yet. Files go in `public/assets/sounds/`, played with the Web Audio API.

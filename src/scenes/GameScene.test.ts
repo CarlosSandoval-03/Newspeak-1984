@@ -45,7 +45,7 @@ describe("GameScene collisions", () => {
       { image: images, font: {} } as Assets,
       new Input(new EventTarget()),
     );
-    scene = new GameScene({} as p5, manager);
+    scene = new GameScene({ get: () => ({}) } as unknown as p5, manager);
     manager.change(scene);
   });
 

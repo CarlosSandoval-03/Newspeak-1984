@@ -149,7 +149,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 **Game over**
 
-- **Decision:** a scene of its own, `GameOverScene`, since VAPORIZED is not an ending. When the last life is lost, the game keeps running for `GAME_OVER_DELAY` frames without the player, so the crash plays out. Then the scene draws `vaporized.png`; after `STAMP_DELAY` frames the red `VAPORIZED` stamp lands on the erased pilot, and `GAME_OVER_TEXT_DELAY` frames later `gameOver.line` and `PRESS ENTER` appear. Enter returns to the Menu, but only once it has been offered, so a key mashed during the crash can't skip the screen.
+- **Decision:** a scene of its own, `GameOverScene`, since VAPORIZED is not an ending. When the last life is lost, the game keeps running for `GAME_OVER_DELAY` frames (2 s) without the player: the crash plays out and the world flies on. Then the telescreen cuts the broadcast over `SIGNAL_OFF_FRAMES`: the game's last frame collapses into a brightening line, the line shrinks to a dot, and the dot fades. `vaporized.png` fades in from ink over `PHOTO_FADE_FRAMES`; `STAMP_DELAY` frames after it starts the red `VAPORIZED` stamp lands on the erased pilot, and `GAME_OVER_TEXT_DELAY` frames later `gameOver.line` and `PRESS ENTER` appear. Enter returns to the Menu, but only once it has been offered, so a key mashed during the crash can't skip the screen.
 - The run is not recorded: only completed runs reach the honor roll (step 4). The vaporized pilot leaves no trace, like the diarist.
 
 **HUD**

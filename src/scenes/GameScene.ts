@@ -53,7 +53,10 @@ export class GameScene implements Scene {
 
   update(): void {
     if (this.gameOverIn > 0 && --this.gameOverIn === 0) {
-      this.manager.change(new GameOverScene(this.p, this.manager));
+      // The canvas still holds the last frame drawn, which the telescreen switches off.
+      this.manager.change(
+        new GameOverScene(this.p, this.manager, this.p.get()),
+      );
       return;
     }
 
