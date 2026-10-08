@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The city is drawn from `layout.ts`: ground tiles, craters, and procedural rooftops with skylights, fixtures, Party banners, and blinking lamps. Next: typed stubs for the files later steps fill in.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over level 1's scrolling city: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`, and losing the last life lets the crash play out, then shows VAPORIZED. The city is drawn from `layout.ts`: ground tiles, craters, and procedural rooftops with skylights, fixtures, Party banners, and blinking lamps. Every file from the structure exists; the ones later steps fill in are typed stubs. Next: the `0.2.0` release.
 
 ### Files
 
@@ -56,19 +56,19 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/Collisions.ts`, `Collisions.test.ts` | Done | Circle–circle test |
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
-| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
+| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs |
 | `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and restarts its waves from the current scroll for the loop |
 | `systems/Propaganda.ts`, `Propaganda.test.ts` | Done | **Pass-through version**: returns the real values and never lies |
-| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Not started | Stubs |
+| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs |
 | `levels/levels.ts`, `levels.test.ts` | Done | Level 1: its terrain recipe and waves; the tests keep the waves sorted and on screen |
 | `levels/layout.ts`, `layout.test.ts` | Done | City generator: streets, blocks, buildings, craters (see **Background** below); the tests run 30 mixed recipes over 8 chunks each |
 | `levels/Background.ts`, `Background.test.ts` | Done | Scrolling background, one `p5.Graphics` per chunk: ground tiles, craters, and procedural rooftops with skylights, fixtures, and banners; lamps blink on top every frame. The tests cover which chunks are on screen and that every cell finds its tile |
 | `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
-| `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
+| `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
 | `scenes/GameScene.ts`, `GameScene.test.ts` | Done | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over the background, and loops the waves once cleared; the tests cover the collision rules, the game over delay, and the loop. Draws the HUD last. |
 | `scenes/GameOverScene.ts`, `GameOverScene.test.ts` | Done | The VAPORIZED screen (see **Game over** below) |
-| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
+| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Done | Stubs |
 
 ### Specification
 
@@ -212,7 +212,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [x] The background scrolls with no visible seam.
 - [x] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
 - [x] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
-- [ ] Every file from the structure exists, and the stubs typecheck.
+- [x] Every file from the structure exists, and the stubs typecheck.
 - [x] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
 - [ ] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.
 
