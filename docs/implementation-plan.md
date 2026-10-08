@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection, `t()`, `state.ts`, and the Menu are done; `BEGIN SERVICE` opens an empty `GameScene`. Next: the player and bullets.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where the player flies and shoots over ink. Next: enemies, waves, collisions, and explosions.
 
 ### Files
 
@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, and starting lives. **Still to do:** material tones (see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, and shadow numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), enemy numbers, scroll speed |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `EnemyKind`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -54,8 +54,8 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/SceneManager.ts`, `SceneManager.test.ts` | Done | Holds the current scene, switches between scenes, and runs the fixed tick; the tests cover the tick loop |
 | `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
 | `core/Collisions.ts` | Not started | Circle–circle test |
-| `entities/Entity.ts` | Not started | Abstract base class |
-| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Not started | Real implementations |
+| `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
+| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | In progress | Real implementations. `Player` and `Bullet` are done, with tests; the player hands its bullets to the scene through a callback. **Still to do:** `Enemy`, `Explosion`, and the player's hit, respawn, and blink |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
 | `systems/Spawner.ts` | Not started | Reads waves from level data |
 | `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
@@ -66,7 +66,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
-| `scenes/GameScene.ts` | In progress | Clears to ink. **Still to do:** the game loop |
+| `scenes/GameScene.ts` | In progress | Runs the player and its bullets over ink. **Still to do:** spawner, enemies, collisions, scroll, background, HUD, game over |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification
@@ -203,8 +203,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 - [ ] `pnpm typecheck` and `pnpm build` pass.
 - [x] The canvas stays centered and crisp at every window size, scaled by a whole number.
-- [ ] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
-- [ ] The player moves in 8 directions, stays on screen, and shoots by holding the button.
+- [x] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
+- [x] The player moves in 8 directions, stays on screen, and shoots by holding the button.
 - [ ] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.
 - [ ] Hit enemies flash, and destroyed ones explode and add score. Getting hit costs a life, then the player respawns with blinking invulnerability.
 - [ ] Losing all lives shows "VAPORIZED" with this run's pilot ID; Enter returns to the Menu. A new run gets a new ID.

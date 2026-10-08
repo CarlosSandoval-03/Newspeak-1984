@@ -43,7 +43,7 @@ export class MenuScene implements Scene {
       case "start":
         if (activate) {
           resetGame();
-          this.manager.change(new GameScene(this.p));
+          this.manager.change(new GameScene(this.p, this.manager));
         }
         break;
       case "language":

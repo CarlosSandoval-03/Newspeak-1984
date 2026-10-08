@@ -39,7 +39,7 @@ Top-down. Hitbox radii are suggestions for `config.ts`, smaller than the sprites
 | File | Size | Used by | Step | Hitbox r | Notes |
 | ---- | ---- | ------- | ---- | -------- | ----- |
 | `player.png` | 48×48 | Player | 1 | 5 | Off-white, nose up: the brightest object on screen. |
-| `player-bank-left.png`, `player-bank-right.png` | 48×48 | Player strafing | Polish | 5 | Lowered wing foreshortened and darkened one step (made locally). Show while moving sideways. |
+| `player-bank-left.png`, `player-bank-right.png` | 48×48 | Player strafing | 1 | 5 | Lowered wing foreshortened and darkened one step (made locally). Show while moving sideways. |
 | `enemy-fighter.png` | 48×48 | Kinds `straight` and `sine`; the `camo` flag | 1 | 12 | Mid grey, nose down. Behavior tells the kinds apart. |
 | `enemy-bomber.png` | 64×64 | Kind `bomber` | 1 | 20 | Twin-engine. |
 | `enemy-gyro.png` | 48×48 | Kind `homing` (pursuit) | 2 | 10 | Autogyro: its silhouette warns that the regime is chasing you. |
@@ -143,7 +143,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `poster-leader.png` | **Mural**: red frame + `#1a1a1a` slogan band with VT323 text. | Slogan flips mid-level with a one-frame flicker. | 5 |
 | `propaganda-blimp.png` | **Towed banner**: tow line and a light banner with dark VT323 text behind the blimp. | Banner sways slightly. | 5 |
 | `boss-*-damaged.png` | Reveal damage regions progressively from `boss-*-damage.json`, never a single swap. | Smoke: grey particles from the revealed holes, more as more regions show. | 4 |
-| `player-bank-*.png` | Use while the horizontal input is held. | — | Polish |
+| `player-bank-*.png` | Use while the horizontal input is held. | — | 1 |
 | `launch-platform.png` | **Runway lamps:** light the sockets from the JSON in `#e0503a`, chasing toward the direction of travel (forward on takeoff, backward on landing). | — | 4 |
 | `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as the Ministry's verdict worsens. | Thin frame, rank caption. | 3, 4 |
 | `memory-hole.png` | The crossed-out real score slides into the slot before the official one is typed. | Papers fluttering into the slot. | 4 |

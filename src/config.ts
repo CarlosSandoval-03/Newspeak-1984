@@ -29,3 +29,20 @@ export const TICK_MS = 1000 / 60;
 export const MAX_UPDATES_PER_FRAME = 2;
 
 export const STARTING_LIVES = 3;
+
+// The words row starts below this, so the ship never hides under it.
+export const PLAYFIELD_BOTTOM = 588;
+
+// The player's sprite is 48 px; clamping by half keeps all of it on screen.
+export const PLAYER_HALF_SIZE = 24;
+// The hitbox is the cockpit, not the wings, so near misses feel fair.
+export const PLAYER_RADIUS = 5;
+export const PLAYER_SPEED = 3;
+export const PLAYER_FIRE_COOLDOWN = 6;
+export const PLAYER_SPAWN = { x: CANVAS_WIDTH / 2, y: 540 };
+export const PLAYER_BULLET_SPEED = 8;
+export const BULLET_RADIUS = 3;
+
+// Fakes altitude, like 1942: the shadow falls down and to the right.
+export const SHADOW_OFFSET = { x: 6, y: 10 };
+export const SHADOW_ALPHA = 0.4;
