@@ -8,7 +8,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | ---- | -------- | ------- | ------ |
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
-| 2 | Surveillance Eyes and Suspicion | `0.3.0` | In progress |
+| 2 | Surveillance Eyes and Suspicion | `0.3.0` | Done |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Not started |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
@@ -56,15 +56,15 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/Collisions.ts`, `Collisions.test.ts` | Done | Circle–circle test |
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
-| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs |
+| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs; step 2 fills in `Eye` and `Boss` |
 | `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and restarts its waves from the current scroll for the loop |
 | `systems/Propaganda.ts`, `Propaganda.test.ts` | Done | **Pass-through version**: returns the real values and never lies |
-| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs |
+| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs; step 2 fills in `Suspicion` |
 | `levels/levels.ts`, `levels.test.ts` | Done | Level 1: its terrain recipe and waves; the tests keep the waves sorted and on screen |
 | `levels/layout.ts`, `layout.test.ts` | Done | City generator: streets, blocks, buildings, craters (see **Background** below); the tests run 30 mixed recipes over 8 chunks each |
 | `levels/Background.ts`, `Background.test.ts` | Done | Scrolling background, one `p5.Graphics` per chunk: ground tiles, craters, and procedural rooftops with skylights, fixtures, and banners; lamps blink on top every frame. The tests cover which chunks are on screen and that every cell finds its tile |
 | `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
-| `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs |
+| `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs; step 2 adds the red vignette to `effects` |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
 | `scenes/GameScene.ts`, `GameScene.test.ts` | Done | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over the background, and loops the waves once cleared; the tests cover the collision rules, the game over delay, and the loop. Draws the HUD last. |
 | `scenes/GameOverScene.ts`, `GameOverScene.test.ts` | Done | The VAPORIZED screen (see **Game over** below) |
@@ -222,6 +222,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the regime watches you. Being seen has consequences that escalate.
 
+**Progress:** the city's layout now generates anchors, and towers and AA turrets stand on them while drones patrol above. Every eye sweeps a cone that turns red the moment it sees the pilot; being seen raises suspicion, faster up close, and it decays out of sight. Shooting an eye down bursts it in red sparks and costs +15. The HUD shows the suspicion meter and the alert state through `Propaganda`, and a red vignette beats while the pilot is seen. At 34 waves grow by a row of reinforcements and every shooter reloads faster; at 67 homing autogyros give chase; at 100 suspicion freezes and the Thought Police come with their escort and red fire, holding the waves back until they are shot down or outlasted, which leaves suspicion at 50. **Step 2 is done** and released as `0.3.0`. Next: step 3.
+
 ### Files
 
 `entities/Eye.ts`, `entities/Turret.ts`, `entities/ThoughtPolice.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (the base of the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
@@ -299,14 +301,14 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Done when
 
-- [ ] Towers scroll with the ground, drones patrol, and both sweep their cones.
-- [ ] Cones turn red exactly when the player is inside them, including near the angle wrap-around at ±180°.
-- [ ] Suspicion rises faster when the player is closer, decays when unseen, and `framesSeen` counts up.
-- [ ] Shooting an eye adds +15 instantly.
-- [ ] At 34 the spawns and enemy fire visibly increase. At 67 homing autogyros appear.
-- [ ] At 100 the Thought Police appear and the HUD shows `THOUGHT POLICE`. Killing them or outlasting them leaves suspicion at 50.
-- [ ] All the numbers above live in `config.ts`.
-- [ ] AA gun barrels track the player, and gyro rotors spin.
+- [x] Towers scroll with the ground, drones patrol, and both sweep their cones.
+- [x] Cones turn red exactly when the player is inside them, including near the angle wrap-around at ±180°.
+- [x] Suspicion rises faster when the player is closer, decays when unseen, and `framesSeen` counts up.
+- [x] Shooting an eye adds +15 instantly.
+- [x] At 34 the spawns and enemy fire visibly increase. At 67 homing autogyros appear.
+- [x] At 100 the Thought Police appear and the HUD shows `THOUGHT POLICE`. Killing them or outlasting them leaves suspicion at 50.
+- [x] All the numbers above live in `config.ts`.
+- [x] AA gun barrels track the player, and gyro rotors spin.
 
 ---
 
