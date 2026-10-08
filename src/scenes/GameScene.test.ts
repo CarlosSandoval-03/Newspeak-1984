@@ -3,14 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
   ENEMY_STATS,
+  EYE_DESTROYED_SUSPICION,
+  EYE_STATS,
   GAME_OVER_DELAY,
   PLAYER_SPAWN,
   STARTING_LIVES,
+  SUSPICION_DECAY,
 } from "../config";
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
+import { Eye } from "../entities/Eye";
 import { resetGame, state } from "../state";
 import type { EnemyKind, Vec } from "../types";
 import { GameScene } from "./GameScene";
@@ -34,6 +38,27 @@ describe("GameScene collisions", () => {
     );
     scene["enemies"].push(enemy);
     return enemy;
+  };
+
+  // Looks straight down, wide and far, at whatever sits below it.
+  const eyeAbove = (pos: Vec) => {
+    const eye = new Eye(
+      {
+        type: "drone",
+        at: 0,
+        x: pos.x,
+        path: "sine",
+        facing: 90,
+        range: 300,
+        sweepAmp: 0,
+        sweepSpeed: 0,
+        aperture: 90,
+      },
+      pos,
+      images,
+    );
+    scene["eyes"].push(eye);
+    return eye;
   };
 
   const bulletAt = (owner: "player" | "enemy", pos: Vec) =>
@@ -142,5 +167,48 @@ describe("GameScene collisions", () => {
 
     expect(scene["spawner"].done).toBe(false);
     expect(scene["scroll"]).toBeGreaterThan(1_000_000);
+  });
+
+  it("raises suspicion while an eye sees the player, and only then", () => {
+    const eye = eyeAbove({ x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - 100 });
+
+    scene.update();
+    expect(eye.detecting).toBe(true);
+    expect(state.suspicion).toBeGreaterThan(0);
+    expect(state.stats.framesSeen).toBe(1);
+
+    scene["player"].pos.x += 200;
+    const seen = state.suspicion;
+    scene.update();
+    expect(eye.detecting).toBe(false);
+    expect(state.suspicion).toBeLessThan(seen);
+  });
+
+  it("can't see a pilot who is already down", () => {
+    const eye = eyeAbove({ x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - 100 });
+    scene["player"].alive = false;
+
+    scene.update();
+
+    expect(eye.detecting).toBe(false);
+    expect(state.suspicion).toBe(0);
+  });
+
+  it("draws the regime's attention when an eye is shot down", () => {
+    const eye = eyeAbove({ x: 100, y: 100 });
+
+    for (let i = 0; i < EYE_STATS.drone.hp; i++) {
+      bulletAt("player", eye.pos);
+      scene.update();
+    }
+
+    // The same tick also decays it, since nothing sees the pilot.
+    expect(state.suspicion).toBeCloseTo(
+      EYE_DESTROYED_SUSPICION - SUSPICION_DECAY,
+    );
+    expect(state.stats.eyesDestroyed).toBe(1);
+    expect(state.realScore).toBe(0);
+    expect(scene["eyes"]).toHaveLength(0);
+    expect(scene["explosions"]).toHaveLength(1);
   });
 });

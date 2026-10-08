@@ -1,8 +1,11 @@
 import type p5 from "p5";
 import {
   ENEMY_STATS,
+  EYE_DESTROYED_SUSPICION,
+  EYE_STATS,
   GAME_OVER_DELAY,
   PLAYER_HALF_SIZE,
+  RED,
   SCROLL_SPEED,
 } from "../config";
 import { circlesOverlap } from "../core/Collisions";
@@ -11,12 +14,14 @@ import type { SceneManager } from "../core/SceneManager";
 import type { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
+import { Eye } from "../entities/Eye";
 import { Player } from "../entities/Player";
 import { Background } from "../levels/Background";
 import { LEVELS } from "../levels/levels";
 import { resetLevelState, state } from "../state";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
+import { Suspicion } from "../systems/Suspicion";
 import { HUD } from "../ui/HUD";
 import { GameOverScene } from "./GameOverScene";
 
@@ -27,7 +32,9 @@ export class GameScene implements Scene {
   private readonly spawner: Spawner;
   private readonly hud: HUD;
   private readonly background: Background;
+  private readonly suspicion = new Suspicion();
   private enemies: Enemy[] = [];
+  private eyes: Eye[] = [];
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private scroll = 0;
@@ -43,11 +50,13 @@ export class GameScene implements Scene {
     this.hud = new HUD(p, assets.font.machine, new Propaganda());
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
-    this.spawner = new Spawner(level, (kind, pos) =>
-      this.enemies.push(
-        new Enemy(kind, pos, () => this.player.pos, assets.image, fire),
-      ),
-    );
+    this.spawner = new Spawner(level, {
+      enemy: (kind, pos) =>
+        this.enemies.push(
+          new Enemy(kind, pos, () => this.player.pos, assets.image, fire),
+        ),
+      eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),
+    });
   }
 
   enter(): void {
@@ -67,14 +76,18 @@ export class GameScene implements Scene {
     this.spawner.update(this.scroll);
 
     for (const enemy of this.enemies) enemy.update();
+    for (const eye of this.eyes) eye.update();
     for (const bullet of this.bullets) bullet.update();
     for (const explosion of this.explosions) explosion.update();
 
     this.collide();
 
     this.enemies = this.enemies.filter((enemy) => enemy.alive);
+    this.eyes = this.eyes.filter((eye) => eye.alive);
     this.bullets = this.bullets.filter((bullet) => bullet.alive);
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
+
+    this.watch();
 
     // Levels have no end yet, so a cleared level starts its waves over while the city flies on.
     if (this.spawner.done && this.enemies.length === 0)
@@ -86,6 +99,7 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.scroll);
+    for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
@@ -95,8 +109,21 @@ export class GameScene implements Scene {
 
   exit(): void {}
 
+  // A dead pilot can't be seen, so the cones go quiet during the crash.
+  private watch(): void {
+    const { player } = this;
+
+    for (const eye of this.eyes)
+      eye.detecting = player.alive && eye.sees(player.pos);
+    this.suspicion.update(
+      this.eyes.filter((eye) => eye.detecting),
+      player.pos,
+    );
+  }
+
   private collide(): void {
     const { player } = this;
+    const targets = [...this.enemies, ...this.eyes];
     // Re-checked on every pair: a hit earlier in the same tick changes it.
     const exposed = () => player.alive && !player.invulnerable;
 
@@ -104,13 +131,15 @@ export class GameScene implements Scene {
       if (!bullet.alive) continue;
 
       if (bullet.owner === "player") {
-        const enemy = this.enemies.find(
-          (enemy) => enemy.alive && circlesOverlap(bullet, enemy),
+        const target = targets.find(
+          (target) => target.alive && circlesOverlap(bullet, target),
         );
-        if (!enemy) continue;
+        if (!target) continue;
 
         bullet.alive = false;
-        if (enemy.hit()) this.kill(enemy);
+        if (!target.hit()) continue;
+        if (target instanceof Eye) this.blind(target);
+        else this.kill(target);
       } else if (exposed() && circlesOverlap(bullet, player)) {
         bullet.alive = false;
         this.hitPlayer();
@@ -132,6 +161,15 @@ export class GameScene implements Scene {
     state.realScore += enemy.score;
     state.stats.kills++;
     this.explode(enemy);
+  }
+
+  // The regime notices at once, and its eyes burst in its own red.
+  private blind(eye: Eye): void {
+    this.suspicion.add(EYE_DESTROYED_SUSPICION);
+    state.stats.eyesDestroyed++;
+    this.explosions.push(
+      new Explosion(eye.pos, EYE_STATS[eye.type].halfSize * 2, RED),
+    );
   }
 
   private explode(enemy: Enemy): void {

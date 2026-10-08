@@ -108,9 +108,11 @@ export const EYE_STATS: Record<
   { halfSize: number; radius: number; hp: number }
 > = {
   tower: { halfSize: 24, radius: 16, hp: 4 },
-  drone: { halfSize: 12, radius: 10, hp: 2 },
+  drone: { halfSize: 16, radius: 12, hp: 2 },
 };
 export const EYE_APERTURE_DEGREES = 45;
+// Shooting an eye down is noticed at once.
+export const EYE_DESTROYED_SUSPICION = 15;
 // Slower than the ground, so a drone drifts down the screen as it patrols.
 export const DRONE_SPEED = 0.5;
 // How far a drone strays either side of its x, and how long one full patrol takes.

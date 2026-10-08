@@ -71,10 +71,11 @@ export type EyeDef = ConeDef &
     | { type: "drone"; at: number; x: number; path: "patrol" | "sine" }
   );
 
-// Later steps add eyes, turrets, pickups, the diary, the boss, and the length.
+// Later steps add turrets, pickups, the diary, the boss, and the length.
 export interface LevelDef {
   terrain: TerrainDef;
   waves: WaveDef[];
+  eyes: EyeDef[];
 }
 
 // Ordered, because each level keeps the effects of the ones below it.

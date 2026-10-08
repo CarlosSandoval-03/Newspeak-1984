@@ -21,11 +21,11 @@ import {
 import type { EyeDef, EyeType, Vec } from "../types";
 import { Entity } from "./Entity";
 
-const DRONE_BODY = 12;
-const DRONE_LENS = 4;
+const DRONE_BODY = 16;
+const DRONE_LENS = 6;
 // Each rotor sits this far out on a diagonal and spins as a line this long.
-const ROTOR_REACH = 8;
-const ROTOR_LENGTH = 8;
+const ROTOR_REACH = 11;
+const ROTOR_LENGTH = 10;
 const ROTOR_SPIN = 0.5;
 
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
