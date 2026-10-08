@@ -285,7 +285,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - **AA gun:** the twin barrels, rotated toward the player every frame. Shots leave from the barrel tips.
 - **Autogyro:** the rotor, two crossed lines rotating over the hub.
 - **Thought Police:** the boss hp bar, plus the hit flash using its `-flash` variant. Its escort uses `thought-police-escort.png`. Its bullets are red.
-- **Red feedback:** the suspicion meter fills in red; a red screen-edge vignette pulses while the player is seen (one prerendered `p5.Graphics`, drawn with varying alpha); destroyed eyes burst in red sparks.
+- **Red feedback:** the suspicion meter fills in red; a red screen-edge vignette pulses while the player is seen (one prerendered `p5.Graphics`, drawn with varying alpha; the `Vignette` in `ui/effects.ts`). It fades in over `VIGNETTE_FADE_FRAMES` and out as fast, and beats once every `VIGNETTE_PULSE_FRAMES` without going fully out, so it reads as a heartbeat, not a blink. Destroyed eyes burst in red sparks.
 
 ### Done when
 

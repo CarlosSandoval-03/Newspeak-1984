@@ -133,3 +133,8 @@ export const ALERT_THRESHOLDS = {
   pursuit: 67,
   thoughtPolice: SUSPICION_MAX,
 } as const;
+
+// While the player is seen, the red vignette fades in over this long and beats once a period.
+export const VIGNETTE_ALPHA = 0.5;
+export const VIGNETTE_FADE_FRAMES = 20;
+export const VIGNETTE_PULSE_FRAMES = 40;

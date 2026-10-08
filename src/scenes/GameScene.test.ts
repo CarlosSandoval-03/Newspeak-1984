@@ -176,6 +176,7 @@ describe("GameScene collisions", () => {
     expect(eye.detecting).toBe(true);
     expect(state.suspicion).toBeGreaterThan(0);
     expect(state.stats.framesSeen).toBe(1);
+    expect(scene["vignette"].strength).toBeGreaterThan(0);
 
     scene["player"].pos.x += 200;
     const seen = state.suspicion;
@@ -210,5 +211,14 @@ describe("GameScene collisions", () => {
     expect(state.realScore).toBe(0);
     expect(scene["eyes"]).toHaveLength(0);
     expect(scene["explosions"]).toHaveLength(1);
+  });
+
+  it("never costs a life for flying into an eye", () => {
+    eyeAbove(PLAYER_SPAWN);
+
+    scene.update();
+
+    expect(state.realLives).toBe(STARTING_LIVES);
+    expect(scene["eyes"]).toHaveLength(1);
   });
 });

@@ -1,5 +1,12 @@
 import type p5 from "p5";
-import { INK, PAPER } from "../config";
+import {
+  ALERT_THRESHOLDS,
+  INK,
+  PAPER,
+  RED,
+  STEEL,
+  SUSPICION_MAX,
+} from "../config";
 import { t } from "../i18n";
 import type { Propaganda } from "../systems/Propaganda";
 
@@ -7,6 +14,11 @@ const MARGIN = 8;
 const RIGHT_EDGE = 472;
 const TOP_BASELINE = 20;
 const SCORE_DIGITS = 6;
+const SECOND_BASELINE = 42;
+const METER = { x: 88, y: 32, w: 120, h: 8 };
+const STATE_X = 216;
+// Indexed by alert level.
+const STATES = ["normal", "alert", "pursuit", "thoughtPolice"] as const;
 
 // Every value comes through Propaganda: the HUD shows what the Party allows, not what is real.
 export class HUD {
@@ -40,6 +52,36 @@ export class HUD {
       RIGHT_EDGE,
       TOP_BASELINE,
     );
+
+    p.textAlign(p.LEFT, p.BASELINE);
+    this.text(t("hud.suspicion"), MARGIN, SECOND_BASELINE);
+    this.meter(propaganda.displayedSuspicion());
+    this.text(
+      t(`hud.states.${STATES[propaganda.displayedAlert()]}`),
+      STATE_X,
+      SECOND_BASELINE,
+    );
+  }
+
+  // A steel frame around an ink well that fills in red, with ink ticks where the alert levels begin.
+  private meter(suspicion: number): void {
+    const { p } = this;
+    const x = METER.x + 1;
+    const y = METER.y + 1;
+    const w = METER.w - 2;
+    const h = METER.h - 2;
+    const at = (value: number) => Math.round((w * value) / SUSPICION_MAX);
+
+    p.fill(STEEL);
+    p.rect(METER.x, METER.y, METER.w, METER.h);
+    p.fill(INK);
+    p.rect(x, y, w, h);
+    p.fill(RED);
+    p.rect(x, y, at(suspicion), h);
+
+    p.fill(INK);
+    for (const threshold of [ALERT_THRESHOLDS.alert, ALERT_THRESHOLDS.pursuit])
+      p.rect(x + at(threshold), y, 1, h);
   }
 
   // The ink shadow lets the text read over plazas and sprites without a backing band.

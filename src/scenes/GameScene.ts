@@ -22,6 +22,7 @@ import { resetLevelState, state } from "../state";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
+import { Vignette } from "../ui/effects";
 import { HUD } from "../ui/HUD";
 import { GameOverScene } from "./GameOverScene";
 
@@ -33,6 +34,7 @@ export class GameScene implements Scene {
   private readonly hud: HUD;
   private readonly background: Background;
   private readonly suspicion = new Suspicion();
+  private readonly vignette: Vignette;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
   private bullets: Bullet[] = [];
@@ -48,6 +50,7 @@ export class GameScene implements Scene {
     this.p = p;
     this.manager = manager;
     this.hud = new HUD(p, assets.font.machine, new Propaganda());
+    this.vignette = new Vignette(p);
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
     this.spawner = new Spawner(level, {
@@ -104,6 +107,7 @@ export class GameScene implements Scene {
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
+    this.vignette.draw();
     this.hud.draw();
   }
 
@@ -115,10 +119,10 @@ export class GameScene implements Scene {
 
     for (const eye of this.eyes)
       eye.detecting = player.alive && eye.sees(player.pos);
-    this.suspicion.update(
-      this.eyes.filter((eye) => eye.detecting),
-      player.pos,
-    );
+    const seenBy = this.eyes.filter((eye) => eye.detecting);
+
+    this.suspicion.update(seenBy, player.pos);
+    this.vignette.update(seenBy.length > 0);
   }
 
   private collide(): void {
