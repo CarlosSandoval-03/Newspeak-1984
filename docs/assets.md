@@ -102,7 +102,7 @@ Side-view scenes, drawn at an integer scale (240×160 → 2× = 480×320).
 
 | File | Size | Scene | Notes |
 | ---- | ---- | ----- | ----- |
-| `menu-city.png` | 240×160 | Menu | Stepped pyramid over the city at night; dark lower third for the menu. Regenerated from a pyramid sketch after the first try drew a spire. |
+| `menu-city.png` | 240×160 | Menu | Stepped pyramid over the city at night; dark lower third for the title. Regenerated from a pyramid sketch after the first try drew a spire. |
 | `dictionary-cover.png` | 96×128 | Dictionary | Red eye emblem, no title. |
 | `vaporized.png` | 240×160 | Game over | Squadron photo with one pilot's head erased: the diarist, and now the player. |
 | `pilot-portrait.png` | 64×64 | Ministry, endings | The player's pilot; same style as the Leader and the Officer so they can face each other. |
@@ -126,7 +126,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | ----- | -------- | -------- | ---- |
 | Every aircraft | `-shadow` variant drawn first. | — | 1 |
 | Player | Blink while invulnerable (skip frames). | Dash afterimages: 2–3 copies at decreasing alpha. | 1, 3 |
-| `menu-city.png` | Title and options in the dark lower third. | Two translucent searchlight triangles sweeping. | 1 |
+| `menu-city.png` | Title on the dark lower third; options below the illustration ([art-direction.md › The Menu](art-direction.md#the-menu)). | Two translucent searchlight triangles sweeping. | 1 |
 | `vaporized.png` | Red "VAPORIZED" stamp (rotated red outline + VT323 word) after a short delay. | One-frame screen shake as it lands. | 1 |
 | `enemy-aa-gun.png` | **Twin barrels**: two parallel 3 px `#3a3a3a` lines with a `#1a1a1a` outline, ~18 px, rotated toward the player each frame; shots leave from the tips. | 2-frame `#e8e4d8` muzzle flash. | 2 |
 | `enemy-gyro.png` | **Rotor**: two crossed `#7a7a7a` lines, ~40 px, rotating over the hub, drawn after the body. | Rotor at 60% alpha. | 2 |

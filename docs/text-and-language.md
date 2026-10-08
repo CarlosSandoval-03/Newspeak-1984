@@ -44,7 +44,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 - **Original only**, in the regime's voice. Never quote Orwell. Orwell's world (Oceania, Eurasia, the Ministries, Newspeak) is the setting; the sentences are ours.
 - **The regime shouts:** everything it displays is UPPERCASE; only long prose (briefings, corrections, diary, endings) uses sentence case.
-- **Short:** at most 22 characters per line (a 176 px mural band) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes.
+- **Short:** at most 22 characters per line (a 176 px mural band) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes. The menu's controls line fits one 60-character VT323 line.
 - **Contradictions come in pairs** stored together (`slogans.banners`); the flip replaces one with the other. For example, `ALWAYS OUR ALLY` / `NEVER OUR ALLY`.
 - **Placeholders** (`{id}`, `{word}`, `{enemy}`…) instead of hard-coded names, so the ticker can rewrite itself and the briefings name the right word in each language.
 

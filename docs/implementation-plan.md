@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection, `t()`, and `state.ts` are done. Next: the Menu.
+**Progress:** the page shell, the canvas, its integer scaling, the asset loader, input, and the `SceneManager` tick are done; the game runs an empty `MenuScene`. Language detection, `t()`, `state.ts`, and the Menu are done; `BEGIN SERVICE` opens an empty `GameScene`. Next: the player and bullets.
 
 ### Files
 
@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, ink, key bindings, tick, and starting lives. **Still to do:** palette (core, regime red ramp, material tones; see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, and starting lives. **Still to do:** material tones (see [art-direction.md](art-direction.md)), player, bullet, and enemy numbers, scroll speed |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `EnemyKind`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -65,8 +65,8 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `levels/Background.ts` | Not started | Scrolling background on a `p5.Graphics` |
 | `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
-| `scenes/MenuScene.ts` | In progress | Clears to ink. **Still to do:** `menu-city.png` with the title and the option list (see **Menu** below) |
-| `scenes/GameScene.ts` | Not started | The game loop |
+| `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
+| `scenes/GameScene.ts` | In progress | Clears to ink. **Still to do:** the game loop |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification
@@ -143,7 +143,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Menu**
 
 - **Decision:** under the title, a vertical list: `BEGIN SERVICE` and `LANGUAGE: ENGLISH` (step 4 adds `HONOR ROLL`). Up and Down move the selection; Enter or Shoot activates it.
-- `BEGIN SERVICE` calls `resetGame()` and starts the run. `LANGUAGE` switches to the other language and saves the choice (`try/catch`).
+- `BEGIN SERVICE` calls `resetGame()` and starts the run. On `LANGUAGE`, Enter, Shoot, or Right moves to the next language and Left to the previous one, and the choice is saved (`try/catch`).
 - Shoot confirms only in the Menu. Everywhere else it is Enter, so a held fire button never skips the text at the end of a level.
 
 **Game over**
@@ -196,7 +196,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - **Enemies:** the `-flash` variant on hit; explosions on death.
 - **Regime red in the city:** hanging Party banners on part of the procedural rooftops (`#b3261e` with `#6e1712` folds) and blinking `#e0503a` warning lamps on antennas.
 - **Player:** blink while invulnerable.
-- **Menu:** draw `menu-city.png` at 2× and write the title and the option list in its dark lower third.
+- **Menu:** draw `menu-city.png` at 2× with the title on its dark lower third and the option list below it ([art-direction.md › The Menu](art-direction.md#the-menu)).
 - **Game over:** draw `vaporized.png` at 2×, then stamp a red "VAPORIZED" over it.
 
 ### Done when
@@ -212,7 +212,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [ ] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
 - [ ] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
 - [ ] Every file from the structure exists, and the stubs typecheck.
-- [ ] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
+- [x] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
 - [ ] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.
 
 ---

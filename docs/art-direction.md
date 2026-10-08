@@ -89,6 +89,10 @@ There is no backing band: every HUD text has a 1 px ink shadow at (+1, +1), so i
   </tr>
 </table>
 
+## The Menu
+
+`menu-city.png` fills the top half of the screen at 2× (480 × 320), and the title (VT323 60, paper) sits on its dark lower third, under the city lights. The options go below the illustration, on ink: the dark band is about 100 px tall, too little for the title, the options, and the honor roll that step 4 adds. The selected option is the only red text. `menu.controls` runs along the bottom in steel; in Spanish it is exactly 60 characters, all a VT323 20 line holds, so a longer version must drop a word.
+
 ## The page around the game
 
 The game is a telescreen set into a concrete wall. The canvas sits in a concrete bezel with a red power lamp that never goes off. On wide windows the Leader's portrait (`poster-leader.png` at 3× or 4×, mirrored on the right) hangs on each side facing the screen; on narrow ones the portraits disappear before they crowd the game. Wall and portraits are dimmed so the game stays the brightest thing on the page. The page has no text: everything the player reads comes from `src/i18n/`, inside the game.

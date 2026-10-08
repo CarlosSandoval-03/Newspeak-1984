@@ -31,7 +31,7 @@ const sketch = (p: p5) => {
     window.addEventListener("resize", fit);
 
     manager = new SceneManager(await loadAssets(p), new Input());
-    manager.change(new MenuScene(p));
+    manager.change(new MenuScene(p, manager));
   };
 
   p.draw = () => manager.frame(p.deltaTime);

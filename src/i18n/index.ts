@@ -5,6 +5,8 @@ const strings = { en, es };
 
 export type Language = keyof typeof strings;
 
+export const LANGUAGES = Object.keys(strings) as Language[];
+
 // Lists are read from the strings object directly, so t() only reaches single strings.
 type Path<T> = {
   [K in keyof T & string]: T[K] extends string
