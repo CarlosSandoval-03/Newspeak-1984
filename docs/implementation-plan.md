@@ -172,11 +172,11 @@ type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 // Ordered, so code can ask for "at least pursuit": state.alertLevel >= ALERT.pursuit.
 const ALERT = { normal: 0, alert: 1, pursuit: 2, thoughtPolice: 3 } as const;
 type AlertLevel = (typeof ALERT)[keyof typeof ALERT];
-type EnemyKind = "straight" | "sine" | "bomber"; // later steps add "homing"
+type EnemyKind = "straight" | "sine" | "bomber"; // step 2 adds "homing"
 
 interface WaveDef {
   at: number;          // scroll distance
-  kind: EnemyKind;
+  kind: EnemyKind;     // never "homing": see step 2 › Pursuit
   count: number;
   x: number;           // spawn x of the first enemy
   spacing: number;     // horizontal gap between enemies
@@ -264,7 +264,9 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   | 100 | 3, Thought Police | see below |
 
 - **Alert:** the Spawner adds extra enemies to each wave (`count * ALERT_SPAWN_MULT`, rounded up), and the fire intervals (`ENEMY_FIRE_INTERVAL`, `BOMBER_FIRE_INTERVAL`) are divided by `ALERT_FIRE_MULT`. **Decision:** the extra enemies fly as a row of reinforcements behind the wave, over its first enemies' columns, so a wave never runs off the side or stacks two enemies on one spot; a lone bomber becomes two in line. An enemy reads the alert at every reload, so those already on screen fire faster from their next shot.
-- **Pursuit:** the Spawner adds autogyros (`enemy-gyro.png`) with the `homing` behavior. They turn toward the player at a capped turn rate (`HOMING_TURN_RATE`), so they can be dodged. Their distinct silhouette tells the player the regime is chasing them.
+- **Pursuit:** the Spawner adds autogyros (`enemy-gyro.png`) with the `homing` behavior: one at once, then one every `GYRO_INTERVAL` frames at a random x above the top edge. The pace is kept across dips out of pursuit, so hovering at 67 can't call them faster. They turn toward the player at a capped turn rate (`HOMING_TURN_RATE`), so they can be dodged, and give up the chase after `HOMING_FRAMES`, flying on until they leave by any edge. Their distinct silhouette tells the player the regime is chasing them, and the sprite turns with their heading.
+- **Decision:** autogyros never fire; their weapon is themselves. Shooting one scores, ramming it costs a life like any crash.
+- **Decision:** autogyros come only from pursuit up, never in a level's waves, so their silhouette always means the regime is chasing you. `WaveDef.kind` excludes `homing`, so level data can't break the signal.
 - **Thought Police:** when suspicion reaches 100, `alertLevel` becomes 3 and the Thought Police spawn: a mini-boss built on `Boss` (hp bar, attack pattern, red accents) with a small escort. **Decision:** suspicion is frozen while they are on screen. If the player kills them, or survives `THOUGHT_POLICE_TIMEOUT` frames until they withdraw off the top of the screen, suspicion resets to **50**. Outlasting them counts as much as beating them, which matters once FREE is gone.
 - They never spawn while a level boss is alive: suspicion stays at 100, with the pursuit effects, until the boss dies. They come back in the same level if suspicion climbs to 100 again.
 

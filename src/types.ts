@@ -29,13 +29,13 @@ export interface PlatformDef {
 
 export type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 
-// Later steps add "homing".
-export type EnemyKind = "straight" | "sine" | "bomber";
+export type EnemyKind = "straight" | "sine" | "bomber" | "homing";
 
 export interface WaveDef {
   // Scroll distance at which the wave enters at the top edge.
   at: number;
-  kind: EnemyKind;
+  // Autogyros only come when suspicion calls them, so their silhouette always means pursuit.
+  kind: Exclude<EnemyKind, "homing">;
   count: number;
   // Spawn x of the first enemy; the rest follow to its right.
   x: number;

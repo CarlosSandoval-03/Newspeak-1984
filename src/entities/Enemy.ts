@@ -11,8 +11,11 @@ import {
   ENEMY_FIRE_JITTER,
   ENEMY_STATS,
   HIT_FLASH_FRAMES,
+  HOMING_FRAMES,
+  HOMING_TURN_RATE,
   SINE_AMPLITUDE,
   SINE_PERIOD,
+  STEEL,
 } from "../config";
 import { state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
@@ -23,7 +26,14 @@ const SPRITES = {
   straight: "enemy-fighter",
   sine: "enemy-fighter",
   bomber: "enemy-bomber",
+  homing: "enemy-gyro",
 } as const;
+
+// The rotor turns over the hub, a little behind the sprite's center.
+const HUB_OFFSET = 4;
+const ROTOR_LENGTH = 40;
+const ROTOR_ALPHA = 0.6;
+const ROTOR_SPIN = 0.4;
 
 export class Enemy extends Entity {
   readonly kind: EnemyKind;
@@ -32,6 +42,8 @@ export class Enemy extends Entity {
   private readonly startX: number;
   private age = 0;
   private flash = 0;
+  // Radians, with π/2 straight down the screen; only an autogyro ever turns.
+  private heading = Math.PI / 2;
   private fireTimer: number;
   private readonly target: () => Vec;
   private readonly images: Assets["image"];
@@ -74,6 +86,7 @@ export class Enemy extends Entity {
 
   update(): void {
     this.age++;
+    if (this.kind === "homing") this.steer();
     super.update();
     if (this.kind === "sine")
       this.pos.x =
@@ -82,11 +95,19 @@ export class Enemy extends Entity {
 
     if (this.flash > 0) this.flash--;
 
-    // Enemies only ever fly down, so leaving means falling off the bottom.
-    if (this.pos.y - ENEMY_STATS[this.kind].halfSize > CANVAS_HEIGHT) {
+    // Most enemies only fly down, so leaving means falling off the bottom; an autogyro can leave by any edge.
+    const half = ENEMY_STATS[this.kind].halfSize;
+    const gone =
+      this.kind === "homing"
+        ? this.isOffscreen(half)
+        : this.pos.y - half > CANVAS_HEIGHT;
+    if (gone) {
       this.alive = false;
       return;
     }
+
+    // An autogyro's weapon is itself.
+    if (this.kind === "homing") return;
 
     // The clock only runs on screen, so nothing shoots from beyond the top edge.
     if (this.pos.y < 0) return;
@@ -101,7 +122,51 @@ export class Enemy extends Entity {
     const sprite = SPRITES[this.kind];
     const body = this.flash > 0 ? (`${sprite}-flash` as const) : sprite;
 
-    this.drawAircraft(p, this.images[body], this.images[`${sprite}-shadow`]);
+    const turn = this.heading - Math.PI / 2;
+
+    this.drawAircraft(
+      p,
+      this.images[body],
+      this.images[`${sprite}-shadow`],
+      turn,
+    );
+    if (this.kind === "homing") this.drawRotor(p, turn);
+  }
+
+  // Turns toward the player no faster than HOMING_TURN_RATE, so a sharp sidestep shakes it off.
+  private steer(): void {
+    if (this.age <= HOMING_FRAMES) {
+      const target = this.target();
+      const wanted = Math.atan2(target.y - this.pos.y, target.x - this.pos.x);
+      const d = wanted - this.heading;
+      const off = Math.atan2(Math.sin(d), Math.cos(d));
+      this.heading +=
+        Math.sign(off) * Math.min(Math.abs(off), HOMING_TURN_RATE);
+    }
+
+    const { speed } = ENEMY_STATS[this.kind];
+    this.vel = {
+      x: Math.cos(this.heading) * speed,
+      y: Math.sin(this.heading) * speed,
+    };
+  }
+
+  private drawRotor(p: p5, turn: number): void {
+    const context = p.drawingContext as CanvasRenderingContext2D;
+    const x = Math.round(this.pos.x - Math.sin(turn) * HUB_OFFSET);
+    const y = Math.round(this.pos.y + Math.cos(turn) * HUB_OFFSET);
+    const spin = this.age * ROTOR_SPIN;
+
+    context.globalAlpha = ROTOR_ALPHA;
+    p.stroke(STEEL);
+    p.strokeWeight(1);
+    for (const blade of [spin, spin + Math.PI / 2]) {
+      const dx = (Math.cos(blade) * ROTOR_LENGTH) / 2;
+      const dy = (Math.sin(blade) * ROTOR_LENGTH) / 2;
+      p.line(x - dx, y - dy, x + dx, y + dy);
+    }
+    p.noStroke();
+    context.globalAlpha = 1;
   }
 
   // Read at every reload, so enemies already on screen speed up from their next shot.

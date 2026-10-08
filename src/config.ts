@@ -87,6 +87,7 @@ export const ENEMY_STATS: Record<
   straight: { halfSize: 24, radius: 12, hp: 1, score: 100, speed: 2 },
   sine: { halfSize: 24, radius: 12, hp: 1, score: 100, speed: 2 },
   bomber: { halfSize: 32, radius: 20, hp: 6, score: 500, speed: 1 },
+  homing: { halfSize: 24, radius: 12, hp: 2, score: 150, speed: 2.5 },
 };
 export const SINE_AMPLITUDE = 40;
 export const SINE_PERIOD = 120;
@@ -144,3 +145,9 @@ export const ALERT_SPAWN_MULT = 1.3;
 export const ALERT_FIRE_MULT = 1.5;
 // Between a wave and the row of reinforcements behind it.
 export const REINFORCEMENT_GAP = 16;
+
+// In pursuit an autogyro comes this often. It turns toward the player at most this many
+// radians a frame, so a sharp sidestep shakes it, and gives up the chase after HOMING_FRAMES.
+export const GYRO_INTERVAL = 180;
+export const HOMING_TURN_RATE = 0.03;
+export const HOMING_FRAMES = 150;

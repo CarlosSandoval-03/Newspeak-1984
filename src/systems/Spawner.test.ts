@@ -1,5 +1,11 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { ENEMY_STATS, EYE_STATS, REINFORCEMENT_GAP } from "../config";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  CANVAS_WIDTH,
+  ENEMY_STATS,
+  EYE_STATS,
+  GYRO_INTERVAL,
+  REINFORCEMENT_GAP,
+} from "../config";
 import { anchorNear } from "../levels/layout";
 import {
   ALERT,
@@ -164,5 +170,50 @@ describe("Spawner", () => {
     expect(bombers[0].pos.y).not.toBe(bombers[1].pos.y);
     // Two sine enemies grow to three.
     expect(spawned.filter(({ kind }) => kind === "sine")).toHaveLength(3);
+  });
+
+  describe("in pursuit", () => {
+    const gyros = () => spawned.filter(({ kind }) => kind === "homing");
+
+    it("sends no autogyros below pursuit", () => {
+      for (let scroll = 0; scroll < 1000; scroll++)
+        spawner.update(scroll, ALERT.alert);
+
+      expect(gyros()).toHaveLength(0);
+    });
+
+    it("sends one at once, then one every interval", () => {
+      for (let scroll = 0; scroll <= GYRO_INTERVAL * 2; scroll++)
+        spawner.update(scroll, ALERT.pursuit);
+
+      expect(gyros()).toHaveLength(3);
+    });
+
+    it("keeps its pace when suspicion dips out of pursuit and back", () => {
+      spawner.update(0, ALERT.pursuit);
+      spawner.update(1, ALERT.alert);
+      spawner.update(2, ALERT.pursuit);
+
+      expect(gyros()).toHaveLength(1);
+    });
+
+    it("brings each one in above the top edge, fully across the screen", () => {
+      const half = ENEMY_STATS.homing.halfSize;
+
+      for (const roll of [0, 0.999]) {
+        vi.spyOn(Math, "random").mockReturnValue(roll);
+        spawned = [];
+        new Spawner(level, {
+          enemy: (kind, pos) => spawned.push({ kind, pos }),
+          eye: () => {},
+        }).update(0, ALERT.thoughtPolice);
+
+        const [{ pos }] = gyros();
+        expect(pos.y).toBe(-half);
+        expect(pos.x).toBeGreaterThanOrEqual(half);
+        expect(pos.x).toBeLessThanOrEqual(CANVAS_WIDTH - half);
+      }
+      vi.restoreAllMocks();
+    });
   });
 });

@@ -129,7 +129,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `menu-city.png` | Title on the dark lower third; options below the illustration ([art-direction.md › The Menu](art-direction.md#the-menu)). | Two translucent searchlight triangles sweeping. | 1 |
 | `vaporized.png` | Red "VAPORIZED" stamp (rotated red outline + VT323 word) after a short delay. | One-frame screen shake as it lands. | 1 |
 | `enemy-aa-gun.png` | **Twin barrels**: two parallel 3 px `#3a3a3a` lines with a `#1a1a1a` outline, ~18 px, rotated toward the player each frame; shots leave from the tips. | 2-frame `#e8e4d8` muzzle flash. | 2 |
-| `enemy-gyro.png` | **Rotor**: two crossed `#7a7a7a` lines, ~40 px, rotating over the hub, drawn after the body. | Rotor at 60% alpha. | 2 |
+| `enemy-gyro.png` | **Rotor**: two crossed `#7a7a7a` lines, ~40 px, rotating over the hub (4 px behind the center), drawn after the body. The body and its shadow turn with the gyro's heading. | Rotor at 60% alpha. | 2 |
 | `eye-tower.png` | **Vision cone** (`arc(..., PIE)`) from the lens, drawn before the tower; grey idle, red detecting. | — | 2 |
 | `thought-police.png`, `boss-*.png` | Hp bar and `-flash` on hit. | Blinking outline on weak points; pulsing red lights. | 2, 4 |
 | `boss-eye.png` | **Pupil**: a `#1a1a1a` circle over the lens, shifted toward the player. | Pupil narrows as hp drops. | 4 |

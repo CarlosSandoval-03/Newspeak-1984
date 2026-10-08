@@ -35,7 +35,13 @@ export abstract class Entity {
   abstract draw(p: p5): void;
 
   // Integer positions keep pixel art crisp; the shadow goes first so the aircraft covers it.
-  protected drawAircraft(p: p5, sprite: p5.Image, shadow: p5.Image): void {
+  // `turn` rotates a sprite drawn facing down; the shadow keeps its offset, since the sun doesn't turn.
+  protected drawAircraft(
+    p: p5,
+    sprite: p5.Image,
+    shadow: p5.Image,
+    turn = 0,
+  ): void {
     const x = Math.round(this.pos.x);
     const y = Math.round(this.pos.y);
     const context = p.drawingContext as CanvasRenderingContext2D;
@@ -44,9 +50,22 @@ export abstract class Entity {
 
     // globalAlpha instead of tint(): tint rebuilds the image on every call.
     context.globalAlpha = SHADOW_ALPHA;
-    p.image(shadow, x + SHADOW_OFFSET.x, y + SHADOW_OFFSET.y);
+    blit(p, shadow, x + SHADOW_OFFSET.x, y + SHADOW_OFFSET.y, turn);
     context.globalAlpha = 1;
 
-    p.image(sprite, x, y);
+    blit(p, sprite, x, y, turn);
   }
+}
+
+function blit(p: p5, image: p5.Image, x: number, y: number, turn: number) {
+  if (turn === 0) {
+    p.image(image, x, y);
+    return;
+  }
+
+  p.push();
+  p.translate(x, y);
+  p.rotate(turn);
+  p.image(image, 0, 0);
+  p.pop();
 }

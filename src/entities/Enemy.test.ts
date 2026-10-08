@@ -11,6 +11,8 @@ import {
   ENEMY_FIRE_INTERVAL,
   ENEMY_STATS,
   HIT_FLASH_FRAMES,
+  HOMING_FRAMES,
+  HOMING_TURN_RATE,
   SINE_AMPLITUDE,
   SINE_PERIOD,
 } from "../config";
@@ -184,5 +186,88 @@ describe("Enemy", () => {
 
     enemy.update();
     expect(enemy.alive).toBe(false);
+  });
+
+  describe("autogyro", () => {
+    const headingOf = (enemy: Enemy) => angleOf(enemy.vel);
+
+    it("turns toward the player no faster than its turn rate", () => {
+      // Straight to the side: the gyro has to swing a quarter turn.
+      const gyro = make("homing", { x: 100, y: 100 }, { x: 400, y: 100 });
+      const headings: number[] = [];
+
+      for (let i = 0; i < 60; i++) {
+        gyro.update();
+        headings.push(headingOf(gyro));
+      }
+
+      for (let i = 1; i < headings.length; i++)
+        expect(Math.abs(headings[i] - headings[i - 1])).toBeLessThanOrEqual(
+          HOMING_TURN_RATE + 1e-9,
+        );
+      expect(headings.at(-1)!).toBeLessThan(Math.PI / 2);
+      expect(Math.hypot(gyro.vel.x, gyro.vel.y)).toBeCloseTo(
+        ENEMY_STATS.homing.speed,
+      );
+    });
+
+    it("turns the short way across the ±180° seam", () => {
+      // Below and just left: the short way round is clockwise, through π.
+      const gyro = make("homing", { x: 300, y: 100 }, { x: 0, y: 101 });
+
+      gyro.update();
+
+      expect(headingOf(gyro)).toBeCloseTo(Math.PI / 2 + HOMING_TURN_RATE);
+    });
+
+    it("gives up the chase after a while and flies on", () => {
+      const target = { x: 240, y: 300 };
+      const gyro = make("homing", { x: 240, y: 0 }, target);
+
+      ticks(gyro, HOMING_FRAMES);
+      target.x = 0;
+      const heading = headingOf(gyro);
+      ticks(gyro, 10);
+
+      expect(headingOf(gyro)).toBe(heading);
+    });
+
+    it("never fires", () => {
+      const gyro = make("homing", { x: 240, y: 100 }, { x: 240, y: 120 });
+
+      ticks(gyro, HOMING_FRAMES);
+
+      expect(fired).toHaveLength(0);
+    });
+
+    it("leaves by any edge", () => {
+      // Chasing a player off to the left, it flies out the side.
+      const gyro = make("homing", { x: 30, y: 300 }, { x: -1000, y: 300 });
+
+      ticks(gyro, 120);
+
+      expect(gyro.alive).toBe(false);
+    });
+
+    it("turns its sprite with its heading and spins a rotor on top", () => {
+      const calls: string[] = [];
+      const rotate = vi.fn();
+      const p = new Proxy(
+        { CENTER: "center", drawingContext: {}, rotate },
+        {
+          get: (target, key) =>
+            key in target
+              ? target[key as keyof typeof target]
+              : () => calls.push(String(key)),
+        },
+      ) as unknown as p5;
+      const gyro = make("homing", { x: 100, y: 100 }, { x: 400, y: 100 });
+
+      ticks(gyro, 10);
+      gyro.draw(p);
+
+      expect(rotate).toHaveBeenCalledWith(headingOf(gyro) - Math.PI / 2);
+      expect(calls.filter((call) => call === "line")).toHaveLength(2);
+    });
   });
 });

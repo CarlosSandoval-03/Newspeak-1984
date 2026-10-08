@@ -147,7 +147,7 @@ flowchart TD
 | ----- | ---- | -------- |
 | Fighter | Basic | Straight or weaving, aimed shots. Can be camouflaged (visible with TRUTH) or disguised as an ally. |
 | Bomber | Heavy | Slower, tougher, more bullets. |
-| Autogyro | Pursuit | Spawns at high suspicion, homes in. |
+| Autogyro | Pursuit | Spawns only at high suspicion, never in a level's waves, so it always means you're being chased. Homes in, never fires. |
 | AA gun | Ground turret | Aims its twin barrels at the player. |
 | Eye tower, drone | Surveillance | Don't shoot and never collide; being seen raises suspicion. |
 | Thought Police + escort | Mini-boss | Arrives at suspicion 100. Red bullets. |

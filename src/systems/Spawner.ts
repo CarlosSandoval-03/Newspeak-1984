@@ -1,7 +1,9 @@
 import {
   ALERT_SPAWN_MULT,
+  CANVAS_WIDTH,
   ENEMY_STATS,
   EYE_STATS,
+  GYRO_INTERVAL,
   REINFORCEMENT_GAP,
 } from "../config";
 import { anchorNear } from "../levels/layout";
@@ -32,6 +34,8 @@ export class Spawner {
   private readonly spawn: Spawn;
   private next = 0;
   private eyes: PendingEye[] = [];
+  // Kept across passes and dips out of pursuit, so hovering at the threshold can't call gyros faster.
+  private nextGyro = -Infinity;
   // The scroll at which the current pass began; the scroll itself never goes back, so the city never jumps.
   private start = 0;
 
@@ -70,6 +74,16 @@ export class Spawner {
           y: -half - row * (half * 2 + REINFORCEMENT_GAP),
         });
       }
+    }
+
+    if (alert >= ALERT.pursuit && scroll >= this.nextGyro) {
+      const half = ENEMY_STATS.homing.halfSize;
+
+      this.nextGyro = scroll + GYRO_INTERVAL;
+      this.spawn.enemy("homing", {
+        x: half + Math.random() * (CANVAS_WIDTH - half * 2),
+        y: -half,
+      });
     }
 
     while (this.eyes.length > 0 && scroll >= this.eyes[0].due) {
