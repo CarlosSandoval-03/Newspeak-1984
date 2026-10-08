@@ -1,3 +1,5 @@
+import type { EnemyKind } from "./types";
+
 export const CANVAS_WIDTH = 480;
 export const CANVAS_HEIGHT = 640;
 export const INK = "#1a1a1a";
@@ -46,3 +48,25 @@ export const BULLET_RADIUS = 3;
 // Fakes altitude, like 1942: the shadow falls down and to the right.
 export const SHADOW_OFFSET = { x: 6, y: 10 };
 export const SHADOW_ALPHA = 0.4;
+
+export const ENEMY_STATS: Record<
+  EnemyKind,
+  { radius: number; hp: number; score: number; speed: number }
+> = {
+  straight: { radius: 12, hp: 1, score: 100, speed: 2 },
+  sine: { radius: 12, hp: 1, score: 100, speed: 2 },
+  bomber: { radius: 20, hp: 6, score: 500, speed: 1 },
+};
+export const SINE_AMPLITUDE = 40;
+export const SINE_PERIOD = 120;
+export const ENEMY_BULLET_SPEED = 3;
+export const ENEMY_FIRE_INTERVAL = 90;
+// Spreads a wave's shots out, so its enemies don't all fire on the same frame.
+export const ENEMY_FIRE_JITTER = 30;
+export const BOMBER_FIRE_INTERVAL = 120;
+export const BOMBER_FAN_COUNT = 5;
+export const BOMBER_FAN_SPREAD_DEGREES = 60;
+export const HIT_FLASH_FRAMES = 3;
+
+export const EXPLOSION_FRAMES = 20;
+export const EXPLOSION_PARTICLES = 8;

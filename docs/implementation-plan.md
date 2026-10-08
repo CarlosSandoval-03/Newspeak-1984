@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where the player flies and shoots over ink. Next: enemies, waves, collisions, and explosions.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where the player flies and shoots over ink. `Enemy` and `Explosion` exist but nothing spawns them yet. Next: waves and the Spawner, then collisions.
 
 ### Files
 
@@ -44,9 +44,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, and shadow numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), enemy numbers, scroll speed |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, and explosion numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), scroll speed, respawn |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
-| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `EnemyKind`, `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
+| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts`, `index.test.ts` | Done | Language detection and `t()` (see **Language** below); `main.ts` calls `initLanguage()` once. `t()` only accepts paths to a single string, so a misspelled key fails the typecheck |
 | `state.ts`, `state.test.ts` | Done | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()`. Both reset `state` in place, so every module that imported it sees the new run |
@@ -55,7 +55,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
 | `core/Collisions.ts` | Not started | Circle–circle test |
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
-| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | In progress | Real implementations. `Player` and `Bullet` are done, with tests; the player hands its bullets to the scene through a callback. **Still to do:** `Enemy`, `Explosion`, and the player's hit, respawn, and blink |
+| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | In progress | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once. **Still to do:** the player's hit, respawn, and blink |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
 | `systems/Spawner.ts` | Not started | Reads waves from level data |
 | `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
@@ -108,7 +108,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 
 - Spawned by the Spawner from a wave. Each enemy has `hp`, a `score` value, and a `kind`.
 - Step 1 kinds:
-  - `straight` (`enemy-fighter.png`) flies straight down; `sine` (the same sprite) flies down while weaving horizontally. Both shoot at the player's current position every `ENEMY_FIRE_INTERVAL` frames, with some random jitter.
+  - `straight` (`enemy-fighter.png`) flies straight down; `sine` (the same sprite) flies down while weaving horizontally. Both shoot at the player's current position every `ENEMY_FIRE_INTERVAL` frames, give or take `ENEMY_FIRE_JITTER`, so a wave doesn't fire in unison. The fire clock only runs on screen.
   - `bomber` (`enemy-bomber.png`) flies straight down, slower and with more hp. Every `BOMBER_FIRE_INTERVAL` frames it fires a fan of `BOMBER_FAN_COUNT` bullets centered on the player.
 - A hit that doesn't kill it swaps the sprite for its `-flash` variant for `HIT_FLASH_FRAMES` (~3) frames.
 - It dies at 0 hp, which spawns an `Explosion`, adds `score` to `state.realScore`, and increments `stats.kills`. It is removed when it leaves the screen.

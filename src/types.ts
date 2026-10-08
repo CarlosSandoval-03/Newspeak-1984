@@ -29,6 +29,9 @@ export interface PlatformDef {
 
 export type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 
+// Later steps add "homing".
+export type EnemyKind = "straight" | "sine" | "bomber";
+
 // Ordered, because each level keeps the effects of the ones below it.
 export const ALERT = {
   normal: 0,
