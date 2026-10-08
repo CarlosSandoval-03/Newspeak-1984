@@ -42,6 +42,18 @@ export const GAME_OVER_TEXT_DELAY = 30;
 
 export const SCROLL_SPEED = 1;
 
+// The city is cut into chunks taller than the screen, so at most two are ever on it.
+export const CELL_SIZE = 32;
+export const CHUNK_HEIGHT = 1024;
+export const MIN_BLOCK_CELLS = 4;
+export const MAX_BLOCK_CELLS = 7;
+export const BUILDING_CHANCE = 0.8;
+export const SKYLIGHT_CHANCE = 0.3;
+export const BANNER_CHANCE = 0.25;
+// crater.png's size, which the layout keeps clear of curbs and chunk edges.
+export const CRATER_SIZE = 48;
+export const CRATER_CHANCE = 0.065;
+
 // The words row starts below this, so the ship never hides under it.
 export const PLAYFIELD_BOTTOM = 588;
 

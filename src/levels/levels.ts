@@ -3,6 +3,7 @@ import type { LevelDef } from "../types";
 // Waves enter about 5 s apart at 1 px a frame; they must be sorted by `at`.
 export const LEVELS: LevelDef[] = [
   {
+    terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
     waves: [
       { at: 60, kind: "straight", count: 3, x: 120, spacing: 120 },
       { at: 360, kind: "sine", count: 4, x: 90, spacing: 100 },

@@ -4,6 +4,7 @@ import type { EnemyKind, LevelDef, Vec } from "../types";
 import { Spawner } from "./Spawner";
 
 const level: LevelDef = {
+  terrain: { seed: 1, blocks: { plaza: 0, rubble: 0 } },
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0 },

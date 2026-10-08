@@ -42,8 +42,16 @@ export interface WaveDef {
   spacing: number;
 }
 
-// Later steps add terrain, eyes, turrets, pickups, the diary, the boss, and the length.
+// The recipe describes intent, not tiles; later steps add the river, railway, and landmark.
+export interface TerrainDef {
+  seed: number;
+  // Shares of the city blocks; the rest stay open asphalt.
+  blocks: { plaza: number; rubble: number };
+}
+
+// Later steps add eyes, turrets, pickups, the diary, the boss, and the length.
 export interface LevelDef {
+  terrain: TerrainDef;
   waves: WaveDef[];
 }
 
