@@ -9,7 +9,9 @@ import { Explosion } from "../entities/Explosion";
 import { Player } from "../entities/Player";
 import { LEVELS } from "../levels/levels";
 import { resetLevelState, state } from "../state";
+import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
+import { HUD } from "../ui/HUD";
 import { MenuScene } from "./MenuScene";
 
 export class GameScene implements Scene {
@@ -17,6 +19,7 @@ export class GameScene implements Scene {
   private readonly manager: SceneManager;
   private readonly player: Player;
   private readonly spawner: Spawner;
+  private readonly hud: HUD;
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
@@ -28,6 +31,7 @@ export class GameScene implements Scene {
 
     this.p = p;
     this.manager = manager;
+    this.hud = new HUD(p, assets.font.machine, new Propaganda());
     this.player = new Player(input, assets.image, fire);
     this.spawner = new Spawner(LEVELS[state.level - 1], (kind, pos) =>
       this.enemies.push(
@@ -71,6 +75,7 @@ export class GameScene implements Scene {
     for (const bullet of this.bullets) bullet.draw(p);
     this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
+    this.hud.draw();
   }
 
   exit(): void {}

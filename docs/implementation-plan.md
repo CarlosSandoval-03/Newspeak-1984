@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over ink: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. Losing the last life returns to the Menu for now. Next: the HUD through `Propaganda` and the VAPORIZED game over.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over ink: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. The HUD shows the score and lives through `Propaganda`. Losing the last life returns to the Menu for now. Next: the VAPORIZED game over.
 
 ### Files
 
@@ -58,15 +58,15 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
 | `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and can reset for the loop |
-| `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
+| `systems/Propaganda.ts`, `Propaganda.test.ts` | Done | **Pass-through version**: returns the real values and never lies |
 | `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Not started | Stubs |
 | `levels/levels.ts`, `levels.test.ts` | In progress | Level 1's waves; the tests keep them sorted and on screen. **Still to do:** the terrain recipe |
 | `levels/layout.ts`, `layout.test.ts` | Not started | City generator: streets, blocks, buildings, craters (see **Background** below) |
 | `levels/Background.ts` | Not started | Scrolling background on a `p5.Graphics` |
-| `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
+| `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
-| `scenes/GameScene.ts`, `GameScene.test.ts` | In progress | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over ink, and loops the level once cleared; the tests cover the collision rules. **Still to do:** background, HUD, and game over (it returns to the Menu for now) |
+| `scenes/GameScene.ts`, `GameScene.test.ts` | In progress | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over ink, and loops the level once cleared; the tests cover the collision rules. Draws the HUD last. **Still to do:** background and game over (it returns to the Menu for now) |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification
@@ -210,7 +210,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [ ] Losing all lives shows "VAPORIZED" with this run's pilot ID; Enter returns to the Menu. A new run gets a new ID.
 - [ ] The background scrolls with no visible seam.
 - [ ] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
-- [ ] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
+- [x] The HUD gets every value through `Propaganda`; a search for `state.` in `ui/HUD.ts` finds nothing.
 - [ ] Every file from the structure exists, and the stubs typecheck.
 - [x] The game starts in English; `?lang=` or a saved choice overrides it; the Menu option switches and remembers it, even with storage blocked (it just won't persist).
 - [ ] No inline player-facing strings: searching `src/` outside `i18n/` for quoted UPPERCASE text finds none.

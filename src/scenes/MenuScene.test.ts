@@ -30,7 +30,10 @@ describe("MenuScene", () => {
     vi.stubGlobal("localStorage", { setItem: () => {} });
 
     keys = new EventTarget();
-    manager = new SceneManager({} as Assets, new Input(keys));
+    manager = new SceneManager(
+      { image: {}, font: {} } as Assets,
+      new Input(keys),
+    );
     menu = new MenuScene({} as p5, manager);
     manager.change(menu);
   });

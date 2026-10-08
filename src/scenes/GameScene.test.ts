@@ -37,7 +37,7 @@ describe("GameScene collisions", () => {
   beforeEach(() => {
     resetGame();
     manager = new SceneManager(
-      { image: images } as Assets,
+      { image: images, font: {} } as Assets,
       new Input(new EventTarget()),
     );
     scene = new GameScene({} as p5, manager);
