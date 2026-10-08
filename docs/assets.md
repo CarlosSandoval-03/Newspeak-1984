@@ -154,7 +154,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | Element | Why |
 | ------- | --- |
 | Regime red in the world | Party banners on rooftops, warning lamps, red vignette, red regime bullets, stamps. Drawn by code so it can react to suspicion; full list in [art-direction.md](art-direction.md). |
-| Bullets | Hundreds of 2–4 px circles; `p.circle()` is as cheap as an image and can change size and color. |
+| Bullets | Hundreds on screen: enemy bullets are 2–4 px circles, and the player's are 5×9 tracers pointed at both ends, made of three rects, so the two never get confused. Both are as cheap as an image and can change size and color. |
 | Drones | Grey circle, red eye, four rotating rotor lines. |
 | Explosions | Expanding circles and particles fading over ~20 frames; sprite animations would cost many generations. |
 | Word pickups | Dynamic text, with a red strike-through when removed. |

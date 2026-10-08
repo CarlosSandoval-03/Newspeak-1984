@@ -20,8 +20,20 @@ export class Bullet extends Entity {
   }
 
   draw(p: p5): void {
+    const x = Math.round(this.pos.x);
+    const y = Math.round(this.pos.y);
+
     p.noStroke();
     p.fill(PAPER);
-    p.circle(Math.round(this.pos.x), Math.round(this.pos.y), this.radius * 2);
+
+    if (this.owner === "enemy") {
+      p.circle(x, y, this.radius * 2);
+      return;
+    }
+
+    // A 5×9 tracer, pointed at both ends, so the player's own fire never reads as an enemy's.
+    p.rect(x - 2, y - 2, 5, 5);
+    p.rect(x - 1, y - 3, 3, 7);
+    p.rect(x, y - 4, 1, 9);
   }
 }
