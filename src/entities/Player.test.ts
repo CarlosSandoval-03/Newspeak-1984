@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import type p5 from "p5";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  BLINK_FRAMES,
   CANVAS_WIDTH,
   PLAYER_BULLET_SPEED,
   PLAYER_FIRE_COOLDOWN,
@@ -8,10 +10,14 @@ import {
   PLAYER_SPAWN,
   PLAYER_SPEED,
   PLAYFIELD_BOTTOM,
+  RESPAWN_INVULN_FRAMES,
 } from "../config";
 import { Input } from "../core/Input";
 import type { Bullet } from "./Bullet";
 import { Player } from "./Player";
+
+// Each image is stood in for by its own name.
+const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
 
 describe("Player", () => {
   let keys: EventTarget;
@@ -31,7 +37,7 @@ describe("Player", () => {
   beforeEach(() => {
     keys = new EventTarget();
     fired = [];
-    player = new Player(new Input(keys), {} as Assets["image"], (bullet) =>
+    player = new Player(new Input(keys), images, (bullet) =>
       fired.push(bullet),
     );
   });
@@ -87,5 +93,42 @@ describe("Player", () => {
     ticks(PLAYER_FIRE_COOLDOWN * 3);
 
     expect(fired).toHaveLength(0);
+  });
+
+  it("respawns at the bottom center, invulnerable for a while", () => {
+    hold("ArrowLeft");
+    ticks(10);
+
+    player.respawn();
+    expect(player.pos).toEqual(PLAYER_SPAWN);
+    expect(player.invulnerable).toBe(true);
+
+    ticks(RESPAWN_INVULN_FRAMES);
+    expect(player.invulnerable).toBe(false);
+  });
+
+  it("blinks while invulnerable, and only then", () => {
+    const image = vi.fn();
+    const p = {
+      CENTER: "center",
+      imageMode: () => {},
+      image,
+      drawingContext: {},
+    } as unknown as p5;
+    const drawnOver = (frames: number) => {
+      image.mockClear();
+      for (let i = 0; i < frames; i++) {
+        player.update();
+        player.draw(p);
+      }
+      // Each visible frame draws the shadow and the ship.
+      return image.mock.calls.length / 2;
+    };
+
+    player.respawn();
+    expect(drawnOver(BLINK_FRAMES * 4)).toBe(BLINK_FRAMES * 2);
+
+    ticks(RESPAWN_INVULN_FRAMES);
+    expect(drawnOver(BLINK_FRAMES * 4)).toBe(BLINK_FRAMES * 4);
   });
 });

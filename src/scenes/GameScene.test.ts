@@ -1,0 +1,124 @@
+import type p5 from "p5";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Assets } from "../assets";
+import { ENEMY_STATS, PLAYER_SPAWN, STARTING_LIVES } from "../config";
+import { Input } from "../core/Input";
+import { SceneManager } from "../core/SceneManager";
+import { Bullet } from "../entities/Bullet";
+import { Enemy } from "../entities/Enemy";
+import { resetGame, state } from "../state";
+import type { EnemyKind, Vec } from "../types";
+import { GameScene } from "./GameScene";
+import { MenuScene } from "./MenuScene";
+
+// Each image is stood in for by its own name; nothing here draws.
+const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
+
+describe("GameScene collisions", () => {
+  let manager: SceneManager;
+  let scene: GameScene;
+
+  // Bracket access reaches the scene's private lists, to set up exact situations.
+  const enemyAt = (kind: EnemyKind, pos: Vec) => {
+    const enemy = new Enemy(
+      kind,
+      pos,
+      () => pos,
+      images,
+      () => {},
+    );
+    scene["enemies"].push(enemy);
+    return enemy;
+  };
+
+  const bulletAt = (owner: "player" | "enemy", pos: Vec) =>
+    scene["bullets"].push(new Bullet(owner, pos, { x: 0, y: 0 }));
+
+  beforeEach(() => {
+    resetGame();
+    manager = new SceneManager(
+      { image: images } as Assets,
+      new Input(new EventTarget()),
+    );
+    scene = new GameScene({} as p5, manager);
+    manager.change(scene);
+  });
+
+  it("scores and explodes an enemy a player bullet destroys", () => {
+    enemyAt("straight", { x: 100, y: 100 });
+    bulletAt("player", { x: 100, y: 100 });
+
+    scene.update();
+
+    expect(state.realScore).toBe(ENEMY_STATS.straight.score);
+    expect(state.stats.kills).toBe(1);
+    expect(scene["enemies"]).toHaveLength(0);
+    expect(scene["bullets"]).toHaveLength(0);
+    expect(scene["explosions"]).toHaveLength(1);
+  });
+
+  it("only uses up the bullet when the hit doesn't kill", () => {
+    enemyAt("bomber", { x: 100, y: 100 });
+    bulletAt("player", { x: 100, y: 100 });
+
+    scene.update();
+
+    expect(state.realScore).toBe(0);
+    expect(scene["enemies"]).toHaveLength(1);
+    expect(scene["bullets"]).toHaveLength(0);
+  });
+
+  it("costs a life for an enemy bullet, then ignores hits while invulnerable", () => {
+    bulletAt("enemy", PLAYER_SPAWN);
+
+    scene.update();
+    expect(state.realLives).toBe(STARTING_LIVES - 1);
+    expect(scene["player"].invulnerable).toBe(true);
+    expect(scene["explosions"]).toHaveLength(1);
+
+    bulletAt("enemy", PLAYER_SPAWN);
+    scene.update();
+    expect(state.realLives).toBe(STARTING_LIVES - 1);
+  });
+
+  it("destroys an enemy that crashes into the player, without scoring it", () => {
+    enemyAt("bomber", PLAYER_SPAWN);
+
+    scene.update();
+
+    expect(state.realLives).toBe(STARTING_LIVES - 1);
+    expect(state.realScore).toBe(0);
+    expect(state.stats.kills).toBe(0);
+    expect(scene["enemies"]).toHaveLength(0);
+  });
+
+  it("counts two hits on one tick as one", () => {
+    bulletAt("enemy", PLAYER_SPAWN);
+    bulletAt("enemy", PLAYER_SPAWN);
+
+    scene.update();
+
+    expect(state.realLives).toBe(STARTING_LIVES - 1);
+  });
+
+  it("returns to the Menu when the last life is lost", () => {
+    const change = vi.spyOn(manager, "change");
+    state.realLives = 1;
+    bulletAt("enemy", PLAYER_SPAWN);
+
+    scene.update();
+
+    expect(change).toHaveBeenCalledWith(expect.any(MenuScene));
+  });
+
+  it("starts the level over once every wave is spawned and cleared", () => {
+    scene["scroll"] = Number.MAX_SAFE_INTEGER;
+    scene.update();
+    expect(scene["enemies"].length).toBeGreaterThan(0);
+
+    scene["enemies"] = [];
+    scene.update();
+
+    expect(scene["scroll"]).toBe(0);
+  });
+});

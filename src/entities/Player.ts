@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
+  BLINK_FRAMES,
   CANVAS_WIDTH,
   PLAYER_BULLET_SPEED,
   PLAYER_FIRE_COOLDOWN,
@@ -9,6 +10,7 @@ import {
   PLAYER_SPAWN,
   PLAYER_SPEED,
   PLAYFIELD_BOTTOM,
+  RESPAWN_INVULN_FRAMES,
 } from "../config";
 import type { Input } from "../core/Input";
 import { Bullet } from "./Bullet";
@@ -24,6 +26,7 @@ export class Player extends Entity {
   private readonly fire: (bullet: Bullet) => void;
   private cooldown = 0;
   private bank = 0;
+  private invulnFrames = 0;
 
   constructor(
     input: Input,
@@ -34,6 +37,15 @@ export class Player extends Entity {
     this.input = input;
     this.images = images;
     this.fire = fire;
+  }
+
+  get invulnerable(): boolean {
+    return this.invulnFrames > 0;
+  }
+
+  respawn(): void {
+    this.pos = { ...PLAYER_SPAWN };
+    this.invulnFrames = RESPAWN_INVULN_FRAMES;
   }
 
   update(): void {
@@ -58,6 +70,7 @@ export class Player extends Entity {
       PLAYFIELD_BOTTOM - PLAYER_HALF_SIZE,
     );
 
+    if (this.invulnFrames > 0) this.invulnFrames--;
     if (this.cooldown > 0) this.cooldown--;
     if (input.isDown("shoot") && this.cooldown === 0) {
       const nose = { x: this.pos.x, y: this.pos.y - PLAYER_HALF_SIZE };
@@ -67,6 +80,9 @@ export class Player extends Entity {
   }
 
   draw(p: p5): void {
+    if (this.invulnerable && Math.floor(this.invulnFrames / BLINK_FRAMES) % 2)
+      return;
+
     const name =
       this.bank < 0
         ? "player-bank-left"

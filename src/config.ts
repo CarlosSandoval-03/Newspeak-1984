@@ -45,6 +45,9 @@ export const PLAYER_SPEED = 3;
 export const PLAYER_FIRE_COOLDOWN = 6;
 export const PLAYER_SPAWN = { x: CANVAS_WIDTH / 2, y: 540 };
 export const PLAYER_BULLET_SPEED = 8;
+export const RESPAWN_INVULN_FRAMES = 120;
+// The ship is hidden every other stretch of this many frames while invulnerable.
+export const BLINK_FRAMES = 4;
 export const BULLET_RADIUS = 3;
 
 // Fakes altitude, like 1942: the shadow falls down and to the right.

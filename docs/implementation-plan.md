@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where level 1's waves fly in and shoot at the player over ink, and the level loops once cleared. Next: collisions, hits, explosions in play, and respawn.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a playable `GameScene` over ink: level 1's waves fly in and shoot, enemies flash, explode, and score, and the player loses lives and respawns blinking. Losing the last life returns to the Menu for now. Next: the HUD through `Propaganda` and the VAPORIZED game over.
 
 ### Files
 
@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, and scroll numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), respawn |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, and respawn numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)) |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `WaveDef`, `LevelDef` (waves only), `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `TerrainDef` and `LevelDef.terrain`, added with the city generator (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -53,9 +53,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/Scene.ts` | Done | `Scene` interface |
 | `core/SceneManager.ts`, `SceneManager.test.ts` | Done | Holds the current scene, switches between scenes, and runs the fixed tick; the tests cover the tick loop |
 | `core/Input.ts`, `Input.test.ts` | Done | Keyboard state by action; the tests drive it with a plain `EventTarget`, since Node has no `KeyboardEvent` |
-| `core/Collisions.ts` | Not started | Circle–circle test |
+| `core/Collisions.ts`, `Collisions.test.ts` | Done | Circle–circle test |
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
-| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | In progress | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once. **Still to do:** the player's hit, respawn, and blink |
+| `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
 | `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and can reset for the loop |
 | `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
@@ -66,7 +66,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
-| `scenes/GameScene.ts` | In progress | Runs the player, the spawner, enemies, bullets, and the scroll over ink, and loops the level once cleared. **Still to do:** collisions, explosions, background, HUD, game over |
+| `scenes/GameScene.ts`, `GameScene.test.ts` | In progress | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over ink, and loops the level once cleared; the tests cover the collision rules. **Still to do:** background, HUD, and game over (it returns to the Menu for now) |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification
@@ -121,7 +121,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Collisions**
 
 - `circlesOverlap(a, b)` returns `dx*dx + dy*dy < (ra + rb)^2`. Compare squared distances so no square root is needed.
-- `GameScene` checks three pairs: player bullets against enemies, enemy bullets against the player, and enemies against the player.
+- `GameScene` checks three pairs: player bullets against enemies, enemy bullets against the player, and enemies against the player. A crash destroys the enemy too but scores nothing, since it isn't a kill. While invulnerable, the player ignores all three, and the respawn happens on the hit itself, so two hits on one tick cost one life.
 
 **Spawner**
 
@@ -205,8 +205,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [x] The canvas stays centered and crisp at every window size, scaled by a whole number.
 - [x] In the Menu, Up and Down select an option, and Enter or Shoot activates it. `BEGIN SERVICE` starts the game.
 - [x] The player moves in 8 directions, stays on screen, and shoots by holding the button.
-- [ ] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.
-- [ ] Hit enemies flash, and destroyed ones explode and add score. Getting hit costs a life, then the player respawns with blinking invulnerability.
+- [x] Level 1 waves appear at their scroll positions and shoot back. Bombers are slower, take several hits, and fire fans.
+- [x] Hit enemies flash, and destroyed ones explode and add score. Getting hit costs a life, then the player respawns with blinking invulnerability.
 - [ ] Losing all lives shows "VAPORIZED" with this run's pilot ID; Enter returns to the Menu. A new run gets a new ID.
 - [ ] The background scrolls with no visible seam.
 - [ ] `layout.test.ts` passes: the same seed gives the same chunk, consecutive chunks join on their streets, and no cell mixes asphalt with two other terrains.
