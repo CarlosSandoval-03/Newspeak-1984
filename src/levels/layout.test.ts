@@ -279,27 +279,34 @@ describe("anchorNear", () => {
         .map(({ x, y }) => ({ x, y: (index + 1) * CHUNK_HEIGHT - y })),
     );
 
-  it("finds the nearest anchor of the kind, in level space", () => {
+  it("finds the anchor of the kind nearest to (x, at), in level space", () => {
     for (const kind of ["street", "plaza", "rooftop"] as const) {
       const all = allAnchors(kind);
 
-      for (let at = 0; at < CHUNK_HEIGHT * CHUNKS; at += 97) {
-        const anchor = anchorNear(recipe, kind, at);
-        const nearest = Math.min(...all.map(({ y }) => Math.abs(y - at)));
+      for (let at = 0; at < CHUNK_HEIGHT * CHUNKS; at += 97)
+        for (const x of [0, 240, 480]) {
+          const anchor = anchorNear(recipe, kind, at, x);
+          const distance = (a: { x: number; y: number }) =>
+            Math.hypot(a.x - x, a.y - at);
+          const nearest = Math.min(...all.map(distance));
 
-        expect(all).toContainEqual(anchor);
-        expect(Math.abs(anchor.y - at)).toBe(nearest);
-      }
+          expect(all).toContainEqual(anchor);
+          expect(distance(anchor)).toBeCloseTo(nearest);
+        }
     }
   });
 
-  it("breaks a tie toward the middle of the screen", () => {
-    const at = CHUNK_HEIGHT * 2 - CELL_SIZE / 2;
-    const row = allAnchors("street").filter(({ y }) => y === at);
-    const middle = Math.min(...row.map(({ x }) => Math.abs(x - 240)));
+  it("looks around the middle of the screen when no x is given", () => {
+    expect(anchorNear(recipe, "street", 1500)).toEqual(
+      anchorNear(recipe, "street", 1500, 240),
+    );
+  });
 
-    expect(row.length).toBeGreaterThan(1);
-    expect(Math.abs(anchorNear(recipe, "street", at).x - 240)).toBe(middle);
+  it("lets x pick a side of the screen", () => {
+    const left = anchorNear(recipe, "street", 1500, 0);
+    const right = anchorNear(recipe, "street", 1500, 480);
+
+    expect(left.x).toBeLessThan(right.x);
   });
 
   it("fails loudly when the recipe has no such ground", () => {

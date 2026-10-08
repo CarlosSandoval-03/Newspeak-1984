@@ -213,7 +213,7 @@ function cachedLayout(terrain: TerrainDef, index: number): ChunkLayout {
 const ANCHOR_REACH = 4;
 
 /**
- * The anchor of `kind` nearest to the level distance `at`.
+ * The anchor of `kind` nearest to the point (`x`, `at`), where `at` is a level distance.
  * Returned in level space: `y` is the scroll distance at which it reaches the screen's top edge.
  * Throws if none lies within ANCHOR_REACH chunks, since that is a mistake in the level data.
  */
@@ -221,6 +221,7 @@ export function anchorNear(
   terrain: TerrainDef,
   kind: AnchorKind,
   at: number,
+  x = CANVAS_WIDTH / 2,
 ): Vec {
   const home = Math.floor(at / CHUNK_HEIGHT);
   let best = null as Vec | null;
@@ -234,7 +235,7 @@ export function anchorNear(
         if (anchor.kind !== kind) continue;
 
         const found = { x: anchor.x, y: top - anchor.y };
-        if (!best || nearer(found, best, at)) best = found;
+        if (!best || nearer(found, best, at, x)) best = found;
       }
     }
 
@@ -242,18 +243,18 @@ export function anchorNear(
       at - (home - reach) * CHUNK_HEIGHT,
       (home + reach + 1) * CHUNK_HEIGHT - at,
     );
-    if (best && Math.abs(best.y - at) < unsearched) return best;
+    // Any anchor further out is at least `unsearched` away, even straight above or below.
+    if (best && Math.hypot(best.x - x, best.y - at) < unsearched) return best;
   }
 
   if (!best) throw new Error(`No ${kind} anchor near ${at}`);
   return best;
 }
 
-// A whole street row lies at one distance, so ties go to the anchor nearest the middle of the screen.
-function nearer(a: Vec, b: Vec, at: number): boolean {
-  const dy = Math.abs(a.y - at) - Math.abs(b.y - at);
-  if (dy !== 0) return dy < 0;
-  return Math.abs(a.x - CANVAS_WIDTH / 2) < Math.abs(b.x - CANVAS_WIDTH / 2);
+// Plain distance, not distance along the level: a vertical street has a cell at nearly any distance,
+// and would otherwise win every time over the horizontal street on the side `x` asks for.
+function nearer(a: Vec, b: Vec, at: number, x: number): boolean {
+  return Math.hypot(a.x - x, a.y - at) < Math.hypot(b.x - x, b.y - at);
 }
 
 // Inset one cell from its block, in cells [left, right) × [top, bottom).

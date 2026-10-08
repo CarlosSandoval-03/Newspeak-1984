@@ -64,18 +64,26 @@ interface ConeDef {
   aperture?: number;
 }
 
-// A tower stands on the ground; a drone flies, so it keeps a plain x.
+// A tower stands on the ground, `x` only picking a side; a drone flies, so its x is where it is.
 export type EyeDef = ConeDef &
   (
-    | { type: "tower"; at: number; on: AnchorKind }
+    | { type: "tower"; at: number; on: AnchorKind; x?: number }
     | { type: "drone"; at: number; x: number; path: "patrol" | "sine" }
   );
 
-// Later steps add turrets, pickups, the diary, the boss, and the length.
+// On the ground, `x` only says which side to prefer among anchors equally near `at`.
+export interface TurretDef {
+  at: number;
+  on: AnchorKind;
+  x?: number;
+}
+
+// Later steps add pickups, the diary, the boss, and the length.
 export interface LevelDef {
   terrain: TerrainDef;
   waves: WaveDef[];
   eyes: EyeDef[];
+  turrets: TurretDef[];
 }
 
 // Ordered, because each level keeps the effects of the ones below it.

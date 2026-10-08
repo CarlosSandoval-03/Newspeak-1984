@@ -76,5 +76,11 @@ export const LEVELS: LevelDef[] = [
         sweepSpeed: 0.05,
       },
     ],
+    // On cross streets, off to the sides, so the player has to weave between their arcs.
+    turrets: [
+      { at: 700, on: "street", x: 400 },
+      { at: 1250, on: "street", x: 60 },
+      { at: 1900, on: "street", x: 420 },
+    ],
   },
 ];

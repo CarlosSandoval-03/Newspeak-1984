@@ -45,7 +45,7 @@ newspeak-1984/
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
     ├── core/             # Scene, SceneManager, Input, Collisions, display (theme-agnostic)
-    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Boss, Pickup
+    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, Pickup
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter)
@@ -204,7 +204,7 @@ Streets keep asphalt between any two other terrains, which is what the Wang tile
 
 A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind. A `street` anchor is the center of a street cell without a crater, a `plaza` anchor the center of an open plaza block (one without a building), a `rooftop` anchor the center of a roof, and a `skylight` anchor the center of a skylight. The river, railway, landmark, and airfield add `bridge`, `railway`, `landmark`, and `platform` when they are built.
 
-**Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(terrain, kind, at)` returns it in level space (`y` is scroll distance), generating and caching the chunks it needs. A whole street row lies at one distance, so a tie goes to the anchor nearest the middle of the screen. The search widens one chunk at a time and gives up after four chunks either side: open plazas can be that far apart, and anything further means the level asks for ground its recipe lacks, so it throws. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates. A ground element enters as its sprite's top edge reaches the screen and stays pinned to its anchor, moving down with the ground; while levels have no end and their waves start over, each pass finds its anchors again, since the city under it is new.
+**Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(terrain, kind, at, x)` returns the anchor nearest to the point (`x`, `at`), in level space (`y` is scroll distance), generating and caching the chunks it needs. `x` defaults to the middle of the screen; level data sets it to pick a side, since a vertical street has a cell at nearly any distance and would otherwise always win. The search widens one chunk at a time and gives up after four chunks either side: open plazas can be that far apart, and anything further means the level asks for ground its recipe lacks, so it throws. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates. A ground element enters as its sprite's top edge reaches the screen and stays pinned to its anchor, moving down with the ground; while levels have no end and their waves start over, each pass finds its anchors again, since the city under it is new.
 
 ```mermaid
 flowchart LR

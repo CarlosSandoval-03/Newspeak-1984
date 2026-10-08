@@ -35,6 +35,13 @@ const ROTOR_LENGTH = 40;
 const ROTOR_ALPHA = 0.6;
 const ROTOR_SPIN = 0.4;
 
+// Read at every reload, so shooters already on screen speed up from their next shot.
+export function reloadDelay(base: number): number {
+  const interval =
+    state.alertLevel >= ALERT.alert ? base / ALERT_FIRE_MULT : base;
+  return Math.round(interval + (Math.random() * 2 - 1) * ENEMY_FIRE_JITTER);
+}
+
 export class Enemy extends Entity {
   readonly kind: EnemyKind;
   readonly score: number;
@@ -169,13 +176,10 @@ export class Enemy extends Entity {
     context.globalAlpha = 1;
   }
 
-  // Read at every reload, so enemies already on screen speed up from their next shot.
   private nextFireDelay(): number {
-    const base =
-      this.kind === "bomber" ? BOMBER_FIRE_INTERVAL : ENEMY_FIRE_INTERVAL;
-    const interval =
-      state.alertLevel >= ALERT.alert ? base / ALERT_FIRE_MULT : base;
-    return Math.round(interval + (Math.random() * 2 - 1) * ENEMY_FIRE_JITTER);
+    return reloadDelay(
+      this.kind === "bomber" ? BOMBER_FIRE_INTERVAL : ENEMY_FIRE_INTERVAL,
+    );
   }
 
   private aim(): number {

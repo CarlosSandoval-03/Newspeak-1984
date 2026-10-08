@@ -5,6 +5,7 @@ import {
   EYE_STATS,
   GYRO_INTERVAL,
   REINFORCEMENT_GAP,
+  TURRET_STATS,
 } from "../config";
 import { anchorNear } from "../levels/layout";
 import {
@@ -12,6 +13,7 @@ import {
   type AlertLevel,
   type EnemyKind,
   type EyeDef,
+  type AnchorKind,
   type LevelDef,
   type Vec,
 } from "../types";
@@ -19,21 +21,17 @@ import {
 type Spawn = {
   enemy: (kind: EnemyKind, pos: Vec) => void;
   eye: (def: EyeDef, pos: Vec) => void;
+  turret: (pos: Vec) => void;
 };
 
-// `ground` is the tower's level distance; a drone has none, since it flies.
-type PendingEye = {
-  def: EyeDef;
-  due: number;
-  x: number;
-  ground: number | null;
-};
+// Eyes and turrets come by scroll distance, not in waves; `place` gets the scroll they finally came at.
+type Placement = { due: number; place: (scroll: number) => void };
 
 export class Spawner {
   private readonly level: LevelDef;
   private readonly spawn: Spawn;
   private next = 0;
-  private eyes: PendingEye[] = [];
+  private placements: Placement[] = [];
   // Kept across passes and dips out of pursuit, so hovering at the threshold can't call gyros faster.
   private nextGyro = -Infinity;
   // The scroll at which the current pass began; the scroll itself never goes back, so the city never jumps.
@@ -46,7 +44,7 @@ export class Spawner {
   }
 
   get done(): boolean {
-    return this.next >= this.level.waves.length && this.eyes.length === 0;
+    return this.next >= this.level.waves.length && this.placements.length === 0;
   }
 
   // Loops, not ifs: a big scroll step can pass several waves in one tick.
@@ -86,32 +84,57 @@ export class Spawner {
       });
     }
 
-    while (this.eyes.length > 0 && scroll >= this.eyes[0].due) {
-      const { def, x, ground } = this.eyes.shift()!;
-      // A tower is pinned to its spot on the ground, wherever that is on screen by now.
-      const y =
-        ground === null ? -EYE_STATS[def.type].halfSize : scroll - ground;
-
-      this.spawn.eye(def, { x, y });
-    }
+    while (this.placements.length > 0 && scroll >= this.placements[0].due)
+      this.placements.shift()!.place(scroll);
   }
 
-  // Towers find their anchors again for the new pass, since the city under it is new.
+  // Ground elements find their anchors again for the new pass, since the city under it is new.
   restart(scroll: number): void {
-    const { terrain, eyes } = this.level;
+    const { eyes, turrets } = this.level;
 
     this.next = 0;
     this.start = scroll;
-    this.eyes = eyes
-      .map((def) => {
-        const half = EYE_STATS[def.type].halfSize;
-        if (def.type === "drone")
-          return { def, due: scroll + def.at, x: def.x, ground: null };
+    this.placements = [
+      ...eyes.map((def) =>
+        def.type === "drone"
+          ? {
+              due: scroll + def.at,
+              place: () =>
+                this.spawn.eye(def, {
+                  x: def.x,
+                  y: -EYE_STATS.drone.halfSize,
+                }),
+            }
+          : this.onGround(def, scroll, EYE_STATS.tower.halfSize, (pos) =>
+              this.spawn.eye(def, pos),
+            ),
+      ),
+      ...turrets.map((def) =>
+        this.onGround(def, scroll, TURRET_STATS.halfSize, (pos) =>
+          this.spawn.turret(pos),
+        ),
+      ),
+    ].sort((a, b) => a.due - b.due);
+  }
 
-        // Due as its sprite's top edge reaches the screen.
-        const anchor = anchorNear(terrain, def.on, scroll + def.at);
-        return { def, due: anchor.y - half, x: anchor.x, ground: anchor.y };
-      })
-      .sort((a, b) => a.due - b.due);
+  // Due as its sprite's top edge reaches the screen, and pinned to its spot on the ground
+  // wherever that is on screen by the time it comes.
+  private onGround(
+    def: { at: number; on: AnchorKind; x?: number },
+    start: number,
+    half: number,
+    spawn: (pos: Vec) => void,
+  ): Placement {
+    const anchor = anchorNear(
+      this.level.terrain,
+      def.on,
+      start + def.at,
+      def.x,
+    );
+
+    return {
+      due: anchor.y - half,
+      place: (scroll) => spawn({ x: anchor.x, y: scroll - anchor.y }),
+    };
   }
 }

@@ -10,12 +10,14 @@ import {
   PLAYER_SPAWN,
   STARTING_LIVES,
   SUSPICION_DECAY,
+  TURRET_STATS,
 } from "../config";
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Eye } from "../entities/Eye";
+import { Turret } from "../entities/Turret";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
@@ -235,5 +237,40 @@ describe("GameScene collisions", () => {
     expect(scene["enemies"]).toHaveLength(
       Math.ceil(first.count * ALERT_SPAWN_MULT),
     );
+  });
+
+  describe("turrets", () => {
+    const turretAt = (pos: Vec) => {
+      const turret = new Turret(
+        pos,
+        () => pos,
+        images,
+        () => {},
+      );
+      scene["turrets"].push(turret);
+      return turret;
+    };
+
+    it("score like an enemy when shot down", () => {
+      const turret = turretAt({ x: 100, y: 100 });
+
+      for (let i = 0; i < TURRET_STATS.hp; i++) {
+        bulletAt("player", turret.pos);
+        scene.update();
+      }
+
+      expect(state.realScore).toBe(TURRET_STATS.score);
+      expect(state.stats.kills).toBe(1);
+      expect(scene["turrets"]).toHaveLength(0);
+    });
+
+    it("never cost a life for flying over one", () => {
+      turretAt({ ...PLAYER_SPAWN });
+
+      scene.update();
+
+      expect(state.realLives).toBe(STARTING_LIVES);
+      expect(scene["turrets"]).toHaveLength(1);
+    });
   });
 });

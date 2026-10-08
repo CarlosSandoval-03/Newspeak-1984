@@ -44,7 +44,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | Done | The canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, city layout, and rooftop numbers. The material tones ([art-direction.md](art-direction.md)) are added with their first use: the AA gun's sandbags in step 2, the diary in step 3 |
+| `config.ts` | Done | The canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, scroll, respawn, game over, city layout, and rooftop numbers. The material tones ([art-direction.md](art-direction.md)) are added with their first use in code; the AA gun's sandbags are painted in its sprite, so the first is the diary's band in step 3 |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
 | `types.ts` | Done | `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `WaveDef`, `TerrainDef` (seed and block shares; later steps add the river, railway, and landmark), `LevelDef`, `ALERT` with `AlertLevel`, and `GameState` (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
@@ -224,7 +224,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`entities/Eye.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (used for the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
+`entities/Eye.ts`, `entities/Turret.ts`, `systems/Suspicion.ts`, `entities/Boss.ts` (used for the Thought Police), and updates to `levels/levels.ts`, `levels/layout.ts` (anchors), `systems/Spawner.ts`, `systems/Propaganda.ts`, `entities/Enemy.ts`, `config.ts`, `ui/HUD.ts`, and `scenes/GameScene.ts`.
 
 ### Specification
 
@@ -272,8 +272,10 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **AA guns** (`enemy-aa-gun.png`)
 
-- Ground turrets placed by level data like towers (`turrets: [{ at, on }]`, usually on `street` or `bridge`); they scroll with the ground.
-- p5 draws their twin barrels rotated toward the player, and they fire aimed shots from the barrel tips.
+- Ground turrets placed by level data like towers (`turrets: [{ at, on, x? }]`, usually on `street` or `bridge`); they scroll with the ground. A ground element's optional `x` says which side of the screen to look for its anchor.
+- p5 draws their twin barrels rotated toward the player, and they fire aimed shots from the barrel tips, one bullet a shot, alternating barrels. Their bullets are light: red is only for the regime's own forces. Like aircraft, they reload faster from alert up.
+- They have hp and score when shot down (`TURRET_STATS`).
+- **Decision:** a turret is its own entity (`entities/Turret.ts`), not a kind of `Enemy`. It is on the ground, so, like the eyes, it never collides with the player: the plane flies over it.
 
 **HUD**
 

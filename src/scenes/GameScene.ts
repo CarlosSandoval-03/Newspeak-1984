@@ -4,6 +4,7 @@ import {
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
+  TURRET_STATS,
   PLAYER_HALF_SIZE,
   RED,
   SCROLL_SPEED,
@@ -16,6 +17,7 @@ import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
 import { Eye } from "../entities/Eye";
 import { Player } from "../entities/Player";
+import { Turret } from "../entities/Turret";
 import { Background } from "../levels/Background";
 import { LEVELS } from "../levels/levels";
 import { resetLevelState, state } from "../state";
@@ -37,6 +39,7 @@ export class GameScene implements Scene {
   private readonly vignette: Vignette;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
+  private turrets: Turret[] = [];
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private scroll = 0;
@@ -59,6 +62,10 @@ export class GameScene implements Scene {
           new Enemy(kind, pos, () => this.player.pos, assets.image, fire),
         ),
       eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),
+      turret: (pos) =>
+        this.turrets.push(
+          new Turret(pos, () => this.player.pos, assets.image, fire),
+        ),
     });
   }
 
@@ -80,6 +87,7 @@ export class GameScene implements Scene {
 
     for (const enemy of this.enemies) enemy.update();
     for (const eye of this.eyes) eye.update();
+    for (const turret of this.turrets) turret.update();
     for (const bullet of this.bullets) bullet.update();
     for (const explosion of this.explosions) explosion.update();
 
@@ -87,6 +95,7 @@ export class GameScene implements Scene {
 
     this.enemies = this.enemies.filter((enemy) => enemy.alive);
     this.eyes = this.eyes.filter((eye) => eye.alive);
+    this.turrets = this.turrets.filter((turret) => turret.alive);
     this.bullets = this.bullets.filter((bullet) => bullet.alive);
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
 
@@ -102,6 +111,7 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.scroll);
+    for (const turret of this.turrets) turret.draw(p);
     for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
@@ -127,7 +137,7 @@ export class GameScene implements Scene {
 
   private collide(): void {
     const { player } = this;
-    const targets = [...this.enemies, ...this.eyes];
+    const targets = [...this.enemies, ...this.turrets, ...this.eyes];
     // Re-checked on every pair: a hit earlier in the same tick changes it.
     const exposed = () => player.alive && !player.invulnerable;
 
@@ -151,6 +161,7 @@ export class GameScene implements Scene {
     }
 
     // A crash destroys the enemy too, but scores nothing: it isn't a kill.
+    // Turrets and eyes stay out of this: the plane flies over the ground.
     for (const enemy of this.enemies) {
       if (!enemy.alive || !exposed()) continue;
       if (!circlesOverlap(enemy, player)) continue;
@@ -161,10 +172,14 @@ export class GameScene implements Scene {
     }
   }
 
-  private kill(enemy: Enemy): void {
-    state.realScore += enemy.score;
+  private kill(target: Enemy | Turret): void {
+    state.realScore += target.score;
     state.stats.kills++;
-    this.explode(enemy);
+    if (target instanceof Turret)
+      this.explosions.push(
+        new Explosion(target.pos, TURRET_STATS.halfSize * 2),
+      );
+    else this.explode(target);
   }
 
   // The regime notices at once, and its eyes burst in its own red.

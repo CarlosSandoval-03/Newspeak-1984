@@ -151,3 +151,7 @@ export const REINFORCEMENT_GAP = 16;
 export const GYRO_INTERVAL = 180;
 export const HOMING_TURN_RATE = 0.03;
 export const HOMING_FRAMES = 150;
+
+// A ground turret: it scrolls with the city, and the plane flies over it, so it can only be shot.
+export const TURRET_STATS = { halfSize: 24, radius: 16, hp: 4, score: 200 };
+export const TURRET_FIRE_INTERVAL = 75;

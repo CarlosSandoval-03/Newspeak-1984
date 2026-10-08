@@ -5,6 +5,7 @@ import {
   EYE_STATS,
   GYRO_INTERVAL,
   REINFORCEMENT_GAP,
+  TURRET_STATS,
 } from "../config";
 import { anchorNear } from "../levels/layout";
 import {
@@ -28,19 +29,23 @@ const level: LevelDef = {
     { type: "tower", at: 600, on: "street", ...cone },
     { type: "drone", at: 150, x: 300, path: "patrol", ...cone },
   ],
+  turrets: [{ at: 300, on: "street", x: 400 }],
 };
 
 describe("Spawner", () => {
   let spawned: { kind: EnemyKind; pos: Vec }[];
   let watching: { def: EyeDef; pos: Vec }[];
+  let turrets: Vec[];
   let spawner: Spawner;
 
   beforeEach(() => {
     spawned = [];
     watching = [];
+    turrets = [];
     spawner = new Spawner(level, {
       enemy: (kind, pos) => spawned.push({ kind, pos }),
       eye: (def, pos) => watching.push({ def, pos }),
+      turret: (pos) => turrets.push(pos),
     });
   });
 
@@ -206,6 +211,7 @@ describe("Spawner", () => {
         new Spawner(level, {
           enemy: (kind, pos) => spawned.push({ kind, pos }),
           eye: () => {},
+          turret: () => {},
         }).update(0, ALERT.thoughtPolice);
 
         const [{ pos }] = gyros();
@@ -215,5 +221,16 @@ describe("Spawner", () => {
       }
       vi.restoreAllMocks();
     });
+  });
+
+  it("stands a turret on the anchor its data points to, entering with the ground", () => {
+    const anchor = anchorNear(level.terrain, "street", 300, 400);
+    const due = anchor.y - TURRET_STATS.halfSize;
+
+    spawner.update(due - 1, ALERT.normal);
+    expect(turrets).toHaveLength(0);
+
+    spawner.update(due, ALERT.normal);
+    expect(turrets).toEqual([{ x: anchor.x, y: -TURRET_STATS.halfSize }]);
   });
 });
