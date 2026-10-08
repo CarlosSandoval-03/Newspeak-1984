@@ -11,7 +11,7 @@ import {
   MIN_BLOCK_CELLS,
   SKYLIGHT_CHANCE,
 } from "../config";
-import type { TerrainDef, Vec } from "../types";
+import type { AnchorKind, TerrainDef, Vec } from "../types";
 
 export type Terrain = "asphalt" | "plaza" | "rubble";
 
@@ -34,12 +34,17 @@ export interface Building extends Rect {
   lamp: (Vec & { phase: number }) | null;
 }
 
+export interface Anchor extends Vec {
+  kind: AnchorKind;
+}
+
 // Positions are in chunk pixels, with y = 0 at the chunk's top edge.
 export interface ChunkLayout {
   // Terrain on tile corners: (ROWS + 1) × (COLUMNS + 1), indexed [row][column].
   corners: Terrain[][];
   buildings: Building[];
   craters: Vec[];
+  anchors: Anchor[];
 }
 
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
@@ -103,11 +108,16 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
     Array<Terrain>(COLUMNS + 1).fill("asphalt"),
   );
   const buildings: Building[] = [];
+  const plazas: Vec[] = [];
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
-  const columns = spans(streetColumns(terrain.seed), 0, COLUMNS);
-  const rows = spans(streets(rng, 1, ROWS), 1, ROWS);
+  const streetCells = {
+    rows: [0, ...streets(rng, 1, ROWS)],
+    columns: streetColumns(terrain.seed),
+  };
+  const columns = spans(streetCells.columns, 0, COLUMNS);
+  const rows = spans(streetCells.rows.slice(1), 1, ROWS);
 
   for (const [top, bottom] of rows) {
     for (const [left, right] of columns) {
@@ -128,12 +138,122 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
         for (let column = firstColumn; column <= lastColumn; column++)
           corners[row][column] = kind;
 
-      if (kind === "plaza" && rng() < BUILDING_CHANCE)
+      if (kind !== "plaza") continue;
+
+      if (rng() < BUILDING_CHANCE)
         buildings.push(building(rng, left + 1, top + 1, right - 1, bottom - 1));
+      else
+        plazas.push({
+          x: ((left + right) / 2) * CELL_SIZE,
+          y: ((top + bottom) / 2) * CELL_SIZE,
+        });
     }
   }
 
-  return { corners, buildings, craters: craters(rng, corners) };
+  const found = craters(rng, corners);
+
+  return {
+    corners,
+    buildings,
+    craters: found,
+    anchors: anchors(streetCells, plazas, buildings, found),
+  };
+}
+
+// Centered on a street cell, an open plaza, a roof, or a skylight, so a sprite sits square on its ground.
+function anchors(
+  streetCells: { rows: number[]; columns: number[] },
+  plazas: Vec[],
+  buildings: Building[],
+  craters: Vec[],
+): Anchor[] {
+  const found: Anchor[] = [];
+  const cratered = (x: number, y: number) =>
+    craters.some((crater) => crater.x === x && crater.y === y);
+
+  for (let row = 0; row < ROWS; row++)
+    for (let column = 0; column < COLUMNS; column++) {
+      if (
+        !streetCells.rows.includes(row) &&
+        !streetCells.columns.includes(column)
+      )
+        continue;
+
+      const x = (column + 0.5) * CELL_SIZE;
+      const y = (row + 0.5) * CELL_SIZE;
+      if (!cratered(x, y)) found.push({ kind: "street", x, y });
+    }
+
+  for (const plaza of plazas) found.push({ kind: "plaza", ...plaza });
+
+  for (const { x, y, w, h, skylight } of buildings) {
+    found.push({ kind: "rooftop", x: x + w / 2, y: y + h / 2 });
+    if (skylight)
+      found.push({
+        kind: "skylight",
+        x: skylight.x + skylight.w / 2,
+        y: skylight.y + skylight.h / 2,
+      });
+  }
+  return found;
+}
+
+const layouts = new WeakMap<TerrainDef, Map<number, ChunkLayout>>();
+
+function cachedLayout(terrain: TerrainDef, index: number): ChunkLayout {
+  let chunks = layouts.get(terrain);
+  if (!chunks) layouts.set(terrain, (chunks = new Map()));
+
+  let layout = chunks.get(index);
+  if (!layout) chunks.set(index, (layout = chunkLayout(terrain, index)));
+  return layout;
+}
+
+// Open plazas can be several chunks apart; past this, the level data asks for ground its recipe lacks.
+const ANCHOR_REACH = 4;
+
+/**
+ * The anchor of `kind` nearest to the level distance `at`.
+ * Returned in level space: `y` is the scroll distance at which it reaches the screen's top edge.
+ * Throws if none lies within ANCHOR_REACH chunks, since that is a mistake in the level data.
+ */
+export function anchorNear(
+  terrain: TerrainDef,
+  kind: AnchorKind,
+  at: number,
+): Vec {
+  const home = Math.floor(at / CHUNK_HEIGHT);
+  let best = null as Vec | null;
+
+  // Outward one ring of chunks at a time, until no chunk left could hold a nearer one.
+  for (let reach = 0; reach <= ANCHOR_REACH; reach++) {
+    for (const index of new Set([home - reach, home + reach])) {
+      const top = (index + 1) * CHUNK_HEIGHT;
+
+      for (const anchor of cachedLayout(terrain, index).anchors) {
+        if (anchor.kind !== kind) continue;
+
+        const found = { x: anchor.x, y: top - anchor.y };
+        if (!best || nearer(found, best, at)) best = found;
+      }
+    }
+
+    const unsearched = Math.min(
+      at - (home - reach) * CHUNK_HEIGHT,
+      (home + reach + 1) * CHUNK_HEIGHT - at,
+    );
+    if (best && Math.abs(best.y - at) < unsearched) return best;
+  }
+
+  if (!best) throw new Error(`No ${kind} anchor near ${at}`);
+  return best;
+}
+
+// A whole street row lies at one distance, so ties go to the anchor nearest the middle of the screen.
+function nearer(a: Vec, b: Vec, at: number): boolean {
+  const dy = Math.abs(a.y - at) - Math.abs(b.y - at);
+  if (dy !== 0) return dy < 0;
+  return Math.abs(a.x - CANVAS_WIDTH / 2) < Math.abs(b.x - CANVAS_WIDTH / 2);
 }
 
 // Inset one cell from its block, in cells [left, right) × [top, bottom).

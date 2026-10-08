@@ -8,7 +8,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | ---- | -------- | ------- | ------ |
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
-| 2 | Surveillance Eyes and Suspicion | `0.3.0` | Not started |
+| 2 | Surveillance Eyes and Suspicion | `0.3.0` | In progress |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Not started |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
@@ -241,7 +241,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Anchors** (`levels/layout.ts`)
 
-- The layout now returns anchors, and `anchorNear(level, kind, at)` finds the nearest one ([technical.md › City layout](technical.md#city-layout)). Every ground element uses it, so none ends up floating over the wrong terrain.
+- The layout now returns anchors, and `anchorNear(terrain, kind, at)` finds the nearest one ([technical.md › City layout](technical.md#city-layout)). Every ground element uses it, so none ends up floating over the wrong terrain.
 
 **Suspicion** (owns `state.suspicion` and `state.alertLevel`)
 

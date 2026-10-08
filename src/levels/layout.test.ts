@@ -5,12 +5,14 @@ import {
   CRATER_SIZE,
   MIN_BLOCK_CELLS,
 } from "../config";
-import type { TerrainDef } from "../types";
+import type { AnchorKind, TerrainDef } from "../types";
 import {
+  anchorNear,
   chunkLayout,
   COLUMNS,
   type ChunkLayout,
   PARAPET,
+  type Rect,
   ROWS,
   streetColumns,
   type Terrain,
@@ -210,5 +212,99 @@ describe("chunkLayout", () => {
             Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)),
           ).toBeGreaterThanOrEqual(CRATER_SIZE);
     });
+  });
+});
+
+describe("anchors", () => {
+  const kinds: AnchorKind[] = ["street", "plaza", "rooftop", "skylight"];
+
+  const inside = (x: number, y: number, rect: Rect) =>
+    x > rect.x && x < rect.x + rect.w && y > rect.y && y < rect.y + rect.h;
+
+  it("stands every anchor on its own ground", () => {
+    const seen = new Set<AnchorKind>();
+
+    everyChunk(({ corners, buildings, craters, anchors }) => {
+      const roofed = (x: number, y: number) =>
+        buildings.some((building) => inside(x, y, building));
+
+      for (const { kind, x, y } of anchors) {
+        seen.add(kind);
+        const row = Math.floor(y / CELL_SIZE);
+        const column = Math.floor(x / CELL_SIZE);
+
+        if (kind === "street") {
+          expect(new Set(cellCorners(corners, row, column))).toEqual(
+            new Set(["asphalt"]),
+          );
+          expect(craters).not.toContainEqual({ x, y });
+        } else if (kind === "plaza") {
+          expect(cellCorners(corners, row, column)).toEqual(
+            Array(4).fill("plaza"),
+          );
+          expect(roofed(x, y)).toBe(false);
+        } else if (kind === "rooftop") {
+          expect(roofed(x, y)).toBe(true);
+        } else {
+          const skylights = buildings.flatMap((b) => b.skylight ?? []);
+          expect(skylights.some((s) => inside(x, y, s))).toBe(true);
+        }
+      }
+    });
+
+    expect([...seen].sort()).toEqual([...kinds].sort());
+  });
+
+  it("gives every roof and skylight an anchor", () => {
+    everyChunk(({ buildings, anchors }) => {
+      const count = (kind: AnchorKind) =>
+        anchors.filter((anchor) => anchor.kind === kind).length;
+
+      expect(count("rooftop")).toBe(buildings.length);
+      expect(count("skylight")).toBe(
+        buildings.filter((building) => building.skylight).length,
+      );
+    });
+  });
+});
+
+describe("anchorNear", () => {
+  const recipe = recipes[0];
+
+  // Every anchor of a kind in level space, from far more chunks than anchorNear looks at.
+  const allAnchors = (kind: AnchorKind) =>
+    Array.from({ length: CHUNKS + 4 }, (_, i) => i - 2).flatMap((index) =>
+      chunkLayout(recipe, index)
+        .anchors.filter((anchor) => anchor.kind === kind)
+        .map(({ x, y }) => ({ x, y: (index + 1) * CHUNK_HEIGHT - y })),
+    );
+
+  it("finds the nearest anchor of the kind, in level space", () => {
+    for (const kind of ["street", "plaza", "rooftop"] as const) {
+      const all = allAnchors(kind);
+
+      for (let at = 0; at < CHUNK_HEIGHT * CHUNKS; at += 97) {
+        const anchor = anchorNear(recipe, kind, at);
+        const nearest = Math.min(...all.map(({ y }) => Math.abs(y - at)));
+
+        expect(all).toContainEqual(anchor);
+        expect(Math.abs(anchor.y - at)).toBe(nearest);
+      }
+    }
+  });
+
+  it("breaks a tie toward the middle of the screen", () => {
+    const at = CHUNK_HEIGHT * 2 - CELL_SIZE / 2;
+    const row = allAnchors("street").filter(({ y }) => y === at);
+    const middle = Math.min(...row.map(({ x }) => Math.abs(x - 240)));
+
+    expect(row.length).toBeGreaterThan(1);
+    expect(Math.abs(anchorNear(recipe, "street", at).x - 240)).toBe(middle);
+  });
+
+  it("fails loudly when the recipe has no such ground", () => {
+    const open = { seed: 5, blocks: { plaza: 0, rubble: 0 } };
+
+    expect(() => anchorNear(open, "rooftop", 500)).toThrow(/rooftop/);
   });
 });

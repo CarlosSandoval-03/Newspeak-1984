@@ -49,6 +49,9 @@ export interface TerrainDef {
   blocks: { plaza: number; rubble: number };
 }
 
+// Where a ground element can stand; later steps add bridge, railway, landmark, and platform.
+export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight";
+
 // Later steps add eyes, turrets, pickups, the diary, the boss, and the length.
 export interface LevelDef {
   terrain: TerrainDef;
