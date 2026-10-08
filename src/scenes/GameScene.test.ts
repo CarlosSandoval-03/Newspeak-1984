@@ -351,6 +351,20 @@ describe("GameScene collisions", () => {
       expect(scene["police"]).not.toBeNull();
     });
 
+    it("hold the waves back while they're here", () => {
+      fullSuspicion();
+      scene.update();
+      scene["scroll"] = LEVELS[0].waves[0].at;
+
+      for (let i = 0; i < 60; i++) scene.update();
+
+      // An autogyro may have come on the tick suspicion hit the top, before they arrived.
+      const waves = scene["enemies"].filter(
+        ({ kind }) => kind !== "escort" && kind !== "homing",
+      );
+      expect(waves).toHaveLength(0);
+    });
+
     it("cost a life when rammed, and fly on", () => {
       fullSuspicion();
       scene.update();

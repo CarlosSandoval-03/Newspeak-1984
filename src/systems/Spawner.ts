@@ -36,6 +36,7 @@ export class Spawner {
   private nextGyro = -Infinity;
   // The scroll at which the current pass began; the scroll itself never goes back, so the city never jumps.
   private start = 0;
+  private last = 0;
 
   constructor(level: LevelDef, spawn: Spawn) {
     this.level = level;
@@ -48,8 +49,13 @@ export class Spawner {
   }
 
   // Loops, not ifs: a big scroll step can pass several waves in one tick.
-  update(scroll: number, alert: AlertLevel): void {
+  // While `held` (the Thought Police hold the sky) the waves' clock stops, so none is skipped, and no
+  // autogyro comes: the fight is with them. The ground keeps coming, since it is the city itself.
+  update(scroll: number, alert: AlertLevel, held = false): void {
     const { waves } = this.level;
+
+    if (held) this.start += scroll - this.last;
+    this.last = scroll;
 
     while (
       this.next < waves.length &&
@@ -74,7 +80,7 @@ export class Spawner {
       }
     }
 
-    if (alert >= ALERT.pursuit && scroll >= this.nextGyro) {
+    if (!held && alert >= ALERT.pursuit && scroll >= this.nextGyro) {
       const half = ENEMY_STATS.homing.halfSize;
 
       this.nextGyro = scroll + GYRO_INTERVAL;
@@ -94,6 +100,7 @@ export class Spawner {
 
     this.next = 0;
     this.start = scroll;
+    this.last = scroll;
     this.placements = [
       ...eyes.map((def) =>
         def.type === "drone"

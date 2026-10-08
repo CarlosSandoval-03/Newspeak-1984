@@ -233,4 +233,33 @@ describe("Spawner", () => {
     spawner.update(due, ALERT.normal);
     expect(turrets).toEqual([{ x: anchor.x, y: -TURRET_STATS.halfSize }]);
   });
+
+  describe("while the Thought Police hold the sky", () => {
+    it("stops the waves' clock, then picks up where it left off", () => {
+      spawner.update(50, ALERT.alert);
+      spawner.update(150, ALERT.thoughtPolice, true);
+      expect(spawned.filter(({ kind }) => kind === "straight")).toHaveLength(0);
+
+      // Held for 100 of scroll, so the wave due at 100 comes at 200, not skipped.
+      spawner.update(199, ALERT.alert);
+      expect(spawned.filter(({ kind }) => kind === "straight")).toHaveLength(0);
+      spawner.update(200, ALERT.alert);
+      expect(
+        spawned.filter(({ kind }) => kind === "straight").length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("sends no autogyros", () => {
+      for (let scroll = 0; scroll < GYRO_INTERVAL * 3; scroll++)
+        spawner.update(scroll, ALERT.thoughtPolice, true);
+
+      expect(spawned.filter(({ kind }) => kind === "homing")).toHaveLength(0);
+    });
+
+    it("keeps the ground coming", () => {
+      spawner.update(150, ALERT.thoughtPolice, true);
+
+      expect(watching.map(({ def }) => def.type)).toContain("drone");
+    });
+  });
 });

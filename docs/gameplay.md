@@ -23,7 +23,7 @@ Towers and drones sweep vision cones. Being seen raises **suspicion** (faster up
 | 0–33 | Normal | A standard shmup. |
 | 34–66 | Alert | More enemies and bullets. |
 | 67–99 | Pursuit | Autogyros hunt the player. |
-| 100 | Thought Police | A mini-boss; kill it or outlast it, and suspicion drops to 50. Never during a boss fight. |
+| 100 | Thought Police | A mini-boss; while it's here no waves come. Kill it or outlast it, and suspicion drops to 50. Never during a boss fight. |
 
 Destroying an eye is allowed but costs +15: you can fight the system, but it notices. Suspicion is also felt without reading the meter: the screen glitches harder and a red vignette closes in.
 
