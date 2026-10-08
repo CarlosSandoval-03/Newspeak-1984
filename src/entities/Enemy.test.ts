@@ -153,12 +153,17 @@ describe("Enemy", () => {
     expect(enemy.hit()).toBe(false);
   });
 
-  it("is removed once it falls off the bottom", () => {
-    const radius = ENEMY_STATS.straight.radius;
-    const enemy = make("straight", { x: 240, y: CANVAS_HEIGHT + radius - 1 });
+  it("is removed once its sprite has left the bottom", () => {
+    const { halfSize, speed } = ENEMY_STATS.bomber;
+    const enemy = make("bomber", {
+      x: 240,
+      y: CANVAS_HEIGHT + halfSize - speed,
+    });
 
     enemy.update();
+    expect(enemy.alive).toBe(true);
 
+    enemy.update();
     expect(enemy.alive).toBe(false);
   });
 });

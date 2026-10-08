@@ -33,7 +33,7 @@ The conventions every step relies on are documented outside this plan:
 
 **Goal:** a plain vertical shooter that already uses the final architecture. There is no theme yet beyond the palette.
 
-**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where the player flies and shoots over ink. `Enemy` and `Explosion` exist but nothing spawns them yet. Next: waves and the Spawner, then collisions.
+**Progress:** the page shell, canvas, asset loader, input, `SceneManager` tick, language detection, `state.ts`, and the Menu are done. `BEGIN SERVICE` starts a `GameScene` where level 1's waves fly in and shoot at the player over ink, and the level loops once cleared. Next: collisions, hits, explosions in play, and respawn.
 
 ### Files
 
@@ -44,9 +44,9 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `index.html`, `style.css` | Done | The telescreen wall ([art-direction.md › The page around the game](art-direction.md#the-page-around-the-game)) with a centered `#game` frame; pass it to `new p5(sketch, element)` so the canvas mounts there. The styles keep an upscaled canvas crisp (`image-rendering: pixelated`). |
 | `core/display.ts` | Done | `fitCanvas()` scales the canvas by the largest integer factor that fits the window minus the frame, computed in device pixels so it stays crisp at 125% or 150% OS zoom. It measures the frame as `#game`'s size minus the canvas's, so the frame's thickness lives only in the CSS. The game itself always works in 480 × 640. |
 | `main.ts` | Done | Creates the p5 instance in `#game`; `setup` creates the canvas, sets `pixelDensity(1)` (the CSS does all the upscaling) and `noSmooth()`, fits it on start and on `resize`, then awaits the assets and hands them to the `SceneManager`, starting on `MenuScene`; `draw` calls `manager.frame(p.deltaTime)`. |
-| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, and explosion numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), scroll speed, respawn |
+| `config.ts` | In progress | Has the canvas size, the core palette and regime red ramp, key bindings, tick, starting lives, and the player, bullet, shadow, enemy, explosion, and scroll numbers. **Still to do:** material tones (see [art-direction.md](art-direction.md)), respawn |
 | `assets.ts`, `assets.test.ts` | Done | Every asset file listed by folder and loaded in parallel; the tests keep the lists in step with the disk and check the JSON data. Next: give the loaded assets to the `SceneManager`. |
-| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `LevelDef`, `WaveDef`, `TerrainDef` (shapes below) |
+| `types.ts` | In progress | Has `Vec`, `TilesetDef`, `DamageMap`, `PlatformDef`, `Word`, `EnemyKind`, `WaveDef`, `LevelDef` (waves only), `ALERT` with `AlertLevel`, and `GameState`. **Still to do:** `TerrainDef` and `LevelDef.terrain`, added with the city generator (shapes below) |
 | `i18n/en.ts`, `i18n/es.ts` | Done | Every player-facing text in English and Spanish. `es` is typed against `en`, so a missing translation fails the typecheck. |
 | `i18n/index.ts`, `index.test.ts` | Done | Language detection and `t()` (see **Language** below); `main.ts` calls `initLanguage()` once. `t()` only accepts paths to a single string, so a misspelled key fails the typecheck |
 | `state.ts`, `state.test.ts` | Done | `state` object with the step 1 fields from [technical.md › Global state](technical.md#global-state), `resetGame()`, `resetLevelState()`. Both reset `state` in place, so every module that imported it sees the new run |
@@ -57,16 +57,16 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | In progress | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once. **Still to do:** the player's hit, respawn, and blink |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Not started | Stubs |
-| `systems/Spawner.ts` | Not started | Reads waves from level data |
+| `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and can reset for the loop |
 | `systems/Propaganda.ts` | Not started | **Pass-through version**: returns the real values and never lies |
 | `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Not started | Stubs |
-| `levels/levels.ts` | Not started | Level 1: terrain recipe and waves |
+| `levels/levels.ts`, `levels.test.ts` | In progress | Level 1's waves; the tests keep them sorted and on screen. **Still to do:** the terrain recipe |
 | `levels/layout.ts`, `layout.test.ts` | Not started | City generator: streets, blocks, buildings, craters (see **Background** below) |
 | `levels/Background.ts` | Not started | Scrolling background on a `p5.Graphics` |
 | `ui/HUD.ts` | Not started | Lives and score, read **through `Propaganda`**; labels from `t()` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Not started | Stubs |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
-| `scenes/GameScene.ts` | In progress | Runs the player and its bullets over ink. **Still to do:** spawner, enemies, collisions, scroll, background, HUD, game over |
+| `scenes/GameScene.ts` | In progress | Runs the player, the spawner, enemies, bullets, and the scroll over ink, and loops the level once cleared. **Still to do:** collisions, explosions, background, HUD, game over |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Not started | Stubs |
 
 ### Specification

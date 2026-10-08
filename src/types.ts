@@ -32,6 +32,21 @@ export type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 // Later steps add "homing".
 export type EnemyKind = "straight" | "sine" | "bomber";
 
+export interface WaveDef {
+  // Scroll distance at which the wave enters at the top edge.
+  at: number;
+  kind: EnemyKind;
+  count: number;
+  // Spawn x of the first enemy; the rest follow to its right.
+  x: number;
+  spacing: number;
+}
+
+// Later steps add terrain, eyes, turrets, pickups, the diary, the boss, and the length.
+export interface LevelDef {
+  waves: WaveDef[];
+}
+
 // Ordered, because each level keeps the effects of the ones below it.
 export const ALERT = {
   normal: 0,

@@ -81,7 +81,7 @@ export class Enemy extends Entity {
     if (this.flash > 0) this.flash--;
 
     // Enemies only ever fly down, so leaving means falling off the bottom.
-    if (this.pos.y - this.radius > CANVAS_HEIGHT) {
+    if (this.pos.y - ENEMY_STATS[this.kind].halfSize > CANVAS_HEIGHT) {
       this.alive = false;
       return;
     }

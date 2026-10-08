@@ -32,6 +32,8 @@ export const MAX_UPDATES_PER_FRAME = 2;
 
 export const STARTING_LIVES = 3;
 
+export const SCROLL_SPEED = 1;
+
 // The words row starts below this, so the ship never hides under it.
 export const PLAYFIELD_BOTTOM = 588;
 
@@ -49,13 +51,14 @@ export const BULLET_RADIUS = 3;
 export const SHADOW_OFFSET = { x: 6, y: 10 };
 export const SHADOW_ALPHA = 0.4;
 
+// halfSize is half the sprite, so an enemy enters and leaves fully off screen.
 export const ENEMY_STATS: Record<
   EnemyKind,
-  { radius: number; hp: number; score: number; speed: number }
+  { halfSize: number; radius: number; hp: number; score: number; speed: number }
 > = {
-  straight: { radius: 12, hp: 1, score: 100, speed: 2 },
-  sine: { radius: 12, hp: 1, score: 100, speed: 2 },
-  bomber: { radius: 20, hp: 6, score: 500, speed: 1 },
+  straight: { halfSize: 24, radius: 12, hp: 1, score: 100, speed: 2 },
+  sine: { halfSize: 24, radius: 12, hp: 1, score: 100, speed: 2 },
+  bomber: { halfSize: 32, radius: 20, hp: 6, score: 500, speed: 1 },
 };
 export const SINE_AMPLITUDE = 40;
 export const SINE_PERIOD = 120;
