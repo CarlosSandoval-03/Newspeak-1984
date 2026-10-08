@@ -1,4 +1,4 @@
-import type { EnemyKind } from "./types";
+import type { EnemyKind, EyeType } from "./types";
 
 export const CANVAS_WIDTH = 480;
 export const CANVAS_HEIGHT = 640;
@@ -101,3 +101,21 @@ export const HIT_FLASH_FRAMES = 3;
 
 export const EXPLOSION_FRAMES = 20;
 export const EXPLOSION_PARTICLES = 8;
+
+// Eyes neither shoot nor score: shooting one down only draws the regime's attention.
+export const EYE_STATS: Record<
+  EyeType,
+  { halfSize: number; radius: number; hp: number }
+> = {
+  tower: { halfSize: 24, radius: 16, hp: 4 },
+  drone: { halfSize: 12, radius: 10, hp: 2 },
+};
+export const EYE_APERTURE_DEGREES = 45;
+// Slower than the ground, so a drone drifts down the screen as it patrols.
+export const DRONE_SPEED = 0.5;
+// How far a drone strays either side of its x, and how long one full patrol takes.
+export const DRONE_PATROL_REACH = 80;
+export const DRONE_PATROL_PERIOD = 240;
+// Faint enough to see the bullets through, with a firmer edge so the cone's reach reads.
+export const CONE_FILL_ALPHA = 0.15;
+export const CONE_EDGE_ALPHA = 0.5;

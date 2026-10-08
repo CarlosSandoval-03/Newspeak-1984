@@ -52,6 +52,25 @@ export interface TerrainDef {
 // Where a ground element can stand; later steps add bridge, railway, landmark, and platform.
 export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight";
 
+export type EyeType = "tower" | "drone";
+
+// Angles in degrees, clockwise from pointing right because screen y grows downward: 90 looks down.
+interface ConeDef {
+  facing: number;
+  range: number;
+  sweepAmp: number;
+  // Radians of sweep phase per frame.
+  sweepSpeed: number;
+  aperture?: number;
+}
+
+// A tower stands on the ground; a drone flies, so it keeps a plain x.
+export type EyeDef = ConeDef &
+  (
+    | { type: "tower"; at: number; on: AnchorKind }
+    | { type: "drone"; at: number; x: number; path: "patrol" | "sine" }
+  );
+
 // Later steps add eyes, turrets, pickups, the diary, the boss, and the length.
 export interface LevelDef {
   terrain: TerrainDef;

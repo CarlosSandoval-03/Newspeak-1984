@@ -237,7 +237,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - Detection: `dist(eye, player) < range` **and** `abs(atan2(sin(d), cos(d))) < aperture / 2`, where `d = angleToPlayer - angle`. Line of sight is ignored; buildings don't block vision.
 - Drawing: a `p.arc(x, y, 2*range, 2*range, angle - aperture/2, angle + aperture/2, PIE)` with low-alpha fill. It is grey (`#7a7a7a`) when idle and red (`#b3261e`) when detecting.
 - Eyes have hp and can be shot down. Destroying one bursts in red sparks (a red `Explosion`), adds **+15 suspicion** immediately, and increments `stats.eyesDestroyed`. Eyes don't shoot.
-- Eyes are placed by level data: `eyes: [{ at, type, facing, range, sweepAmp, sweepSpeed, on?, x?, path? }]`. A tower stands on an anchor (`on: 'rooftop'`, `'plaza'`, or `'street'`); a drone flies, so it uses `x`.
+- Eyes are placed by level data: `eyes: [{ at, type, facing, range, sweepAmp, sweepSpeed, aperture? }]`, plus `on` for a tower and `x` and `path` for a drone. A tower stands on an anchor (`on: 'rooftop'`, `'plaza'`, or `'street'`); a drone flies, so it uses `x`, and its `path` is `'patrol'` (back and forth at an even speed) or `'sine'`, `DRONE_PATROL_REACH` either side. Angles are in degrees, clockwise from pointing right, so `facing: 90` looks down the screen; `sweepSpeed` is radians of sweep per frame.
+- A drone is drawn in code: a grey hub with a red lens, a rotor spinning at each diagonal, and a round shadow.
 
 **Anchors** (`levels/layout.ts`)
 
