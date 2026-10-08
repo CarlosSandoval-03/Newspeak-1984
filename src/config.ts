@@ -119,3 +119,15 @@ export const DRONE_PATROL_PERIOD = 240;
 // Faint enough to see the bullets through, with a firmer edge so the cone's reach reads.
 export const CONE_FILL_ALPHA = 0.15;
 export const CONE_EDGE_ALPHA = 0.5;
+
+// Per frame while seen: fastest point-blank, slowest at the tip of the cone.
+export const SUSPICION_RISE_NEAR = 1.2;
+export const SUSPICION_RISE_FAR = 0.3;
+export const SUSPICION_DECAY = 0.05;
+export const SUSPICION_MAX = 100;
+// Where each alert level begins; the Thought Police come only at the very top.
+export const ALERT_THRESHOLDS = {
+  alert: 34,
+  pursuit: 67,
+  thoughtPolice: SUSPICION_MAX,
+} as const;

@@ -246,8 +246,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Suspicion** (owns `state.suspicion` and `state.alertLevel`)
 
-- `update(seenBy: Eye[])`:
-  - If at least one eye sees the player, suspicion rises by `lerp(1.2, 0.3, distance / range)` per frame, using the closest detecting eye. Closer eyes raise it faster. Increment `stats.framesSeen`.
+- `update(seenBy: Eye[], player: Vec)`:
+  - If at least one eye sees the player, suspicion rises by `lerp(1.2, 0.3, distance / range)` per frame, using the detecting eye with the lowest `distance / range`, the one the player is deepest inside. Closer eyes raise it faster. Increment `stats.framesSeen`.
   - If no eye sees the player, it decays by `0.05` per frame.
   - Clamp the value to `[0, 100]`.
 - `add(amount)` is used for instant changes: destroying an eye, and in later steps crossed-out pickups and diaries.
