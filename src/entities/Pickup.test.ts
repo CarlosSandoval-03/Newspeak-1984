@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   CANVAS_HEIGHT,
+  INK,
   PAPER,
   PICKUP_RADIUS,
   PICKUP_SPEED,
@@ -26,6 +27,7 @@ describe("Pickup", () => {
       textSize: () => {},
       textAlign: () => {},
       textWidth: (text: string) => text.length * 10,
+      drawingContext: {},
       fill: (c: unknown) => (color = c),
       text: (text: string) => drawn.push({ kind: "text", color, text }),
       rect: () => drawn.push({ kind: "rect", color }),
@@ -46,12 +48,13 @@ describe("Pickup", () => {
     expect(pickup.alive).toBe(false);
   });
 
-  it("shows an available word in paper, with nothing struck", () => {
+  it("shows an available word in ink on a paper card, with nothing struck", () => {
     const drawn = draw(new Pickup("ESCAPE", { x: 0, y: 0 }, {} as p5.Font));
 
+    expect(drawn.at(-2)).toEqual({ kind: "rect", color: PAPER });
     expect(drawn.at(-1)).toEqual({
       kind: "text",
-      color: PAPER,
+      color: INK,
       text: "ESCAPE",
     });
     expect(drawn.some(({ color }) => color === RED)).toBe(false);
@@ -63,7 +66,8 @@ describe("Pickup", () => {
 
     const drawn = draw(pickup);
 
-    expect(drawn).toContainEqual({ kind: "text", color: STEEL, text: "FREE" });
+    expect(drawn).toContainEqual({ kind: "rect", color: STEEL });
+    expect(drawn).not.toContainEqual({ kind: "rect", color: PAPER });
     expect(drawn.at(-1)).toEqual({ kind: "rect", color: RED });
   });
 });

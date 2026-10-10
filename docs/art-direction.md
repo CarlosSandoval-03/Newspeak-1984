@@ -20,7 +20,7 @@ Each asset uses the groups that help it read. The exception is aircraft: they st
 
 ## Value hierarchy
 
-Dark ground, mid-grey enemies, the player brightest. Readability comes from brightness, not hue. Landmarks other than the white Ministry of Truth are one step darker for the same reason.
+Dark ground, mid-grey enemies, the player brightest, matched only by the paper cards of falling words, which must be seen. Readability comes from brightness, not hue, so a pickup stands out by being a slip of paper, not by a color of its own. Landmarks other than the white Ministry of Truth are one step darker for the same reason.
 
 ## Red belongs to the regime
 

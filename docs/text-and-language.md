@@ -28,7 +28,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Blimp banners | Machine | Towed across the screen. | The most visible flips: each pair swaps to its opposite mid-level. | `slogans.banners` | `ALWAYS OUR ALLY` / `NEVER OUR ALLY` |
 | Telescreens | Machine | Background screens. | Static, the eye, or a line. | `slogans.telescreens` | `THE LEADER IS WATCHING` |
 | HUD | Machine | Score, lives, suspicion, alert state, words. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT` |
-| Word pickups | Machine | Falling pickups. | Removed words appear struck out in red. | `words` | `FREE` struck in red |
+| Word pickups | Machine | Falling pickups, each on a paper card. | Removed words appear struck out in red, on a card dulled to steel. | `words` | `FREE` struck in red |
 | Menu | Machine | Start screen, as a vertical list. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
 | Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level, by the Ministry's verdict on the last level: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
@@ -66,7 +66,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | HUD lives, suspicion label, alert state | VT323 | 20 | `#e8e4d8` | UPPER |
 | HUD words | VT323 | 20 | `#e8e4d8`; recharging and removed `#7a7a7a`, removed also struck in red; active `#1a1a1a` on `#e8e4d8` | UPPER |
 | Ticker | VT323 | 20 | `#e8e4d8` on a `#6e1712` (dark red) strip | UPPER |
-| Word pickups | VT323 | 20 | `#e8e4d8`; removed: `#7a7a7a` + red strike-through | UPPER |
+| Word pickups | VT323 | 20 | `#1a1a1a` on a `#e8e4d8` card; removed: on a `#7a7a7a` card + red strike-through | UPPER |
 | Mural slogan | VT323 | 20 | `#e8e4d8` on a `#1a1a1a` band | UPPER |
 | Ground slogan | VT323 | 40 or 60 | `#7a7a7a` on `#3a3a3a` | UPPER |
 | Towed banner | VT323 | 20 | `#1a1a1a` on `#e8e4d8` | UPPER |

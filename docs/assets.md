@@ -157,7 +157,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | Bullets | Hundreds on screen: enemy bullets are 2–4 px circles, and the player's are 5×9 tracers pointed at both ends, made of three rects, so the two never get confused. Both are as cheap as an image and can change size and color. |
 | Drones | Grey circle, red eye, four rotating rotor lines. |
 | Explosions | Expanding circles and particles fading over ~20 frames; sprite animations would cost many generations. |
-| Word pickups | Dynamic text, with a red strike-through when removed. |
+| Word pickups | Dynamic text in ink on a paper card with a 1 px ink border, casting an aircraft's shadow; a removed word's card is steel, with a red strike-through. |
 | Buildings | Procedural rooftops: `#3a3a3a` roof, `#1a1a1a` parapet, `#7a7a7a` vents, tanks, hatches. The generator drew buildings in perspective. |
 | Diary hiding spots | Rooftop skylights (`#1a1a1a` rectangle, `#3a3a3a` grid) in the procedural rooftops, so players learn where to look. |
 | Slogans, ground lettering, telescreens | Text and animated content that change during play. |

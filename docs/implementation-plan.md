@@ -367,7 +367,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   - If the word is available, the pickup wakes or upgrades it; REMEMBER's new level also adds a bomb at once.
   - At the maximum level it pays `PICKUP_BONUS_SCORE` (500) instead.
   - If the word has been removed, the pickup is drawn **crossed out** in red, gives nothing, and adds **+10 suspicion** (`REMOVED_PICKUP_SUSPICION`). It is a temptation the player has to learn to avoid. The pickup checks the word as it is drawn, so one removed while falling is struck out at once.
-- Pickups are drawn as text, not sprites: the word's display name in VT323 20 with the HUD's 1 px ink shadow ([text-and-language.md › Usage map](text-and-language.md#usage-map)). They are drawn above the enemies and below the bullets.
+- Pickups are drawn as text, not sprites: the word's display name in VT323 20, ink on a **paper card** with a 1 px ink border ([text-and-language.md › Usage map](text-and-language.md#usage-map)). **Decision:** the card makes the pickup the brightest thing in the sky after the player and keeps it apart from the HUD's text, which is never framed; the palette has no hue to spare, since red is the regime's and leather the diary's. It casts the same shadow as an aircraft, so it reads as falling through the air. A removed word's card is dulled to steel. Pickups are drawn above the enemies and below the bullets.
 - Level 1 offers FREE early (placed at 420) and again from its two-bomber wave, plus ESCAPE, REMEMBER, and TRUTH. The level tests check that every level offers the word the next level removes.
 
 **Diary**
