@@ -286,7 +286,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
   - `--only a,b` runs some scenarios.
   - `--fes` keeps p5's parameter checks on, as `pnpm dev` does, to measure what they cost.
   - `--save` writes the results to `bench/baseline.json`.
-- **Baseline:** once `bench/baseline.json` exists, every run shows its change against it, and a p95 or max more than 20% slower is marked `SLOWER`. The baseline belongs to one machine, so it is not committed. Save one before a change that may cost frames, then run again after it.
+- **Baseline:** once `bench/baseline.json` exists, every run shows its change against it, and a p95 more than 20% slower is marked `SLOWER`. The max is shown but never flagged: it is a single frame, and a garbage collection or a JIT pass can nearly double it between identical runs. For freezes, watch the frames over budget and the dropped frames instead. The baseline belongs to one machine, so it is not committed. Save one before a change that may cost frames, then run again after it.
 - **Limits:** the numbers are Chromium's on this machine, with software rendering, so they compare changes; they don't promise a frame rate. Firefox, the GPU, and monitors above 60 Hz are not measured.
 
 ## Tooling

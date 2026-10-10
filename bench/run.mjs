@@ -16,7 +16,8 @@ import { createServer } from "vite";
 const BUDGET_MS = 1000 / 60;
 // Two frames' worth: a frame the browser had to drop, not timer jitter.
 const DROPPED_MS = BUDGET_MS * 1.5;
-// Slower than the baseline by more than this is flagged.
+// A p95 slower than the baseline by more than this is flagged. The max is a single frame, which a
+// garbage collection or a JIT pass can double from one run to the next, so it is shown, never flagged.
 const REGRESSION = 0.2;
 const BASELINE = new URL("baseline.json", import.meta.url);
 
@@ -112,10 +113,13 @@ async function launch(bin) {
       }
       throw new Error(`Timed out on ${url}`);
     },
-    close() {
+    // Chromium keeps writing its profile until it has exited, so it is removed only after that.
+    async close() {
       ws.close();
+      const exited = new Promise((resolve) => chrome.once("exit", resolve));
       chrome.kill();
-      rmSync(profile, { recursive: true, force: true });
+      await exited;
+      rmSync(profile, { recursive: true, force: true, maxRetries: 3 });
     },
   };
 }
@@ -150,11 +154,11 @@ function summarize(raw) {
 }
 
 const ms = (value) => value.toFixed(2).padStart(6);
-const versus = (value, base) => {
+const versus = (value, base, flagged = true) => {
   if (base === undefined) return "";
   const change = (value - base) / base;
   const text = `${change >= 0 ? "+" : ""}${(change * 100).toFixed(0)}%`;
-  return change > REGRESSION ? ` (${text} SLOWER)` : ` (${text})`;
+  return flagged && change > REGRESSION ? ` (${text} SLOWER)` : ` (${text})`;
 };
 
 // Cross-origin isolation gives performance.now() microseconds instead of 0.1 ms steps.
@@ -190,7 +194,7 @@ try {
 
     console.log(
       `${key.padEnd(22)} cpu p50 ${ms(result.cpu.p50)}  p95 ${ms(result.cpu.p95)}${versus(result.cpu.p95, base?.cpu.p95)}` +
-        `  max ${ms(result.cpu.max)}${versus(result.cpu.max, base?.cpu.max)}`,
+        `  max ${ms(result.cpu.max)}${versus(result.cpu.max, base?.cpu.max, false)}`,
     );
     console.log(
       `${"".padEnd(22)} update p95 ${ms(result.update.p95)}  draw p95 ${ms(result.draw.p95)}` +
@@ -208,6 +212,6 @@ try {
     console.log(`Baseline saved to ${BASELINE.pathname}`);
   }
 } finally {
-  browser.close();
+  await browser.close();
   await server.close();
 }
