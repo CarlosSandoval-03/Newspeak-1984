@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import {
+  PICKUP_BONUS_SCORE,
+  REMOVED_PICKUP_SUSPICION,
+  WORD_MAX_LEVEL,
+} from "../config";
 import { resetGame, state } from "../state";
 import { Newspeak, removedAt } from "./Newspeak";
+import { Suspicion } from "./Suspicion";
 
 const available = () => [...state.words].sort();
 
@@ -9,7 +15,7 @@ describe("Newspeak", () => {
 
   beforeEach(() => {
     resetGame();
-    newspeak = new Newspeak();
+    newspeak = new Newspeak(new Suspicion());
   });
 
   it("removes nothing in level 1", () => {
@@ -51,5 +57,41 @@ describe("Newspeak", () => {
     newspeak.applyLevel(2);
 
     expect(state.wordLevels.FREE).toBe(3);
+  });
+
+  describe("collecting a pickup", () => {
+    it("wakes a dormant word, then upgrades it up to the top", () => {
+      for (let level = 1; level <= WORD_MAX_LEVEL; level++) {
+        newspeak.collect("FREE");
+        expect(state.wordLevels.FREE).toBe(level);
+      }
+      expect(state.realScore).toBe(0);
+    });
+
+    it("pays a bonus instead once the word is at the top", () => {
+      state.wordLevels.ESCAPE = WORD_MAX_LEVEL;
+
+      newspeak.collect("ESCAPE");
+
+      expect(state.wordLevels.ESCAPE).toBe(WORD_MAX_LEVEL);
+      expect(state.realScore).toBe(PICKUP_BONUS_SCORE);
+    });
+
+    it("hands over REMEMBER's new bomb at once", () => {
+      newspeak.collect("REMEMBER");
+      newspeak.collect("REMEMBER");
+
+      expect(state.bombs).toBe(2);
+    });
+
+    it("gives nothing for a removed word, and raises suspicion", () => {
+      newspeak.applyLevel(2);
+
+      newspeak.collect("FREE");
+
+      expect(state.wordLevels.FREE).toBe(0);
+      expect(state.realScore).toBe(0);
+      expect(state.suspicion).toBe(REMOVED_PICKUP_SUSPICION);
+    });
   });
 });

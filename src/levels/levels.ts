@@ -9,11 +9,18 @@ export const LEVELS: LevelDef[] = [
       { at: 360, kind: "sine", count: 4, x: 90, spacing: 100 },
       { at: 660, kind: "straight", count: 5, x: 60, spacing: 90 },
       { at: 960, kind: "bomber", count: 1, x: 240, spacing: 0 },
-      { at: 1260, kind: "sine", count: 5, x: 80, spacing: 80 },
+      { at: 1260, kind: "sine", count: 5, x: 80, spacing: 80, drops: "ESCAPE" },
       { at: 1560, kind: "straight", count: 3, x: 300, spacing: 60 },
       { at: 1680, kind: "straight", count: 3, x: 60, spacing: 60 },
-      { at: 1980, kind: "bomber", count: 2, x: 140, spacing: 200 },
-      { at: 2280, kind: "sine", count: 6, x: 65, spacing: 70 },
+      {
+        at: 1980,
+        kind: "bomber",
+        count: 2,
+        x: 140,
+        spacing: 200,
+        drops: "FREE",
+      },
+      { at: 2280, kind: "sine", count: 6, x: 65, spacing: 70, drops: "TRUTH" },
       { at: 2580, kind: "bomber", count: 1, x: 240, spacing: 0 },
       { at: 2640, kind: "straight", count: 2, x: 120, spacing: 240 },
     ],
@@ -81,6 +88,11 @@ export const LEVELS: LevelDef[] = [
       { at: 700, on: "street", x: 400 },
       { at: 1250, on: "street", x: 60 },
       { at: 1900, on: "street", x: 420 },
+    ],
+    // FREE is only ever found here, so the first one comes early, to be enjoyed before it is taken.
+    pickups: [
+      { at: 420, x: 240, word: "FREE" },
+      { at: 1800, x: 120, word: "REMEMBER" },
     ],
   },
 ];

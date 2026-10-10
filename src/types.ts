@@ -40,6 +40,15 @@ export interface WaveDef {
   // Spawn x of the first enemy; the rest follow to its right.
   x: number;
   spacing: number;
+  // Carried by the wave's last enemy, and dropped only if it is shot down.
+  drops?: Word;
+}
+
+// Falls in from the top edge at `x`, like a drone, since it is not on the ground.
+export interface PickupDef {
+  at: number;
+  x: number;
+  word: Word;
 }
 
 // The recipe describes intent, not tiles; later steps add the river, railway, and landmark.
@@ -78,12 +87,13 @@ export interface TurretDef {
   x?: number;
 }
 
-// Later steps add pickups, the diary, the boss, and the length.
+// Later steps add the diary, the boss, and the length.
 export interface LevelDef {
   terrain: TerrainDef;
   waves: WaveDef[];
   eyes: EyeDef[];
   turrets: TurretDef[];
+  pickups: PickupDef[];
 }
 
 // Ordered, because each level keeps the effects of the ones below it.

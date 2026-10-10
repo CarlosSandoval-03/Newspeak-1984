@@ -20,7 +20,7 @@ import {
   STEEL,
 } from "../config";
 import { state } from "../state";
-import { ALERT, type EnemyKind, type Vec } from "../types";
+import { ALERT, type EnemyKind, type Vec, type Word } from "../types";
 import { Bullet } from "./Bullet";
 import { Entity } from "./Entity";
 
@@ -54,6 +54,8 @@ export function reloadDelay(base: number): number {
 export class Enemy extends Entity {
   readonly kind: EnemyKind;
   readonly score: number;
+  // Let fall where it is shot down; a crash takes the word down with it.
+  drops: Word | null = null;
   private hp: number;
   private readonly startX: number;
   private age = 0;

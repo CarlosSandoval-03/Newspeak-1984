@@ -4,6 +4,7 @@ import {
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
+  PICKUP_RADIUS,
   REINFORCEMENT_GAP,
   TURRET_STATS,
 } from "../config";
@@ -14,6 +15,7 @@ import {
   type EyeDef,
   type LevelDef,
   type Vec,
+  type Word,
 } from "../types";
 import { Spawner } from "./Spawner";
 
@@ -22,7 +24,7 @@ const level: LevelDef = {
   terrain: { seed: 1, blocks: { plaza: 0, rubble: 0 } },
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
-    { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0 },
+    { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },
     { at: 200, kind: "sine", count: 2, x: 100, spacing: 60 },
   ],
   eyes: [
@@ -30,22 +32,26 @@ const level: LevelDef = {
     { type: "drone", at: 150, x: 300, path: "patrol", ...cone },
   ],
   turrets: [{ at: 300, on: "street", x: 400 }],
+  pickups: [{ at: 250, x: 180, word: "REMEMBER" }],
 };
 
 describe("Spawner", () => {
-  let spawned: { kind: EnemyKind; pos: Vec }[];
+  let spawned: { kind: EnemyKind; pos: Vec; drops: Word | null }[];
   let watching: { def: EyeDef; pos: Vec }[];
   let turrets: Vec[];
+  let pickups: { word: Word; pos: Vec }[];
   let spawner: Spawner;
 
   beforeEach(() => {
     spawned = [];
     watching = [];
     turrets = [];
+    pickups = [];
     spawner = new Spawner(level, {
-      enemy: (kind, pos) => spawned.push({ kind, pos }),
+      enemy: (kind, pos, drops) => spawned.push({ kind, pos, drops }),
       eye: (def, pos) => watching.push({ def, pos }),
       turret: (pos) => turrets.push(pos),
+      pickup: (word, pos) => pickups.push({ word, pos }),
     });
   });
 
@@ -56,9 +62,9 @@ describe("Spawner", () => {
     spawner.update(100, ALERT.normal);
     const y = -ENEMY_STATS.straight.halfSize;
     expect(spawned).toEqual([
-      { kind: "straight", pos: { x: 50, y } },
-      { kind: "straight", pos: { x: 90, y } },
-      { kind: "straight", pos: { x: 130, y } },
+      { kind: "straight", pos: { x: 50, y }, drops: null },
+      { kind: "straight", pos: { x: 90, y }, drops: null },
+      { kind: "straight", pos: { x: 130, y }, drops: null },
     ]);
   });
 
@@ -209,9 +215,10 @@ describe("Spawner", () => {
         vi.spyOn(Math, "random").mockReturnValue(roll);
         spawned = [];
         new Spawner(level, {
-          enemy: (kind, pos) => spawned.push({ kind, pos }),
+          enemy: (kind, pos, drops) => spawned.push({ kind, pos, drops }),
           eye: () => {},
           turret: () => {},
+          pickup: () => {},
         }).update(0, ALERT.thoughtPolice);
 
         const [{ pos }] = gyros();
@@ -221,6 +228,34 @@ describe("Spawner", () => {
       }
       vi.restoreAllMocks();
     });
+  });
+
+  it("gives a wave's word to its last enemy only, reinforcements included", () => {
+    spawner.update(200, ALERT.normal);
+    expect(
+      spawned.filter(({ kind }) => kind === "bomber").map(({ drops }) => drops),
+    ).toEqual(["FREE"]);
+
+    spawner.restart(1000);
+    spawned = [];
+    spawner.update(1200, ALERT.alert);
+    expect(
+      spawned.filter(({ kind }) => kind === "bomber").map(({ drops }) => drops),
+    ).toEqual([null, "FREE"]);
+  });
+
+  it("drops a pickup in above the top edge when the scroll reaches it", () => {
+    spawner.update(249, ALERT.normal);
+    expect(pickups).toHaveLength(0);
+
+    spawner.update(250, ALERT.normal);
+    expect(pickups).toEqual([
+      { word: "REMEMBER", pos: { x: 180, y: -PICKUP_RADIUS } },
+    ]);
+
+    spawner.restart(1000);
+    spawner.update(1250, ALERT.normal);
+    expect(pickups).toHaveLength(2);
   });
 
   it("stands a turret on the anchor its data points to, entering with the ground", () => {

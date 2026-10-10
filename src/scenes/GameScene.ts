@@ -18,6 +18,7 @@ import type { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
 import { Eye } from "../entities/Eye";
+import { Pickup } from "../entities/Pickup";
 import { Player } from "../entities/Player";
 import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
@@ -41,16 +42,18 @@ export class GameScene implements Scene {
   private readonly hud: HUD;
   private readonly background: Background;
   private readonly suspicion = new Suspicion();
-  private readonly newspeak = new Newspeak();
+  private readonly newspeak = new Newspeak(this.suspicion);
   private readonly vignette: Vignette;
   private readonly images: Assets["image"];
   private readonly fire: (bullet: Bullet) => void;
+  private readonly font: p5.Font;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
   private turrets: Turret[] = [];
   private police: ThoughtPolice | null = null;
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
+  private pickups: Pickup[] = [];
   private scroll = 0;
   private gameOverIn = 0;
 
@@ -63,20 +66,30 @@ export class GameScene implements Scene {
     this.manager = manager;
     this.images = assets.image;
     this.fire = fire;
+    this.font = assets.font.machine;
     this.hud = new HUD(p, assets.font.machine, new Propaganda());
     this.vignette = new Vignette(p);
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
     this.spawner = new Spawner(level, {
-      enemy: (kind, pos) =>
-        this.enemies.push(
-          new Enemy(kind, pos, () => this.player.pos, assets.image, fire),
-        ),
+      enemy: (kind, pos, drops) => {
+        const enemy = new Enemy(
+          kind,
+          pos,
+          () => this.player.pos,
+          assets.image,
+          fire,
+        );
+        enemy.drops = drops;
+        this.enemies.push(enemy);
+      },
       eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),
       turret: (pos) =>
         this.turrets.push(
           new Turret(pos, () => this.player.pos, assets.image, fire),
         ),
+      pickup: (word, pos) =>
+        this.pickups.push(new Pickup(word, pos, assets.font.machine)),
     });
   }
 
@@ -108,6 +121,7 @@ export class GameScene implements Scene {
     for (const turret of this.turrets) turret.update();
     for (const bullet of this.bullets) bullet.update();
     for (const explosion of this.explosions) explosion.update();
+    for (const pickup of this.pickups) pickup.update();
 
     this.collide();
 
@@ -116,6 +130,7 @@ export class GameScene implements Scene {
     this.turrets = this.turrets.filter((turret) => turret.alive);
     this.bullets = this.bullets.filter((bullet) => bullet.alive);
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
+    this.pickups = this.pickups.filter((pickup) => pickup.alive);
 
     this.watch();
 
@@ -141,6 +156,7 @@ export class GameScene implements Scene {
     for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
     this.police?.draw(p);
+    for (const pickup of this.pickups) pickup.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
@@ -229,6 +245,13 @@ export class GameScene implements Scene {
     const { police } = this;
     if (police?.alive && exposed() && circlesOverlap(police, player))
       this.hitPlayer();
+
+    // Even while blinking: only a pilot who is down can't reach for a word.
+    for (const pickup of this.pickups) {
+      if (!player.alive || !circlesOverlap(pickup, player)) continue;
+      pickup.alive = false;
+      this.newspeak.collect(pickup.word);
+    }
   }
 
   private kill(target: Enemy | Turret | ThoughtPolice): void {
@@ -242,7 +265,11 @@ export class GameScene implements Scene {
       this.explosions.push(
         new Explosion(target.pos, TURRET_STATS.halfSize * 2),
       );
-    else this.explode(target);
+    else {
+      this.explode(target);
+      if (target.drops)
+        this.pickups.push(new Pickup(target.drops, target.pos, this.font));
+    }
   }
 
   // The regime notices at once, and its eyes burst in its own red.

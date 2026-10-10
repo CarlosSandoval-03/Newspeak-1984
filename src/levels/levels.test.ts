@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { CANVAS_WIDTH, ENEMY_STATS, SINE_AMPLITUDE } from "../config";
+import {
+  CANVAS_WIDTH,
+  ENEMY_STATS,
+  PICKUP_RADIUS,
+  SINE_AMPLITUDE,
+} from "../config";
+import { removedAt } from "../systems/Newspeak";
 import { LEVELS } from "./levels";
 
 describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
   "level %i",
-  (_, level) => {
+  (number, level) => {
     it("lists its waves in scroll order", () => {
       const at = level.waves.map((wave) => wave.at);
 
@@ -25,6 +31,24 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
           CANVAS_WIDTH,
         );
       }
+    });
+
+    it("keeps every pickup on screen", () => {
+      for (const pickup of level.pickups) {
+        expect(pickup.x - PICKUP_RADIUS).toBeGreaterThanOrEqual(0);
+        expect(pickup.x + PICKUP_RADIUS).toBeLessThanOrEqual(CANVAS_WIDTH);
+      }
+    });
+
+    // Removed words may still fall as temptations, but the next one to go must be found first.
+    it("offers the word the next level removes, while it can still be had", () => {
+      const next = removedAt(number + 1);
+      const offered = [
+        ...level.pickups.map((pickup) => pickup.word),
+        ...level.waves.flatMap((wave) => (wave.drops ? [wave.drops] : [])),
+      ];
+
+      if (next) expect(offered).toContain(next);
     });
   },
 );

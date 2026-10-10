@@ -361,9 +361,14 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Pickups**
 
-- They are placed by level data (`pickups: [{ at, x, word }]`) and some come from dropping enemies (`drops: Word` in a wave). They drift down slowly.
-- If the word is available, the pickup upgrades that word.
-- If the word has been removed, the pickup is drawn **crossed out** in red, gives nothing, and adds **+10 suspicion**. It is a temptation the player has to learn to avoid.
+- They are placed by level data (`pickups: [{ at, x, word }]`) and some come from dropping enemies (`drops: Word` in a wave). They drift down slowly, at `PICKUP_SPEED` (0.75, slower than the ground), so they linger long enough to be reached.
+- **Decision:** a wave's `drops` goes to its **last enemy in spawn order**, a reinforcement when the alert adds some, and it falls only if that enemy is **shot down**; a crash takes the word down with it.
+- A pickup is collected by touching it, with a generous `PICKUP_RADIUS` (20) against the cockpit-sized hitbox, even while the pilot blinks after a respawn, but not once the pilot is down. `Newspeak.collect(word)` applies it:
+  - If the word is available, the pickup wakes or upgrades it; REMEMBER's new level also adds a bomb at once.
+  - At the maximum level it pays `PICKUP_BONUS_SCORE` (500) instead.
+  - If the word has been removed, the pickup is drawn **crossed out** in red, gives nothing, and adds **+10 suspicion** (`REMOVED_PICKUP_SUSPICION`). It is a temptation the player has to learn to avoid. The pickup checks the word as it is drawn, so one removed while falling is struck out at once.
+- Pickups are drawn as text, not sprites: the word's display name in VT323 20 with the HUD's 1 px ink shadow ([text-and-language.md › Usage map](text-and-language.md#usage-map)). They are drawn above the enemies and below the bullets.
+- Level 1 offers FREE early (placed at 420) and again from its two-bomber wave, plus ESCAPE, REMEMBER, and TRUTH. The level tests check that every level offers the word the next level removes.
 
 **Diary**
 

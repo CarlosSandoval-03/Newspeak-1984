@@ -20,6 +20,7 @@ import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Eye } from "../entities/Eye";
+import { Pickup } from "../entities/Pickup";
 import { Turret } from "../entities/Turret";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
@@ -252,6 +253,51 @@ describe("GameScene collisions", () => {
     expect(scene["enemies"]).toHaveLength(
       Math.ceil(first.count * ALERT_SPAWN_MULT),
     );
+  });
+
+  describe("pickups", () => {
+    const pickupAt = (pos: Vec) => {
+      const pickup = new Pickup("FREE", pos, {} as p5.Font);
+      scene["pickups"].push(pickup);
+      return pickup;
+    };
+
+    it("are collected by flying into them, and wake their word", () => {
+      pickupAt({ ...PLAYER_SPAWN });
+
+      scene.update();
+
+      expect(state.wordLevels.FREE).toBe(1);
+      expect(scene["pickups"]).toHaveLength(0);
+    });
+
+    it("stay out of reach of a pilot who is down", () => {
+      pickupAt({ ...PLAYER_SPAWN });
+      scene["player"].alive = false;
+
+      scene.update();
+
+      expect(state.wordLevels.FREE).toBe(0);
+      expect(scene["pickups"]).toHaveLength(1);
+    });
+
+    it("fall from an enemy that carried one when it is shot down", () => {
+      enemyAt("straight", { x: 100, y: 100 }).drops = "ESCAPE";
+      bulletAt("player", { x: 100, y: 100 });
+
+      scene.update();
+
+      expect(scene["pickups"].map(({ word }) => word)).toEqual(["ESCAPE"]);
+      expect(scene["pickups"][0].pos.x).toBe(100);
+    });
+
+    it("go down with an enemy that crashes into the pilot", () => {
+      enemyAt("bomber", PLAYER_SPAWN).drops = "ESCAPE";
+
+      scene.update();
+
+      expect(scene["pickups"]).toHaveLength(0);
+    });
   });
 
   describe("turrets", () => {

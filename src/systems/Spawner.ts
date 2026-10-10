@@ -4,6 +4,7 @@ import {
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
+  PICKUP_RADIUS,
   REINFORCEMENT_GAP,
   TURRET_STATS,
 } from "../config";
@@ -16,15 +17,18 @@ import {
   type AnchorKind,
   type LevelDef,
   type Vec,
+  type Word,
 } from "../types";
 
 type Spawn = {
-  enemy: (kind: EnemyKind, pos: Vec) => void;
+  // `drops` is the word the enemy lets fall when shot down, if any.
+  enemy: (kind: EnemyKind, pos: Vec, drops: Word | null) => void;
   eye: (def: EyeDef, pos: Vec) => void;
   turret: (pos: Vec) => void;
+  pickup: (word: Word, pos: Vec) => void;
 };
 
-// Eyes and turrets come by scroll distance, not in waves; `place` gets the scroll they finally came at.
+// Eyes, turrets, and pickups come by scroll distance, not in waves; `place` gets the scroll they finally came at.
 type Placement = { due: number; place: (scroll: number) => void };
 
 export class Spawner {
@@ -73,10 +77,14 @@ export class Spawner {
       for (let i = 0; i < total; i++) {
         const row = Math.floor(i / wave.count);
         const column = i % wave.count;
-        this.spawn.enemy(wave.kind, {
-          x: wave.x + column * wave.spacing,
-          y: -half - row * (half * 2 + REINFORCEMENT_GAP),
-        });
+        this.spawn.enemy(
+          wave.kind,
+          {
+            x: wave.x + column * wave.spacing,
+            y: -half - row * (half * 2 + REINFORCEMENT_GAP),
+          },
+          i === total - 1 ? (wave.drops ?? null) : null,
+        );
       }
     }
 
@@ -84,10 +92,11 @@ export class Spawner {
       const half = ENEMY_STATS.homing.halfSize;
 
       this.nextGyro = scroll + GYRO_INTERVAL;
-      this.spawn.enemy("homing", {
-        x: half + Math.random() * (CANVAS_WIDTH - half * 2),
-        y: -half,
-      });
+      this.spawn.enemy(
+        "homing",
+        { x: half + Math.random() * (CANVAS_WIDTH - half * 2), y: -half },
+        null,
+      );
     }
 
     while (this.placements.length > 0 && scroll >= this.placements[0].due)
@@ -96,7 +105,7 @@ export class Spawner {
 
   // Ground elements find their anchors again for the new pass, since the city under it is new.
   restart(scroll: number): void {
-    const { eyes, turrets } = this.level;
+    const { eyes, turrets, pickups } = this.level;
 
     this.next = 0;
     this.start = scroll;
@@ -121,6 +130,11 @@ export class Spawner {
           this.spawn.turret(pos),
         ),
       ),
+      ...pickups.map((def) => ({
+        due: scroll + def.at,
+        place: () =>
+          this.spawn.pickup(def.word, { x: def.x, y: -PICKUP_RADIUS }),
+      })),
     ].sort((a, b) => a.due - b.due);
   }
 

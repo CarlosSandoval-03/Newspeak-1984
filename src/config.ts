@@ -40,6 +40,13 @@ export const WORD_REMOVAL_ORDER: readonly Word[] = [
   "REMEMBER",
   "TRUTH",
 ];
+// Slower than the ground, so a pickup lingers on screen long enough to be reached.
+export const PICKUP_SPEED = 0.75;
+// Generous against the player's cockpit-sized hitbox: brushing the word is enough.
+export const PICKUP_RADIUS = 20;
+export const PICKUP_BONUS_SCORE = 500;
+// Reaching for a word the Party took away is noticed.
+export const REMOVED_PICKUP_SUSPICION = 10;
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.
