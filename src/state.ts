@@ -1,7 +1,7 @@
 import { STARTING_LIVES } from "./config";
-import { ALERT, type GameState } from "./types";
+import { ALERT, type GameState, type Stats } from "./types";
 
-const freshStats = () => ({
+const freshStats = (): Stats => ({
   kills: 0,
   eyesDestroyed: 0,
   framesSeen: 0,
@@ -18,7 +18,11 @@ function freshRun(): GameState {
     suspicion: 0,
     alertLevel: ALERT.normal,
     words: new Set(["FREE", "ESCAPE", "TRUTH", "REMEMBER"]),
+    wordLevels: { FREE: 1, ESCAPE: 1, TRUTH: 1, REMEMBER: 1 },
+    restoredWord: null,
+    bombs: 1,
     stats: freshStats(),
+    runStats: { ...freshStats(), pagesRead: [] },
   };
 }
 
@@ -29,6 +33,16 @@ export function resetGame(): void {
   Object.assign(state, freshRun());
 }
 
+// Counted for the level and the run at once, so the two totals can never drift apart.
+export function record(stat: keyof Stats): void {
+  state.stats[stat]++;
+  state.runStats[stat]++;
+}
+
+// A diary's word was given back for one level only; removal itself is permanent.
 export function resetLevelState(): void {
   state.stats = freshStats();
+  if (state.restoredWord) state.words.delete(state.restoredWord);
+  state.restoredWord = null;
+  state.bombs = state.words.has("REMEMBER") ? state.wordLevels.REMEMBER : 0;
 }

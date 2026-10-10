@@ -7,7 +7,7 @@ import {
   THOUGHT_POLICE_RESET,
 } from "../config";
 import type { Eye } from "../entities/Eye";
-import { state } from "../state";
+import { record, state } from "../state";
 import { ALERT, type AlertLevel, type Vec } from "../types";
 
 export function alertFor(suspicion: number): AlertLevel {
@@ -45,7 +45,7 @@ export class Suspicion {
           Math.hypot(eye.pos.x - player.x, eye.pos.y - player.y) / eye.range,
       ),
     );
-    state.stats.framesSeen++;
+    record("framesSeen");
     this.set(
       state.suspicion +
         SUSPICION_RISE_NEAR +

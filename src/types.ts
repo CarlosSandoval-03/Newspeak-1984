@@ -96,6 +96,13 @@ export const ALERT = {
 
 export type AlertLevel = (typeof ALERT)[keyof typeof ALERT];
 
+export type Stats = {
+  kills: number;
+  eyesDestroyed: number;
+  framesSeen: number;
+  diaries: number;
+};
+
 export interface GameState {
   // Zero-padded once here, so every place that shows it agrees.
   pilotId: string;
@@ -105,12 +112,13 @@ export interface GameState {
   realScore: number;
   suspicion: number;
   alertLevel: AlertLevel;
+  // Available right now: what removal left, plus any word a diary gave back for this level.
   words: Set<Word>;
+  // Kept when a word is removed, so a diary gives it back as strong as it was.
+  wordLevels: Record<Word, number>;
+  restoredWord: Word | null;
+  bombs: number;
   // This level only.
-  stats: {
-    kills: number;
-    eyesDestroyed: number;
-    framesSeen: number;
-    diaries: number;
-  };
+  stats: Stats;
+  runStats: Stats & { pagesRead: number[] };
 }

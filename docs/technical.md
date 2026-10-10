@@ -105,15 +105,15 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
   suspicion: number;          // 0–100; the Ministry rewrites it between levels
   alertLevel: AlertLevel;     // ALERT.normal, alert, pursuit, thoughtPolice
   words: Set<Word>;           // available words: "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER"
-  stats: { kills: number; eyesDestroyed: number; framesSeen: number; diaries: number };  // this level
+  stats: Stats;               // this level: { kills, eyesDestroyed, framesSeen, diaries }
 
   // step 3
   bombs: number;
   wordLevels: Record<Word, number>;  // 1–3; kept when a word is removed
   restoredWord: Word | null;  // restored by a diary, for this level only
-  runStats: { kills: number; officialKills: number; eyesDestroyed: number; framesSeen: number; diaries: number; pagesRead: number[] };
+  runStats: Stats & { pagesRead: number[] };  // the whole run
 
-  // step 4
+  // step 4 (and officialKills in runStats)
   levelStartScore: number;    // realScore when the level began
   officialScore: number;      // whole run; the only score the regime shows
   verdict: Verdict;           // the Ministry's verdict on the last level: VERDICT.hero, underReview, suspect

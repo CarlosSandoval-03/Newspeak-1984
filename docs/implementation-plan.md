@@ -9,7 +9,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` | Done |
-| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Not started |
+| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | In progress |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
 | — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
@@ -386,6 +386,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 **state.ts**
 
 - `resetLevelState()` clears the per-level stats (`kills`, `eyesDestroyed`, `framesSeen`, `diaries`), and any word a diary restored, and refills `bombs` to REMEMBER's level (0 without the word). It does not touch `realScore`, `realLives`, the permanently removed words, or the cumulative run totals that step 4 needs. **Decision:** keep a separate `runStats` object for the run totals.
+- `record(stat)` counts a stat for the level and the run in one call, so the two totals can't drift apart. Every counter goes through it.
+- `GameScene.enter()` calls `Newspeak.applyLevel(state.level)` before `resetLevelState()`, so the bombs are refilled from the words the level actually leaves. `applyLevel` removes every word due by that level, not only the current one, so a run can start from any level.
 
 ### p5 additions on assets
 

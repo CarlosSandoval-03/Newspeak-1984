@@ -81,6 +81,18 @@ describe("GameScene collisions", () => {
     manager.change(scene);
   });
 
+  it("starts the level with the words it leaves, and bombs to match", () => {
+    state.wordLevels.REMEMBER = 2;
+    state.words.delete("FREE");
+
+    manager.change(
+      new GameScene({ get: () => ({}) } as unknown as p5, manager),
+    );
+
+    expect(state.bombs).toBe(2);
+    expect(state.words.has("FREE")).toBe(false);
+  });
+
   it("scores and explodes an enemy a player bullet destroys", () => {
     enemyAt("straight", { x: 100, y: 100 });
     bulletAt("player", { x: 100, y: 100 });

@@ -23,7 +23,8 @@ import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { Background } from "../levels/Background";
 import { LEVELS } from "../levels/levels";
-import { resetLevelState, state } from "../state";
+import { record, resetLevelState, state } from "../state";
+import { Newspeak } from "../systems/Newspeak";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
@@ -40,6 +41,7 @@ export class GameScene implements Scene {
   private readonly hud: HUD;
   private readonly background: Background;
   private readonly suspicion = new Suspicion();
+  private readonly newspeak = new Newspeak();
   private readonly vignette: Vignette;
   private readonly images: Assets["image"];
   private readonly fire: (bullet: Bullet) => void;
@@ -78,7 +80,9 @@ export class GameScene implements Scene {
     });
   }
 
+  // Words go first, so the bombs are refilled from what the level actually leaves.
   enter(): void {
+    this.newspeak.applyLevel(state.level);
     resetLevelState();
   }
 
@@ -229,7 +233,7 @@ export class GameScene implements Scene {
 
   private kill(target: Enemy | Turret | ThoughtPolice): void {
     state.realScore += target.score;
-    state.stats.kills++;
+    record("kills");
     if (target instanceof ThoughtPolice)
       this.explosions.push(
         new Explosion(target.pos, THOUGHT_POLICE_STATS.halfSize * 2, RED),
@@ -244,7 +248,7 @@ export class GameScene implements Scene {
   // The regime notices at once, and its eyes burst in its own red.
   private blind(eye: Eye): void {
     this.suspicion.add(EYE_DESTROYED_SUSPICION);
-    state.stats.eyesDestroyed++;
+    record("eyesDestroyed");
     this.explosions.push(
       new Explosion(eye.pos, EYE_STATS[eye.type].halfSize * 2, RED),
     );

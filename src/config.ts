@@ -1,4 +1,4 @@
-import type { EnemyKind, EyeType } from "./types";
+import type { EnemyKind, EyeType, Word } from "./types";
 
 export const CANVAS_WIDTH = 480;
 export const CANVAS_HEIGHT = 640;
@@ -31,6 +31,15 @@ export const TICK_MS = 1000 / 60;
 export const MAX_UPDATES_PER_FRAME = 2;
 
 export const STARTING_LIVES = 3;
+
+export const WORD_MAX_LEVEL = 3;
+// One word per level from level 2 on, so the last level leaves the pilot with none.
+export const WORD_REMOVAL_ORDER: readonly Word[] = [
+  "FREE",
+  "ESCAPE",
+  "REMEMBER",
+  "TRUTH",
+];
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.
