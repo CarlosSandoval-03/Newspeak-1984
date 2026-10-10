@@ -79,6 +79,12 @@ export const PLAYER_SPEED = 3;
 export const PLAYER_FIRE_COOLDOWN = 6;
 export const PLAYER_SPAWN = { x: CANVAS_WIDTH / 2, y: 540 };
 export const PLAYER_BULLET_SPEED = 8;
+// FREE's volley at each upgrade level: degrees off straight ahead, one bullet each.
+export const FREE_SPREAD_DEGREES = [
+  [-10, 0, 10],
+  [-20, 0, 20],
+  [-20, -10, 0, 10, 20],
+];
 export const RESPAWN_INVULN_FRAMES = 120;
 // The ship is hidden every other stretch of this many frames while invulnerable.
 export const BLINK_FRAMES = 4;

@@ -338,6 +338,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Decision:** TRUTH is an **active, timed ability**. If it were always on while the word is held, the HUD lies would never matter until level 5. As an active ability, it is a resource the player chooses when to spend.
 
+**Decision:** FREE's volleys are 3 bullets at ±10°, then 3 at ±20°, then 5 bullets 10° apart (`FREE_SPREAD_DEGREES`), all at full speed and from the nose. The player reads the word at every shot, so losing or upgrading it changes the very next volley. The tracer stays upright at any angle, as in *1942*: a rotated 5×9 shape would blur.
+
 **Camouflaged enemies** (new `camo` flag on `Enemy`): drawn at very low alpha. They become fully visible while TRUTH is active. They appear from level 2 on.
 
 **Removal** (`Newspeak.applyLevel(level)`)

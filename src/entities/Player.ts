@@ -3,6 +3,7 @@ import type { Assets } from "../assets";
 import {
   BLINK_FRAMES,
   CANVAS_WIDTH,
+  FREE_SPREAD_DEGREES,
   PLAYER_BULLET_SPEED,
   PLAYER_FIRE_COOLDOWN,
   PLAYER_HALF_SIZE,
@@ -13,6 +14,7 @@ import {
   RESPAWN_INVULN_FRAMES,
 } from "../config";
 import type { Input } from "../core/Input";
+import { state } from "../state";
 import { Bullet } from "./Bullet";
 import { Entity } from "./Entity";
 
@@ -73,9 +75,26 @@ export class Player extends Entity {
     if (this.invulnFrames > 0) this.invulnFrames--;
     if (this.cooldown > 0) this.cooldown--;
     if (input.isDown("shoot") && this.cooldown === 0) {
-      const nose = { x: this.pos.x, y: this.pos.y - PLAYER_HALF_SIZE };
-      this.fire(new Bullet("player", nose, { x: 0, y: -PLAYER_BULLET_SPEED }));
+      this.volley();
       this.cooldown = PLAYER_FIRE_COOLDOWN;
+    }
+  }
+
+  // Read at every shot, so losing or upgrading FREE changes the very next volley.
+  private volley(): void {
+    const nose = { x: this.pos.x, y: this.pos.y - PLAYER_HALF_SIZE };
+    const spread = state.words.has("FREE")
+      ? FREE_SPREAD_DEGREES[state.wordLevels.FREE - 1]
+      : [0];
+
+    for (const degrees of spread) {
+      const angle = (degrees * Math.PI) / 180;
+      this.fire(
+        new Bullet("player", nose, {
+          x: Math.sin(angle) * PLAYER_BULLET_SPEED,
+          y: -Math.cos(angle) * PLAYER_BULLET_SPEED,
+        }),
+      );
     }
   }
 

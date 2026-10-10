@@ -4,6 +4,7 @@ import type { Assets } from "../assets";
 import {
   BLINK_FRAMES,
   CANVAS_WIDTH,
+  FREE_SPREAD_DEGREES,
   PLAYER_BULLET_SPEED,
   PLAYER_FIRE_COOLDOWN,
   PLAYER_HALF_SIZE,
@@ -13,6 +14,7 @@ import {
   RESPAWN_INVULN_FRAMES,
 } from "../config";
 import { Input } from "../core/Input";
+import { resetGame, state } from "../state";
 import type { Bullet } from "./Bullet";
 import { Player } from "./Player";
 
@@ -35,6 +37,7 @@ describe("Player", () => {
   };
 
   beforeEach(() => {
+    resetGame();
     keys = new EventTarget();
     fired = [];
     player = new Player(new Input(keys), images, (bullet) =>
@@ -77,6 +80,7 @@ describe("Player", () => {
   });
 
   it("fires from the nose every cooldown while Shoot is held", () => {
+    state.words.delete("FREE");
     hold("Space");
 
     ticks(PLAYER_FIRE_COOLDOWN * 2 + 1);
@@ -86,6 +90,48 @@ describe("Player", () => {
       owner: "player",
       pos: { x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - PLAYER_HALF_SIZE },
       vel: { x: 0, y: -PLAYER_BULLET_SPEED },
+    });
+  });
+
+  describe("with FREE", () => {
+    const angles = () =>
+      fired.map(({ vel }) =>
+        Math.round((Math.atan2(vel.x, -vel.y) * 180) / Math.PI),
+      );
+
+    it("fires a volley that widens with each upgrade level", () => {
+      hold("Space");
+
+      FREE_SPREAD_DEGREES.forEach((spread, i) => {
+        state.wordLevels.FREE = i + 1;
+        fired = [];
+        ticks(PLAYER_FIRE_COOLDOWN);
+        expect(angles()).toEqual(spread);
+      });
+    });
+
+    it("keeps every bullet at full speed, from the nose", () => {
+      state.wordLevels.FREE = FREE_SPREAD_DEGREES.length;
+      hold("Space");
+      ticks(1);
+
+      for (const bullet of fired) {
+        expect(Math.hypot(bullet.vel.x, bullet.vel.y)).toBeCloseTo(
+          PLAYER_BULLET_SPEED,
+        );
+        expect(bullet.pos.y).toBe(PLAYER_SPAWN.y - PLAYER_HALF_SIZE);
+      }
+    });
+
+    it("drops to a single shot the moment the word is gone", () => {
+      hold("Space");
+      ticks(1);
+      state.words.delete("FREE");
+      fired = [];
+
+      ticks(PLAYER_FIRE_COOLDOWN);
+
+      expect(angles()).toEqual([0]);
     });
   });
 
