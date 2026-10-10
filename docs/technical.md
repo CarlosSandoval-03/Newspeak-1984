@@ -29,6 +29,7 @@ newspeak-1984/
 ├── .github/workflows/    # ci.yml: checks, and deploys tags to GitHub Pages
 ├── README.md             # project overview and how to run it
 ├── docs/                 # this documentation (start at docs/README.md)
+├── bench/                # performance benchmarks: scenarios, the page that times them, the runner
 ├── public/
 │   ├── favicon.png
 │   └── assets/
@@ -258,6 +259,36 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | Red vignette | One prerendered `p5.Graphics` (red edges, transparent center), drawn with an alpha driven by suspicion. Never rebuilt per frame. |
 | Never per frame | `tint()`, `loadPixels()`/`get()` on images, creating `p5.Graphics`. (Boss damage graphics are created once, at load.) |
 
+### Benchmarks
+
+`pnpm bench` times the real `GameScene` in headless Chromium, one scenario at a time, so a change that slows the game shows up as a number before it shows up as lag. It needs no extra dependency: `bench/run.mjs` starts Vite and Chromium itself and talks to it over the DevTools protocol. It uses `CHROME_BIN`, or else finds the Playwright cache or a system Chromium.
+
+- **How it measures:** `bench/main.ts` (served at `/bench/`, never built) runs one tick and one draw per browser frame and times them apart, after `WARMUP_FRAMES` so the first chunks and fonts are built. `Math.random` is seeded, so every run of a scenario sees the same waves. The page is cross-origin isolated, so `performance.now()` has microsecond resolution.
+- **Scenarios** (`bench/scenarios.ts`) set up the scene the way the tests do, through its private fields, so the game needs no hooks. The pilot never shoots and keeps weaving, so enemies live and fire as they would at a dodging player, and lives are held so no run ends.
+
+  | Scenario | What it loads |
+  | -------- | ------------- |
+  | `level1` | Level 1 as played: waves, eyes, turrets, the scrolling city. |
+  | `level1-spread` | Level 1 with FREE at its maximum, firing all the time. |
+  | `pursuit` | Suspicion held at 80: reinforcements, faster fire, autogyros. |
+  | `thought-police` | The Thought Police and escort, an eye on the pilot, the red vignette. |
+  | `bullet-storm` | Stress: 30 fighters and bombers on screen, all firing. |
+  | `explosions` | Stress: eight explosions every 6 frames. |
+  | `fast-scroll` | The city alone, 24 times faster, to time building its chunks. |
+
+- **What it reports**, per scenario:
+  - update, draw, and their sum (`cpu`) at p50, p95, and max;
+  - frames over the 16.7 ms budget;
+  - **dropped** frames, those the browser took more than 1.5 budgets to show, which catches costs outside the timed code: garbage collection, rasterizing the canvas;
+  - the most enemies, bullets, and explosions on screen, so a number is read against its load;
+  - the heap retained between the start and the end, after collecting garbage, to catch leaks.
+- **Options:**
+  - `--only a,b` runs some scenarios.
+  - `--fes` keeps p5's parameter checks on, as `pnpm dev` does, to measure what they cost.
+  - `--save` writes the results to `bench/baseline.json`.
+- **Baseline:** once `bench/baseline.json` exists, every run shows its change against it, and a p95 or max more than 20% slower is marked `SLOWER`. The baseline belongs to one machine, so it is not committed. Save one before a change that may cost frames, then run again after it.
+- **Limits:** the numbers are Chromium's on this machine, with software rendering, so they compare changes; they don't promise a frame rate. Firefox, the GPU, and monitors above 60 Hz are not measured.
+
 ## Tooling
 
 | Command | Does |
@@ -265,6 +296,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | `pnpm dev` | Dev server with hot reload. |
 | `pnpm typecheck` | `tsc --noEmit`; run after every change. |
 | `pnpm test` | Run the tests once (`vitest run`); `pnpm vitest` watches. |
+| `pnpm bench` | Time the game's scenarios in headless Chromium ([Benchmarks](#benchmarks)). |
 | `pnpm build` | Typecheck and build to `dist/`. |
 | `pnpm preview` | Serve the build. |
 

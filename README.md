@@ -47,6 +47,7 @@ Open http://localhost:5173 in your browser.
 | `pnpm dev`       | Start the dev server with hot reload      |
 | `pnpm typecheck` | Type-check the project without emitting   |
 | `pnpm test`      | Run the tests                             |
+| `pnpm bench`     | Time the game in headless Chromium        |
 | `pnpm build`     | Type-check and build to `dist/`           |
 | `pnpm preview`   | Serve the production build locally        |
 
