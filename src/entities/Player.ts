@@ -83,9 +83,8 @@ export class Player extends Entity {
   // Read at every shot, so losing or upgrading FREE changes the very next volley.
   private volley(): void {
     const nose = { x: this.pos.x, y: this.pos.y - PLAYER_HALF_SIZE };
-    const spread = state.words.has("FREE")
-      ? FREE_SPREAD_DEGREES[state.wordLevels.FREE - 1]
-      : [0];
+    const spread =
+      FREE_SPREAD_DEGREES[state.words.has("FREE") ? state.wordLevels.FREE : 0];
 
     for (const degrees of spread) {
       const angle = (degrees * Math.PI) / 180;

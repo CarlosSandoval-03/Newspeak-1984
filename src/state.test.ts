@@ -45,19 +45,19 @@ describe("state", () => {
     expect(state.pilotId).toBe("9999");
   });
 
-  it("starts every word at level 1, with one bomb", () => {
+  it("starts with every word known but asleep, and no bombs", () => {
     state.wordLevels.FREE = 3;
-    state.bombs = 0;
+    state.bombs = 2;
 
     resetGame();
 
     expect(state.wordLevels).toEqual({
-      FREE: 1,
-      ESCAPE: 1,
-      TRUTH: 1,
-      REMEMBER: 1,
+      FREE: 0,
+      ESCAPE: 0,
+      TRUTH: 0,
+      REMEMBER: 0,
     });
-    expect(state.bombs).toBe(1);
+    expect(state.bombs).toBe(0);
     expect(state.restoredWord).toBeNull();
   });
 

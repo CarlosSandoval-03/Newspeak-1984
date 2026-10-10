@@ -324,13 +324,15 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Words and abilities**
 
-`state.words` is the set of words that are currently **available**. `state.wordLevels` keeps each word's upgrade level, from 1 to `WORD_MAX_LEVEL` (default 3).
+`state.words` is the set of words that are currently **available**. `state.wordLevels` keeps each word's upgrade level, from 0 (dormant) to `WORD_MAX_LEVEL` (default 3).
 
+- **Decision:** the run starts with every word available but **dormant**, at level 0: the Dictionary and the words row show all four from the start, so the player knows what can be taken away, but a dormant word gives no power. Its first pickup wakes it to level 1, and each one after that upgrades it. The power is earned before it is lost, so removal takes something the player worked for. It also keeps FREE's spread from making level 1 easy from its first second.
 - **Decision:** upgrades last the whole run, and removing a word doesn't clear its level. Losing a word the player built up hurts more, and a diary brings it back at the level it had.
 - A pickup for a word already at the maximum gives a score bonus instead.
+- A word can only be picked up while it is available, so each level's data must offer pickups for the words removed next: FREE only in level 1, ESCAPE in levels 1–2, and so on. FREE's first pickup comes early in level 1, so the player has time to enjoy it before it is taken.
 
-| Word | Without it | With it | Upgrade per extra pickup |
-| ---- | ---------- | ------- | ------------------------ |
+| Word | Dormant or removed | Awake (level 1) | Upgrade per extra pickup |
+| ---- | ------------------ | --------------- | ------------------------ |
 | `FREE` | single shot | triple spread shot | wider spread, then 5-way |
 | `ESCAPE` | no dash | a short dash in the movement direction with 30 frames (0.5 s) of invulnerability, on a cooldown | shorter cooldown |
 | `TRUTH` | no way to see through the lies (from step 5); camouflaged enemies are almost invisible | press `V` to see the truth for `TRUTH_DURATION` frames, on a cooldown | longer duration |
@@ -338,7 +340,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Decision:** TRUTH is an **active, timed ability**. If it were always on while the word is held, the HUD lies would never matter until level 5. As an active ability, it is a resource the player chooses when to spend.
 
-**Decision:** FREE's volleys are 3 bullets at ±10°, then 3 at ±20°, then 5 bullets 10° apart (`FREE_SPREAD_DEGREES`), all at full speed and from the nose. The player reads the word at every shot, so losing or upgrading it changes the very next volley. The tracer stays upright at any angle, as in *1942*: a rotated 5×9 shape would blur.
+**Decision:** FREE's volleys are a single straight shot while dormant or removed, then 3 bullets at ±10°, then 3 at ±20°, then 5 bullets 10° apart (`FREE_SPREAD_DEGREES`), all at full speed and from the nose. The player reads the word at every shot, so losing or upgrading it changes the very next volley. The tracer stays upright at any angle, as in *1942*: a rotated 5×9 shape would blur.
 
 **Camouflaged enemies** (new `camo` flag on `Enemy`): drawn at very low alpha. They become fully visible while TRUTH is active. They appear from level 2 on.
 
@@ -355,8 +357,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   | 4 | REMEMBER | TRUTH |
   | 5 | TRUTH | — |
 
-- Removal is permanent for the rest of the run. **Decision:** the game has **5 levels**, one for each step of the removal order.
-- **Decision:** the player starts the run with every word at level 1, so the player knows exactly what is being taken away.
+- Removal is permanent for the rest of the run, whether the word was awake or still dormant. **Decision:** the game has **5 levels**, one for each step of the removal order.
 
 **Pickups**
 
@@ -367,7 +368,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 **Diary**
 
 - There is one per level, on the skylight anchor nearest to the `at` in level data (`diary: { at }`), so players learn where to look. **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
-- Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word. In level 1 nothing has been removed yet, so it gives a score bonus instead.
+- Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word, awake at least at level 1 even if it was still dormant when it was taken, so the diary always gives back a power. In level 1 nothing has been removed yet, so it gives a score bonus instead.
 - Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed in the diary band without pausing, sliding left once it reaches the margin, and stays `DIARY_HOLD` frames after it is typed ([art-direction.md › The HUD](art-direction.md#the-hud)). Record which pages were read in `runStats`.
 
 **DictionaryScene** (shown before every level)
@@ -611,8 +612,8 @@ These are the gaps this plan filled in. An open decision can still change before
 | 7 | Eye vision ignores line of sight | 2 | Confirmed |
 | 8 | TRUTH is an active, timed ability | 3 | Confirmed |
 | 9 | 5 levels, one for each word in the removal order | 3 | Confirmed |
-| 10 | The run starts with all words at level 1 | 3 | Confirmed |
-| 11 | The diary restores the most recently removed word (a score bonus in level 1) | 3 | Confirmed |
+| 10 | The run starts with all words available but dormant (level 0); the first pickup wakes each one | 3 | Confirmed |
+| 11 | The diary restores the most recently removed word, at level 1 at least (a score bonus in level 1) | 3 | Confirmed |
 | 12 | Separate `runStats` for run totals | 3 | Confirmed |
 | 13 | A random four-digit pilot ID per run (0001–9999, zero-padded) instead of a name-entry screen | 1 | Confirmed |
 | 14 | Ending chosen by diaries read during the run (≥ 3 → rebel) | 4 | Confirmed |

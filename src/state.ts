@@ -18,9 +18,11 @@ function freshRun(): GameState {
     suspicion: 0,
     alertLevel: ALERT.normal,
     words: new Set(["FREE", "ESCAPE", "TRUTH", "REMEMBER"]),
-    wordLevels: { FREE: 1, ESCAPE: 1, TRUTH: 1, REMEMBER: 1 },
+    // Every word is known from the start, so the pilot sees what can be taken, but each one
+    // sleeps until its first pickup, so its power is earned before it is lost.
+    wordLevels: { FREE: 0, ESCAPE: 0, TRUTH: 0, REMEMBER: 0 },
     restoredWord: null,
-    bombs: 1,
+    bombs: 0,
     stats: freshStats(),
     runStats: { ...freshStats(), pagesRead: [] },
   };

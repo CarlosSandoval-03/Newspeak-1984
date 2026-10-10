@@ -48,7 +48,7 @@ stateDiagram-v2
 
 Abilities are words: `FREE` (spread shot), `ESCAPE` (dash), `TRUTH` (see through lies), `REMEMBER` (bomb). From level 2 the Party removes one per level: FREE → ESCAPE → REMEMBER → TRUTH. A removed word's pickup appears crossed out, gives nothing, and raises suspicion (+10), so players learn to stop reaching for what was taken.
 
-Upgrades last the whole run, so every removal takes away something the player built. A **diary** page restores the most recently removed word, at the level it had, for the rest of that level (+25 suspicion).
+The run starts with all four words known but **dormant**: they give no power until the first pickup of each one wakes it, and later pickups upgrade it. A word can only be found while it is still available, so FREE is a level 1 prize that the Party takes back at once. Upgrades last the whole run, so every removal takes away something the player built. A **diary** page restores the most recently removed word, at the level it had (at least awake), for the rest of that level (+25 suspicion).
 
 ```mermaid
 flowchart LR

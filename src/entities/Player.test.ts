@@ -12,6 +12,7 @@ import {
   PLAYER_SPEED,
   PLAYFIELD_BOTTOM,
   RESPAWN_INVULN_FRAMES,
+  WORD_MAX_LEVEL,
 } from "../config";
 import { Input } from "../core/Input";
 import { resetGame, state } from "../state";
@@ -79,8 +80,7 @@ describe("Player", () => {
     });
   });
 
-  it("fires from the nose every cooldown while Shoot is held", () => {
-    state.words.delete("FREE");
+  it("fires single shots from the nose every cooldown while Shoot is held", () => {
     hold("Space");
 
     ticks(PLAYER_FIRE_COOLDOWN * 2 + 1);
@@ -99,19 +99,20 @@ describe("Player", () => {
         Math.round((Math.atan2(vel.x, -vel.y) * 180) / Math.PI),
       );
 
-    it("fires a volley that widens with each upgrade level", () => {
+    it("fires straight while the word sleeps, then wider with each upgrade", () => {
       hold("Space");
 
-      FREE_SPREAD_DEGREES.forEach((spread, i) => {
-        state.wordLevels.FREE = i + 1;
+      FREE_SPREAD_DEGREES.forEach((spread, level) => {
+        state.wordLevels.FREE = level;
         fired = [];
         ticks(PLAYER_FIRE_COOLDOWN);
         expect(angles()).toEqual(spread);
       });
+      expect(FREE_SPREAD_DEGREES[0]).toEqual([0]);
     });
 
     it("keeps every bullet at full speed, from the nose", () => {
-      state.wordLevels.FREE = FREE_SPREAD_DEGREES.length;
+      state.wordLevels.FREE = WORD_MAX_LEVEL;
       hold("Space");
       ticks(1);
 
@@ -124,8 +125,10 @@ describe("Player", () => {
     });
 
     it("drops to a single shot the moment the word is gone", () => {
+      state.wordLevels.FREE = 1;
       hold("Space");
       ticks(1);
+      expect(fired).toHaveLength(3);
       state.words.delete("FREE");
       fired = [];
 

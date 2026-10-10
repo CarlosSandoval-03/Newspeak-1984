@@ -109,7 +109,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
 
   // step 3
   bombs: number;
-  wordLevels: Record<Word, number>;  // 1–3; kept when a word is removed
+  wordLevels: Record<Word, number>;  // 0 (dormant) to 3; kept when a word is removed
   restoredWord: Word | null;  // restored by a diary, for this level only
   runStats: Stats & { pagesRead: number[] };  // the whole run
 

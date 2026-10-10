@@ -71,6 +71,7 @@ There is no backing band: every HUD text has a 1 px ink shadow at (+1, +1), so i
 
 | State | Look |
 | ----- | ---- |
+| Dormant | Steel, with no pips: known from the start, but not earned yet. |
 | Available | Paper. Pips under it show the upgrade level, 1 to 3. |
 | Recharging (ESCAPE, TRUTH) | Steel word and pips until it is ready again. |
 | REMEMBER | Its pips are the bombs: paper for the ones left, concrete for the ones spent this level. |

@@ -114,7 +114,8 @@ export interface GameState {
   alertLevel: AlertLevel;
   // Available right now: what removal left, plus any word a diary gave back for this level.
   words: Set<Word>;
-  // Kept when a word is removed, so a diary gives it back as strong as it was.
+  // 0 while a word sleeps, before its first pickup. Kept when a word is removed, so a diary
+  // gives it back as strong as it was.
   wordLevels: Record<Word, number>;
   restoredWord: Word | null;
   bombs: number;
