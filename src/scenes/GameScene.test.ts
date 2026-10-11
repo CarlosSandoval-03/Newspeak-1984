@@ -26,6 +26,7 @@ import { Turret } from "../entities/Turret";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
+import { DictionaryScene } from "./DictionaryScene";
 import { GameScene } from "./GameScene";
 import { GameOverScene } from "./GameOverScene";
 
@@ -179,7 +180,33 @@ describe("GameScene collisions", () => {
     expect(state.realLives).toBe(0);
   });
 
-  it("starts the waves over once they are all cleared, without rewinding the city", () => {
+  it("leads on to the next level's Dictionary once its waves are cleared", () => {
+    const change = vi.spyOn(manager, "change");
+    scene["scroll"] = 1_000_000;
+    scene.update();
+    expect(change).not.toHaveBeenCalled();
+
+    scene["enemies"] = [];
+    scene.update();
+
+    expect(state.level).toBe(2);
+    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+  });
+
+  it("waits for the Thought Police to go before leaving the level", () => {
+    scene["scroll"] = 1_000_000;
+    scene.update();
+    scene["suspicion"].add(100);
+    scene.update();
+    scene["enemies"] = [];
+
+    scene.update();
+
+    expect(state.level).toBe(1);
+  });
+
+  it("starts the last level's waves over, without rewinding the city", () => {
+    state.level = LEVELS.length;
     scene["scroll"] = 1_000_000;
     scene.update();
     expect(scene["spawner"].done).toBe(true);

@@ -183,6 +183,8 @@ export const ALERT_THRESHOLDS = {
 export const VIGNETTE_ALPHA = 0.5;
 // Fast enough that a page never makes the player wait, slow enough to read as typed.
 export const TYPEWRITER_CPF = 1;
+// A red strike-through grows left to right over this long, so the player watches the word go.
+export const STRIKE_FRAMES = 15;
 export const CURSOR_BLINK_FRAMES = 30;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;

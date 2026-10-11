@@ -9,7 +9,9 @@ import {
 } from "vitest";
 import {
   currentLanguage,
+  currentStrings,
   detectLanguage,
+  format,
   initLanguage,
   setLanguage,
   t,
@@ -129,5 +131,23 @@ describe("t", () => {
     expectTypeOf(t).toBeCallableWith("menu.strat");
     // @ts-expect-error lists are read directly, not through t()
     expectTypeOf(t).toBeCallableWith("slogans.ground");
+  });
+});
+
+describe("lists", () => {
+  afterEach(() => {
+    setLanguage("en");
+    vi.unstubAllGlobals();
+  });
+
+  it("are read from the current language and filled in like any string", () => {
+    stubBrowser();
+    setLanguage("es");
+
+    const [calm] = currentStrings().briefings[1];
+
+    expect(format(calm, { id: "0042", word: "LIBRE" })).toMatch(
+      /^Piloto 0042\..*LIBRE/,
+    );
   });
 });

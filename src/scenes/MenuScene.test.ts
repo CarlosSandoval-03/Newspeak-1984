@@ -5,7 +5,7 @@ import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { currentLanguage, setLanguage } from "../i18n";
 import { state } from "../state";
-import { GameScene } from "./GameScene";
+import { DictionaryScene } from "./DictionaryScene";
 import { MenuScene } from "./MenuScene";
 
 // Node has no KeyboardEvent; a plain Event with a code is all Input reads.
@@ -51,7 +51,7 @@ describe("MenuScene", () => {
     tick();
 
     expect(state.realScore).toBe(0);
-    expect(change).toHaveBeenCalledWith(expect.any(GameScene));
+    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
   });
 
   it("accepts Shoot as confirm", () => {

@@ -60,6 +60,21 @@ export function setLanguage(language: Language): void {
   }
 }
 
+// Lists (briefings, ordinals, diary pages) are read from here, then filled in with `format()`.
+export function currentStrings(): Strings {
+  return strings[current];
+}
+
+// An unknown placeholder stays visible, so a missing param shows up on screen.
+export function format(
+  text: string,
+  params: Record<string, string | number> = {},
+): string {
+  return text.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
+    String(params[name] ?? placeholder),
+  );
+}
+
 export function t(
   path: Path<Strings>,
   params: Record<string, string | number> = {},
@@ -71,8 +86,5 @@ export function t(
       strings[current],
     ) as string;
 
-  // An unknown placeholder stays visible, so a missing param shows up on screen.
-  return text.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
-    String(params[name] ?? placeholder),
-  );
+  return format(text, params);
 }

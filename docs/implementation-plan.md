@@ -359,7 +359,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Removal** (`Newspeak.applyLevel(level)`)
 
-- Until step 4 adds level ends, each loop of the level 1 waves advances to the next level through the DictionaryScene, so every removal can be tested.
+- Until step 4 adds level ends, clearing a level's waves advances to the next level through the DictionaryScene, so every removal can be tested.
 - Level 1 removes nothing. From level 2 on, one word is removed per level in the order from `config.ts`, `WORD_REMOVAL_ORDER = ['FREE', 'ESCAPE', 'REMEMBER', 'TRUTH']`:
 
   | Level | Removed this level | Still available |
@@ -395,6 +395,10 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - The word removed this level gets a red strike-through drawn in an animation. Words removed earlier are already struck through and greyed out.
 - The Inner Party officer (`officer-portrait.png`) briefs the pilot. The line comes from `briefings` in `i18n/`: one of three tones (calm, wary, cold) picked by the Ministry's verdict on the last level (`state.verdict`, step 4). Level 1, and every level until step 4, uses the calm one.
 - `Enter` skips the typewriter, then continues to the GameScene.
+- **Decision:** the page is typed top to bottom as one `Typewriter` page: heading, edition, the four words, the notice (`THE WORD … IS NO LONGER REQUIRED.`, or `THIS EDITION IS COMPLETE.` in level 1), then the briefing. Earlier removals show steel and struck as they are typed. This level's word stays paper and is struck after it is typed, growing over `STRIKE_FRAMES` (15). The first `Enter` finishes the page and the strike, and `PRESS ENTER TO TAKE OFF` appears only once the page has settled, so a press never skips what wasn't seen.
+- Layout: the cover at 2× top left, with the heading, the edition, and the words in a column beside it, wrapped at 17 characters, so a long edition breaks onto two lines. The notice is below in Courier 16. The Officer's portrait at 2× sits with the briefing wrapped beside it at 29 characters. The prompt is in VT323 at the bottom.
+- **Flow:** `BEGIN SERVICE` opens level 1's Dictionary. When a level's waves are cleared, and no Thought Police are on screen, `state.level` goes up and the next Dictionary opens; the last level starts its waves over until step 4 adds the ending. Levels 3 to 5 replay the level 2 stand-in until then.
+- i18n gains `currentStrings()`, for lists such as the ordinals and the briefings, and `format(text, params)`, which fills their placeholders as `t()` does.
 
 **Typewriter** (`ui/effects.ts`)
 

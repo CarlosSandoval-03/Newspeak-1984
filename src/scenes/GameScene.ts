@@ -38,6 +38,7 @@ import { Suspicion } from "../systems/Suspicion";
 import { ALERT } from "../types";
 import { Vignette } from "../ui/effects";
 import { HUD } from "../ui/HUD";
+import { DictionaryScene } from "./DictionaryScene";
 import { GameOverScene } from "./GameOverScene";
 
 export class GameScene implements Scene {
@@ -172,9 +173,16 @@ export class GameScene implements Scene {
     if (!this.police && state.alertLevel === ALERT.thoughtPolice)
       this.summonPolice();
 
-    // Levels have no end yet, so a cleared level starts its waves over while the city flies on.
-    if (this.spawner.done && this.enemies.length === 0)
+    // Levels have no end yet, so clearing one's waves leads to the next level's Dictionary, and the
+    // last level starts its waves over while the city flies on. Never mid-fight with the Thought Police.
+    if (this.spawner.done && this.enemies.length === 0 && !this.police) {
+      if (state.level < LEVELS.length) {
+        state.level++;
+        this.manager.change(new DictionaryScene(this.p, this.manager));
+        return;
+      }
       this.spawner.restart(this.scroll);
+    }
     this.scroll += SCROLL_SPEED;
   }
 

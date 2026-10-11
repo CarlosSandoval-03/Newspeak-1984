@@ -105,4 +105,5 @@ const LEVEL_2: LevelDef = {
   ),
 };
 
-export const LEVELS: LevelDef[] = [LEVEL_1, LEVEL_2];
+// Levels 3 to 5 replay the stand-in too, so every removal can be played until step 4.
+export const LEVELS: LevelDef[] = [LEVEL_1, LEVEL_2, LEVEL_2, LEVEL_2, LEVEL_2];
