@@ -134,6 +134,7 @@ export const SCENARIOS: Record<string, Scenario> = {
       scene["eyes"] = [];
       scene["turrets"] = [];
       scene["bullets"] = [];
+      scene["pickups"] = [];
     },
   },
 };
