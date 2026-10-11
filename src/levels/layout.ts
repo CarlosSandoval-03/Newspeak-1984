@@ -14,7 +14,7 @@ import {
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
 } from "../config";
-import type { AnchorKind, LevelDef, Vec } from "../types";
+import type { AnchorKind, LevelDef, TerrainDef, Vec } from "../types";
 
 // What the city needs from a level: its recipe, and where it ends, for the landing platform.
 export type City = Pick<LevelDef, "terrain" | "length">;
@@ -115,20 +115,13 @@ function spans(streetCells: number[], first: number, length: number) {
   return edges.slice(1).map((end, i) => [edges[i] + 1, end] as const);
 }
 
+// A chunk of the city, built in rule order from its own seed: the streets, the blocks between them
+// (open plaza under any airfield), the craters on open asphalt, and the anchors ground elements stand
+// on. The order of the random draws is part of the map: changing it changes every city.
 export function chunkLayout(city: City, index: number): ChunkLayout {
   const { terrain } = city;
   const rng = random(terrain.seed + index);
-  const corners: Terrain[][] = Array.from({ length: ROWS + 1 }, () =>
-    Array<Terrain>(COLUMNS + 1).fill("asphalt"),
-  );
-  const buildings: Building[] = [];
-  const plazas: Vec[] = [];
-  const airfields = [
-    airfield(index, AIRFIELD_AT, false),
-    airfield(index, city.length + LANDING_LEAD, true),
-  ].filter(
-    (rect) => rect.y < CHUNK_HEIGHT && rect.y + rect.h > 0,
-  );
+  const airfields = chunkAirfields(city, index);
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
@@ -136,53 +129,13 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     rows: [0, ...streets(rng, 1, ROWS)],
     columns: streetColumns(terrain.seed),
   };
-  const columns = spans(streetCells.columns, 0, COLUMNS);
-  const rows = spans(streetCells.rows.slice(1), 1, ROWS);
 
-  for (const [top, bottom] of rows) {
-    for (const [left, right] of columns) {
-      const roll = rng();
-      // The blocks under a platform are an open plaza, so no roof rises through the runway.
-      const cleared = airfields.some((rect) =>
-        overlaps(
-          {
-            x: left * CELL_SIZE,
-            y: top * CELL_SIZE,
-            w: (right - left) * CELL_SIZE,
-            h: (bottom - top) * CELL_SIZE,
-          },
-          rect,
-        ),
-      );
-      const kind: Terrain = cleared
-        ? "plaza"
-        : roll < terrain.blocks.plaza
-          ? "plaza"
-          : roll < terrain.blocks.plaza + terrain.blocks.rubble
-            ? "rubble"
-            : "asphalt";
-      if (kind === "asphalt") continue;
-
-      // Inner corners only, so each block's edge cells hold its curb and the streets stay pure asphalt.
-      // A block at the screen's side runs off it, with no curb there.
-      const firstColumn = left === 0 ? 0 : left + 1;
-      const lastColumn = right === COLUMNS ? COLUMNS : right - 1;
-      for (let row = top + 1; row <= bottom - 1; row++)
-        for (let column = firstColumn; column <= lastColumn; column++)
-          corners[row][column] = kind;
-
-      if (kind !== "plaza") continue;
-
-      if (!cleared && rng() < BUILDING_CHANCE)
-        buildings.push(building(rng, left + 1, top + 1, right - 1, bottom - 1));
-      else
-        plazas.push({
-          x: ((left + right) / 2) * CELL_SIZE,
-          y: ((top + bottom) / 2) * CELL_SIZE,
-        });
-    }
-  }
-
+  const { corners, buildings, plazas } = blocks(
+    rng,
+    terrain,
+    streetCells,
+    airfields,
+  );
   const found = craters(rng, corners);
 
   return {
@@ -196,6 +149,94 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     airfields,
   };
 }
+
+// The start and landing platforms that reach into this chunk, if any.
+function chunkAirfields(city: City, index: number): Airfield[] {
+  return [
+    airfield(index, AIRFIELD_AT, false),
+    airfield(index, city.length + LANDING_LEAD, true),
+  ].filter((rect) => rect.y < CHUNK_HEIGHT && rect.y + rect.h > 0);
+}
+
+// Cells [left, right) × [top, bottom).
+interface Block {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+// Each block between the streets becomes plaza, rubble, or open asphalt by the recipe's shares, and
+// most plazas get a building; the rest stay open, for ground elements to stand on.
+function blocks(
+  rng: () => number,
+  terrain: TerrainDef,
+  streetCells: { rows: number[]; columns: number[] },
+  airfields: Airfield[],
+) {
+  const corners: Terrain[][] = Array.from({ length: ROWS + 1 }, () =>
+    Array<Terrain>(COLUMNS + 1).fill("asphalt"),
+  );
+  const buildings: Building[] = [];
+  const plazas: Vec[] = [];
+
+  for (const [top, bottom] of spans(streetCells.rows.slice(1), 1, ROWS))
+    for (const [left, right] of spans(streetCells.columns, 0, COLUMNS)) {
+      const block = { left, top, right, bottom };
+      const roll = rng();
+      // The blocks under a platform are an open plaza, so no roof rises through the runway.
+      const cleared = airfields.some((rect) =>
+        overlaps(blockRect(block), rect),
+      );
+      const kind = cleared ? "plaza" : blockKind(roll, terrain.blocks);
+      if (kind === "asphalt") continue;
+
+      paintBlock(corners, block, kind);
+      if (kind !== "plaza") continue;
+
+      if (!cleared && rng() < BUILDING_CHANCE)
+        buildings.push(building(rng, inset(block)));
+      else plazas.push(blockCenter(block));
+    }
+
+  return { corners, buildings, plazas };
+}
+
+function blockKind(roll: number, shares: TerrainDef["blocks"]): Terrain {
+  if (roll < shares.plaza) return "plaza";
+  if (roll < shares.plaza + shares.rubble) return "rubble";
+  return "asphalt";
+}
+
+// Inner corners only, so each block's edge cells hold its curb and the streets stay pure asphalt.
+// A block at the screen's side runs off it, with no curb there.
+function paintBlock(corners: Terrain[][], block: Block, kind: Terrain): void {
+  const first = block.left === 0 ? 0 : block.left + 1;
+  const last = block.right === COLUMNS ? COLUMNS : block.right - 1;
+
+  for (let row = block.top + 1; row <= block.bottom - 1; row++)
+    for (let column = first; column <= last; column++)
+      corners[row][column] = kind;
+}
+
+const inset = ({ left, top, right, bottom }: Block): Block => ({
+  left: left + 1,
+  top: top + 1,
+  right: right - 1,
+  bottom: bottom - 1,
+});
+
+const blockRect = ({ left, top, right, bottom }: Block): Rect => ({
+  x: left * CELL_SIZE,
+  y: top * CELL_SIZE,
+  w: (right - left) * CELL_SIZE,
+  h: (bottom - top) * CELL_SIZE,
+});
+
+const blockCenter = ({ left, top, right, bottom }: Block): Vec => ({
+  x: ((left + right) / 2) * CELL_SIZE,
+  y: ((top + bottom) / 2) * CELL_SIZE,
+});
 
 // Centered across the screen, with its eye at level distance `at`, in the chunk's pixels.
 function airfield(index: number, at: number, landing: boolean): Airfield {
@@ -310,70 +351,15 @@ function nearer(a: Vec, b: Vec, at: number, x: number): boolean {
   return Math.hypot(a.x - x, a.y - at) < Math.hypot(b.x - x, b.y - at);
 }
 
-// Inset one cell from its block, in cells [left, right) × [top, bottom).
-function building(
-  rng: () => number,
-  left: number,
-  top: number,
-  right: number,
-  bottom: number,
-): Building {
-  const rect = {
-    x: left * CELL_SIZE,
-    y: top * CELL_SIZE,
-    w: (right - left) * CELL_SIZE,
-    h: (bottom - top) * CELL_SIZE,
-  };
+// A roof over the whole block, then, each by chance, a skylight, a Party banner, and a blinking lamp in
+// a corner they leave free; fixtures fill what is left. Each part keeps clear of the parts before it.
+function building(rng: () => number, block: Block): Building {
+  const rect = blockRect(block);
+  const skylight = rng() < SKYLIGHT_CHANCE ? roofSkylight(rng, block) : null;
+  const banner = rng() < BANNER_CHANCE ? roofBanner(rng, rect) : null;
 
-  // Centered on a grid line inside the roof, so it never touches the parapet.
-  const skylight =
-    rng() < SKYLIGHT_CHANCE
-      ? {
-          x:
-            rect.x +
-            between(rng, 1, right - left - 1) * CELL_SIZE -
-            SKYLIGHT_SIZE / 2,
-          y:
-            rect.y +
-            between(rng, 1, bottom - top - 1) * CELL_SIZE -
-            SKYLIGHT_SIZE / 2,
-          w: SKYLIGHT_SIZE,
-          h: SKYLIGHT_SIZE,
-        }
-      : null;
-
-  // Hangs from the parapet, just inside one side wall.
-  const banner =
-    rng() < BANNER_CHANCE
-      ? {
-          x:
-            rng() < 0.5
-              ? rect.x + ROOF_MARGIN
-              : rect.x + rect.w - ROOF_MARGIN - BANNER_WIDTH,
-          y: rect.y + PARAPET,
-          w: BANNER_WIDTH,
-          h: between(rng, 2, 4) * BANNER_FOLD,
-        }
-      : null;
-
-  // In a roof corner the banner and skylight leave free.
   const taken = [skylight, banner].filter((part): part is Rect => !!part);
-  const corners = [
-    { x: rect.x + ROOF_MARGIN, y: rect.y + ROOF_MARGIN },
-    { x: rect.x + rect.w - ROOF_MARGIN - 2, y: rect.y + ROOF_MARGIN },
-    { x: rect.x + ROOF_MARGIN, y: rect.y + rect.h - ROOF_MARGIN - 2 },
-    {
-      x: rect.x + rect.w - ROOF_MARGIN - 2,
-      y: rect.y + rect.h - ROOF_MARGIN - 2,
-    },
-  ].filter(
-    (corner) =>
-      !taken.some((part) => overlaps({ ...corner, w: 2, h: 2 }, part)),
-  );
-  const lamp =
-    corners.length > 0 && rng() < LAMP_CHANCE
-      ? { ...corners[Math.floor(rng() * corners.length)], phase: rng() }
-      : null;
+  const lamp = roofLamp(rng, rect, taken);
   if (lamp) taken.push({ x: lamp.x, y: lamp.y, w: 2, h: 2 });
 
   return {
@@ -383,6 +369,55 @@ function building(
     fixtures: fixtures(rng, rect, taken),
     lamp,
   };
+}
+
+// Centered on a grid line inside the roof, so it never touches the parapet.
+function roofSkylight(rng: () => number, block: Block): Rect {
+  const { left, top, right, bottom } = block;
+
+  return {
+    x:
+      (left + between(rng, 1, right - left - 1)) * CELL_SIZE -
+      SKYLIGHT_SIZE / 2,
+    y:
+      (top + between(rng, 1, bottom - top - 1)) * CELL_SIZE -
+      SKYLIGHT_SIZE / 2,
+    w: SKYLIGHT_SIZE,
+    h: SKYLIGHT_SIZE,
+  };
+}
+
+// Hangs from the parapet, just inside one side wall.
+function roofBanner(rng: () => number, roof: Rect): Rect {
+  return {
+    x:
+      rng() < 0.5
+        ? roof.x + ROOF_MARGIN
+        : roof.x + roof.w - ROOF_MARGIN - BANNER_WIDTH,
+    y: roof.y + PARAPET,
+    w: BANNER_WIDTH,
+    h: between(rng, 2, 4) * BANNER_FOLD,
+  };
+}
+
+// In a roof corner the other parts leave free, if any, and only by chance.
+function roofLamp(rng: () => number, roof: Rect, taken: Rect[]) {
+  const near = roof.x + ROOF_MARGIN;
+  const far = roof.x + roof.w - ROOF_MARGIN - 2;
+  const top = roof.y + ROOF_MARGIN;
+  const bottom = roof.y + roof.h - ROOF_MARGIN - 2;
+  const free = [
+    { x: near, y: top },
+    { x: far, y: top },
+    { x: near, y: bottom },
+    { x: far, y: bottom },
+  ].filter(
+    (corner) =>
+      !taken.some((part) => overlaps({ ...corner, w: 2, h: 2 }, part)),
+  );
+
+  if (free.length === 0 || rng() >= LAMP_CHANCE) return null;
+  return { ...free[Math.floor(rng() * free.length)], phase: rng() };
 }
 
 function overlaps(a: Rect, b: Rect): boolean {
@@ -450,21 +485,27 @@ function craters(rng: () => number, corners: Terrain[][]): Vec[] {
     );
 
   for (let row = 1; row < ROWS - 1; row++)
-    for (let column = 0; column < COLUMNS; column++) {
-      let clear = true;
-      for (let r = row - 1; r <= row + 1; r++)
-        for (
-          let c = Math.max(0, column - 1);
-          c <= Math.min(COLUMNS - 1, column + 1);
-          c++
-        )
-          if (!pureAsphalt(corners, r, c)) clear = false;
-
-      if (clear && !near(row, column) && rng() < CRATER_CHANCE)
+    for (let column = 0; column < COLUMNS; column++)
+      if (
+        asphaltAround(corners, row, column) &&
+        !near(row, column) &&
+        rng() < CRATER_CHANCE
+      )
         found.push({
           x: (column + 0.5) * CELL_SIZE,
           y: (row + 0.5) * CELL_SIZE,
         });
-    }
   return found;
+}
+
+// The cell and the ring around it, clipped at the screen's sides, hold nothing but asphalt.
+function asphaltAround(corners: Terrain[][], row: number, column: number) {
+  for (let r = row - 1; r <= row + 1; r++)
+    for (
+      let c = Math.max(0, column - 1);
+      c <= Math.min(COLUMNS - 1, column + 1);
+      c++
+    )
+      if (!pureAsphalt(corners, r, c)) return false;
+  return true;
 }
