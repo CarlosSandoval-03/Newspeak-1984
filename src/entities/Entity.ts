@@ -49,7 +49,7 @@ export abstract class Entity {
   // shows it: 0 on the ground, under the aircraft, and 1 in flight; above that it drifts further and fades.
   protected drawAircraft(
     p: p5,
-    sprite: p5.Image,
+    sprite: p5.Image | p5.Graphics,
     shadow: p5.Image,
     turn = 0,
     alpha = 1,
@@ -76,7 +76,13 @@ export abstract class Entity {
   }
 }
 
-function blit(p: p5, image: p5.Image, x: number, y: number, turn: number) {
+function blit(
+  p: p5,
+  image: p5.Image | p5.Graphics,
+  x: number,
+  y: number,
+  turn: number,
+) {
   if (turn === 0) {
     p.image(image, x, y);
     return;

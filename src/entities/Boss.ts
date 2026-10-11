@@ -1,7 +1,13 @@
 import type p5 from "p5";
-import { BOSS_ENTRY_SPEED, BOSS_STATS, ENEMY_BULLET_SPEED } from "../config";
+import {
+  BOSS_ENTRY_SPEED,
+  BOSS_STATS,
+  DAMAGE_END,
+  ENEMY_BULLET_SPEED,
+} from "../config";
 import { angleTo, fan, radians, velocity } from "../core/math";
 import type { BossDef, BossKind, Vec, VolleyDef } from "../types";
+import type { BossDamage } from "./BossDamage";
 import { Bullet } from "./Bullet";
 import { Destructible } from "./Destructible";
 import type { Arena } from "./Entity";
@@ -28,16 +34,17 @@ export abstract class Boss extends Destructible {
 
 // Any level's boss, run from its data: it comes down to `hoverY` above `x`, then sways and fires its
 // current phase's volleys in turn. An air boss sways across the sky; a ground boss rides its street,
-// swaying along it, under the plane.
+// swaying along it, under the plane. It breaks hole by hole as its hp runs low.
 export class LevelBoss extends Boss {
   readonly kind: BossKind;
   readonly def: BossDef;
   private readonly home: Vec;
   private readonly arena: Arena;
+  private readonly damage: BossDamage;
   private inPlace = 0;
   private volley = 0;
 
-  constructor(kind: BossKind, x: number, arena: Arena) {
+  constructor(kind: BossKind, x: number, arena: Arena, damage: BossDamage) {
     const def = BOSS_STATS[kind];
     super({ x, y: -def.halfSize }, def);
 
@@ -46,6 +53,7 @@ export class LevelBoss extends Boss {
     this.home = { x, y: def.hoverY };
     this.vel = { x: 0, y: BOSS_ENTRY_SPEED };
     this.arena = arena;
+    this.damage = damage;
   }
 
   update(): void {
@@ -60,8 +68,15 @@ export class LevelBoss extends Boss {
 
   draw(p: p5): void {
     const { images } = this.arena;
-    const name = `boss-${this.kind}` as const;
-    const sprite = this.flash > 0 ? images[`${name}-flash`] : images[name];
+    // The flash and the shadow follow the hull once it is a wreck, holes and all.
+    const name =
+      this.health <= DAMAGE_END
+        ? (`boss-${this.kind}-damaged` as const)
+        : (`boss-${this.kind}` as const);
+    const sprite =
+      this.flash > 0
+        ? images[`${name}-flash`]
+        : this.damage.sprite(this.health);
 
     // The ground has no height to cast a shadow from.
     if (this.def.ground) {

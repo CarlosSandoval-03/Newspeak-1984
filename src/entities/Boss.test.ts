@@ -1,9 +1,10 @@
 import type p5 from "p5";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Assets } from "../assets";
-import { BOSS_STATS } from "../config";
+import { BOSS_STATS, DAMAGE_END } from "../config";
 import type { BossKind, Vec } from "../types";
 import { LevelBoss } from "./Boss";
+import type { BossDamage } from "./BossDamage";
 import type { Bullet } from "./Bullet";
 
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
@@ -14,12 +15,17 @@ describe("LevelBoss", () => {
   let fired: Bullet[];
   let target: Vec;
 
+  // Its damage hands back the health it is drawn at, to show which sprite was used.
+  const damage = {
+    sprite: (health: number) => `wrecked ${health}`,
+  } as unknown as BossDamage;
   const make = (kind: BossKind, x = 240) =>
-    new LevelBoss(kind, x, {
-      images,
-      fire: (bullet) => fired.push(bullet),
-      target: () => target,
-    });
+    new LevelBoss(
+      kind,
+      x,
+      { images, fire: (bullet) => fired.push(bullet), target: () => target },
+      damage,
+    );
   // Until it is in place, the tick it fires its first volley on included.
   const arrive = (boss: LevelBoss) => {
     while (fired.length === 0) boss.update();
@@ -126,23 +132,43 @@ describe("LevelBoss", () => {
     expect(fired.length).toBeGreaterThan(0);
   });
 
-  it("casts a shadow in the air, but not on the ground", () => {
-    const drawn = (boss: LevelBoss) => {
-      const names: unknown[] = [];
-      boss.draw({
-        CENTER: "center",
-        drawingContext: {},
-        imageMode: () => {},
-        image: (name: unknown) => names.push(name),
-      } as unknown as p5);
-      return names;
-    };
+  const drawn = (boss: LevelBoss) => {
+    const names: unknown[] = [];
+    boss.draw({
+      CENTER: "center",
+      drawingContext: {},
+      imageMode: () => {},
+      image: (name: unknown) => names.push(name),
+    } as unknown as p5);
+    return names;
+  };
 
+  it("casts a shadow in the air, but not on the ground", () => {
     expect(drawn(make("fortress"))).toEqual([
       "boss-fortress-shadow",
-      "boss-fortress",
+      "wrecked 1",
     ]);
-    expect(drawn(make("landship"))).toEqual(["boss-landship"]);
+    expect(drawn(make("landship"))).toEqual(["wrecked 1"]);
+  });
+
+  it("draws its hull at its health, and flashes and casts its shadow as a wreck at the end", () => {
+    const boss = make("fortress");
+    const { hp } = BOSS_STATS.fortress;
+    boss.hit(hp * (1 - DAMAGE_END) - 1);
+    expect(drawn(boss)).toEqual([
+      "boss-fortress-shadow",
+      "boss-fortress-flash",
+    ]);
+    expect(boss.health).toBeGreaterThan(DAMAGE_END);
+
+    boss.hit(1);
+    for (let i = 0; i < 10; i++) boss.update();
+    expect(drawn(boss)).toEqual([
+      "boss-fortress-damaged-shadow",
+      `wrecked ${DAMAGE_END}`,
+    ]);
+    boss.hit(1);
+    expect(drawn(boss)[1]).toBe("boss-fortress-damaged-flash");
   });
 
   it("fires the regime's red only for the Eye", () => {

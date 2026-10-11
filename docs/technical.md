@@ -46,7 +46,7 @@ newspeak-1984/
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
     ├── core/             # Scene, SceneManager, Input, Collisions, math, display (theme-agnostic)
-    ├── entities/         # Entity, Destructible, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, ThoughtPolice, Pickup, Diary
+    ├── entities/         # Entity, Destructible, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, BossDamage, ThoughtPolice, Pickup, Diary
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner, Flight
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter)
@@ -242,11 +242,11 @@ Bosses show damage hole by hole, driven by code and two assets per boss: `boss-*
   "regions": [{ "x": 19, "y": 54, "w": 22, "h": 19 }, …] }
 ```
 
-1. At load, copy the clean sprite into a `p5.Graphics` the size of the sprite. Draw the boss from it.
+1. On the boss's first frame, copy the clean sprite into a `p5.Graphics` the size of the sprite (`BossDamage`, made with the level and removed when it ends). Draw the boss from it.
 2. Each time hp changes, compute how many regions should show: `shown = min(n, ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END)))`, with `DAMAGE_END` ≈ 0.2 in `config.ts` (the hp fraction where the boss is fully wrecked).
 3. For each newly shown region, replace that rect: `g.noStroke(); g.erase(); g.rect(x, y, w, h); g.noErase(); g.image(damaged, x, y, w, h, x, y, w, h)`. Without `noStroke()` the erase bleeds 1 px past the rect. Erasing first matters, because holes are transparent and drawing alone would not clear the clean pixels.
 
-Regions are revealed in file order, and the last one leaves the graphics identical to the damaged sprite (verified for all five bosses). The work happens only when a region appears, never per frame. The hit flash and shadow use the clean `-flash` and `-shadow` variants; tiny mismatches at the holes don't show at ~3 frames.
+Regions are revealed in file order, and the last one leaves the graphics identical to the damaged sprite (verified for all five bosses). The work happens only when a region appears, never per frame. The hit flash and shadow use the clean `-flash` and `-shadow` variants until `DAMAGE_END`, and the `-damaged-flash` and `-damaged-shadow` ones after; tiny mismatches at the holes don't show at ~3 frames.
 
 ### Performance budget
 
@@ -258,7 +258,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | Glitch | `p.copy()` on a few horizontal slices; none at suspicion 0. The most expensive effect: cap the slice count in `config.ts`. |
 | Scanlines | One prerendered `p5.Graphics` overlay. |
 | Red vignette | One prerendered `p5.Graphics` (red edges, transparent center), drawn with an alpha driven by suspicion. Never rebuilt per frame. |
-| Never per frame | `tint()`, `loadPixels()`/`get()` on images, creating `p5.Graphics`. (Boss damage graphics are created once, at load.) |
+| Never per frame | `tint()`, `loadPixels()`/`get()` on images, creating `p5.Graphics`. (Boss damage graphics are created once per level, on the boss's first frame.) |
 
 ### Benchmarks
 

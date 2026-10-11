@@ -176,6 +176,8 @@ export const BOMBER_FIRE_INTERVAL = 120;
 export const BOMBER_FAN_COUNT = 5;
 export const BOMBER_FAN_SPREAD_DEGREES = 60;
 export const HIT_FLASH_FRAMES = 3;
+// The boss's share of hp left at which its last damage region shows: from here on it is a wreck.
+export const DAMAGE_END = 0.2;
 
 export const EXPLOSION_FRAMES = 20;
 export const EXPLOSION_PARTICLES = 8;

@@ -22,6 +22,7 @@ import { circlesOverlap } from "../core/Collisions";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { LevelBoss } from "../entities/Boss";
+import { BossDamage } from "../entities/BossDamage";
 import type { Bullet } from "../entities/Bullet";
 import { Diary } from "../entities/Diary";
 import { Enemy } from "../entities/Enemy";
@@ -65,6 +66,7 @@ export class GameScene implements Scene {
   private readonly vignette: Vignette;
   private readonly arena: Arena;
   private readonly font: p5.Font;
+  private readonly bossDamage: BossDamage;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
   private turrets: Turret[] = [];
@@ -96,6 +98,7 @@ export class GameScene implements Scene {
     this.background = new Background(p, level, assets);
     this.player = new Player(input, assets.image, fire);
     this.flight = new Flight(this.player, level, assets.platform);
+    this.bossDamage = new BossDamage(p, level.boss, assets);
     this.spawner = this.createSpawner(assets);
   }
 
@@ -147,7 +150,9 @@ export class GameScene implements Scene {
     this.hud.draw(this.bossBar());
   }
 
-  exit(): void {}
+  exit(): void {
+    this.bossDamage.remove();
+  }
 
   // Propaganda reads the word clocks at draw time, by when the pilot exists.
   private createHud(assets: Assets): HUD {
@@ -342,7 +347,7 @@ export class GameScene implements Scene {
           )
       : middle;
 
-    this.boss = new LevelBoss(kind, x, this.arena);
+    this.boss = new LevelBoss(kind, x, this.arena, this.bossDamage);
   }
 
   // Suspicion stays at the top while they hold the sky, so they come once until they're gone.
