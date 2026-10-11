@@ -59,8 +59,9 @@ export const DIARY_ALPHA = 0.6;
 export const DIARY_SUSPICION = 25;
 // Level 1 has no word to give back yet, so its page pays this instead.
 export const DIARY_BONUS_SCORE = 1000;
-// How long the page's line stays in the band once it is typed.
-export const DIARY_HOLD = 180;
+// Read mid-fight, so the line types at a quarter of a page's speed, and stays a while once typed.
+export const DIARY_CPF = 0.25;
+export const DIARY_HOLD = 300;
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.

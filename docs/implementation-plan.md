@@ -395,7 +395,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   - in level 1 it pays `DIARY_BONUS_SCORE` (1000) instead;
   - either way it adds `DIARY_SUSPICION` (25), records `diaries`, and pushes the page's index (`level - 1`) to `runStats.pagesRead`.
 - One page a level: once read, a later pass of the waves (level 5 loops) lays no new diary. Level 1's lies on the skylight nearest 1350.
-- The HUD types the page's `line` in the band (`#33251f`, `LEATHER_DARK`) with a `Typewriter`, keeps it `DIARY_HOLD` (180) frames once typed, then clears it. The scene hands the HUD the line; the HUD reads no state.
+- The HUD types the page's `line` in the band (`#33251f`, `LEATHER_DARK`) with a `Typewriter` at `DIARY_CPF` (a character every 4 frames, a quarter of a page's speed, since it is read mid-fight), keeps it `DIARY_HOLD` (300) frames once typed, then clears it. The scene hands the HUD the line; the HUD reads no state.
 
 **DictionaryScene** (shown before every level)
 

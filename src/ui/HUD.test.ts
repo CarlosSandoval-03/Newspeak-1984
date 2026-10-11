@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CANVAS_WIDTH,
   CONCRETE,
+  DIARY_CPF,
   DIARY_HOLD,
   INK,
   LEATHER,
@@ -196,8 +197,8 @@ describe("HUD", () => {
         for (let i = 0; i < frames; i++) hud.update();
       });
 
-    it("types the line on leather, a character at a time", () => {
-      const { rects, placed } = typed("I kept the old one.", 6);
+    it("types the line on leather, slower than a page", () => {
+      const { rects, placed } = typed("I kept the old one.", 6 / DIARY_CPF);
 
       expect(rects).toContainEqual({
         color: LEATHER_DARK,
@@ -210,7 +211,7 @@ describe("HUD", () => {
 
     it("slides the line left once the carriage reaches the right margin", () => {
       // 60 characters at 10 px each, and a 10 px cursor: 610 px, against a margin at 472.
-      const { placed } = typed("x".repeat(60), 60);
+      const { placed } = typed("x".repeat(60), 60 / DIARY_CPF);
 
       expect(placed[0]).toEqual({ text: "x".repeat(60), x: 472 - 10 - 600 });
     });
@@ -220,8 +221,10 @@ describe("HUD", () => {
       const leather = (frames: number) =>
         typed(line, frames).rects.some(({ color }) => color === LEATHER_DARK);
 
-      expect(leather(line.length + DIARY_HOLD - 1)).toBe(true);
-      expect(leather(line.length + DIARY_HOLD)).toBe(false);
+      const typing = line.length / DIARY_CPF;
+
+      expect(leather(typing + DIARY_HOLD - 1)).toBe(true);
+      expect(leather(typing + DIARY_HOLD)).toBe(false);
     });
   });
 });

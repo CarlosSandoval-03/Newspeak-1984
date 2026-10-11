@@ -4,6 +4,7 @@ import {
   ALERT_THRESHOLDS,
   CANVAS_WIDTH,
   CONCRETE,
+  DIARY_CPF,
   DIARY_HOLD,
   INK,
   LEATHER,
@@ -57,7 +58,7 @@ export class HUD {
 
   // A line of the erased pilot's diary, typed in its band without pausing the game.
   typeDiary(line: string): void {
-    this.diary = new Typewriter([line]);
+    this.diary = new Typewriter([line], DIARY_CPF);
     this.diaryHold = DIARY_HOLD;
   }
 

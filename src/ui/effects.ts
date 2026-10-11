@@ -15,11 +15,13 @@ import {
 export class Typewriter {
   private readonly lines: readonly string[];
   private readonly total: number;
+  private readonly cpf: number;
   private typed = 0;
   private age = 0;
 
-  constructor(lines: readonly string[]) {
+  constructor(lines: readonly string[], cpf = TYPEWRITER_CPF) {
     this.lines = lines;
+    this.cpf = cpf;
     this.total = lines.reduce((sum, line) => sum + line.length, 0);
   }
 
@@ -43,7 +45,7 @@ export class Typewriter {
 
   update(): void {
     this.age++;
-    this.typed = Math.min(this.total, this.typed + TYPEWRITER_CPF);
+    this.typed = Math.min(this.total, this.typed + this.cpf);
   }
 
   finish(): void {
