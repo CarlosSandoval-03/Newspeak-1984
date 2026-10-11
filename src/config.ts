@@ -181,6 +181,9 @@ export const ALERT_THRESHOLDS = {
 
 // While the player is seen, the red vignette fades in over this long and beats once a period.
 export const VIGNETTE_ALPHA = 0.5;
+// Fast enough that a page never makes the player wait, slow enough to read as typed.
+export const TYPEWRITER_CPF = 1;
+export const CURSOR_BLINK_FRAMES = 30;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;
 

@@ -2,13 +2,86 @@ import type p5 from "p5";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  CURSOR_BLINK_FRAMES,
   RED,
+  TYPEWRITER_CPF,
   VIGNETTE_ALPHA,
   VIGNETTE_FADE_FRAMES,
   VIGNETTE_PULSE_FRAMES,
 } from "../config";
 
-export class Typewriter {}
+// Types a page, line after line, a few characters a frame; `finish()` is Enter, revealing the rest.
+// It only counts characters: the scene draws them, so each line keeps its own font and place.
+export class Typewriter {
+  private readonly lines: readonly string[];
+  private readonly total: number;
+  private typed = 0;
+  private age = 0;
+
+  constructor(lines: readonly string[]) {
+    this.lines = lines;
+    this.total = lines.reduce((sum, line) => sum + line.length, 0);
+  }
+
+  get done(): boolean {
+    return this.typed >= this.total;
+  }
+
+  // The line the carriage is on, and how far along it: the first line not typed in full, or the
+  // end of the last one once the page is done.
+  get cursor(): { line: number; column: number } {
+    const line = this.lines.findIndex(
+      (_, i) => this.shown(i).length < this.lines[i].length,
+    );
+    const at = line === -1 ? this.lines.length - 1 : line;
+    return { line: at, column: this.shown(at).length };
+  }
+
+  get cursorVisible(): boolean {
+    return Math.floor(this.age / CURSOR_BLINK_FRAMES) % 2 === 0;
+  }
+
+  update(): void {
+    this.age++;
+    this.typed = Math.min(this.total, this.typed + TYPEWRITER_CPF);
+  }
+
+  finish(): void {
+    this.typed = this.total;
+  }
+
+  // What of a line is on the page so far.
+  shown(line: number): string {
+    const start = this.lines
+      .slice(0, line)
+      .reduce((sum, text) => sum + text.length, 0);
+    return this.lines[line].slice(
+      0,
+      Math.max(0, Math.floor(this.typed) - start),
+    );
+  }
+
+  // Whether a line has been typed in full, so what follows it, like a strike-through, can begin.
+  typedLine(line: number): boolean {
+    return this.shown(line).length === this.lines[line].length;
+  }
+}
+
+// Breaks prose into lines of at most `columns` characters, at spaces. Both fonts are monospaced,
+// so a line's width is its length.
+export function wrap(text: string, columns: number): string[] {
+  const lines: string[] = [];
+  let line = "";
+
+  for (const word of text.split(" ")) {
+    if (line && line.length + 1 + word.length > columns) {
+      lines.push(line);
+      line = word;
+    } else line = line ? `${line} ${word}` : word;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
 
 export function drawScanlines(): void {}
 

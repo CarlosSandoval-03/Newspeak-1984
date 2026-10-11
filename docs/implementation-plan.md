@@ -399,6 +399,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 **Typewriter** (`ui/effects.ts`)
 
 - Reveals a string at `TYPEWRITER_CPF` characters per frame, with a blinking block cursor; `Enter` reveals the rest. DictionaryScene, MinistryScene, and EndingScene use it. Rules: [text-and-language.md › Rules](text-and-language.md#rules).
+- **Decision:** it types a whole page, a list of lines one after another, at `TYPEWRITER_CPF` (1, 60 characters a second), and `finish()` reveals the rest. It only counts characters: `shown(line)` is what of a line is on the page, `typedLine(line)` says when one is complete (so a strike-through can start), and `cursor` is the line and column of the carriage, blinking every `CURSOR_BLINK_FRAMES` (30). The scene draws the text, so each line keeps its own font and place.
+- `wrap(text, columns)` breaks prose into lines at spaces. Both fonts are monospaced, so columns are characters, not pixels.
 
 **HUD**
 
