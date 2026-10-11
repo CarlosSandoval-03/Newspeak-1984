@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  AIRFIELD_AT,
   ALERT_SPAWN_MULT,
   DIARY_BONUS_SCORE,
   BOMB_BOSS_DAMAGE,
@@ -9,7 +10,9 @@ import {
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
+  LIFTOFF_FRAMES,
   PLAYER_SPAWN,
+  SCROLL_SPEED,
   STARTING_LIVES,
   SUSPICION_DECAY,
   THOUGHT_POLICE_RESET,
@@ -36,6 +39,20 @@ import { GameOverScene } from "./GameOverScene";
 
 // Each image is stood in for by its own name; nothing here draws.
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
+const platform: Assets["platform"] = {
+  sprite: "launch-platform.png",
+  park: { x: 56, y: 128 },
+  liftoff: { x: 56, y: 24 },
+  touchdown: { x: 56, y: 232 },
+  lamps: [],
+};
+
+// Past the takeoff, with the stick, as most situations here need.
+function fly(scene: GameScene): void {
+  scene["flying"] = true;
+  scene["speed"] = SCROLL_SPEED;
+  scene["player"].altitude = 1;
+}
 
 describe("GameScene collisions", () => {
   let keys: EventTarget;
@@ -82,11 +99,62 @@ describe("GameScene collisions", () => {
   beforeEach(() => {
     resetGame();
     manager = new SceneManager(
-      { image: images, font: {} } as Assets,
+      { image: images, font: {}, platform } as Assets,
       new Input((keys = new EventTarget())),
     );
     scene = new GameScene({ get: () => ({}) } as unknown as p5, manager);
     manager.change(scene);
+    fly(scene);
+  });
+
+  describe("the takeoff", () => {
+    const press = (code: string) =>
+      keys.dispatchEvent(Object.assign(new Event("keydown"), { code }));
+
+    beforeEach(() => {
+      scene = new GameScene({ get: () => ({}) } as unknown as p5, manager);
+      manager.change(scene);
+    });
+
+    it("rolls the runway under the parked plane, which climbs past the lift-off line", () => {
+      const player = scene["player"];
+      const liftoffScroll =
+        AIRFIELD_AT + PLAYER_SPAWN.y + platform.park.y - platform.liftoff.y;
+      press("ArrowLeft");
+      press("Space");
+
+      let altitude = 0;
+      while (!scene["flying"]) {
+        const before = scene["scroll"];
+        scene.update();
+        manager.input.endFrame();
+
+        expect(scene["scroll"]).toBeGreaterThan(before);
+        if (!scene["flying"]) {
+          expect(player.pos).toEqual(PLAYER_SPAWN);
+          expect(scene["bullets"]).toHaveLength(0);
+        }
+        expect(player.altitude).toBeGreaterThanOrEqual(altitude);
+        if (scene["scroll"] < liftoffScroll) expect(player.altitude).toBe(0);
+        altitude = player.altitude;
+      }
+
+      expect(player.altitude).toBe(1);
+      expect(scene["liftoffFrames"]).toBe(LIFTOFF_FRAMES);
+      // The level's own distances begin only once the pilot has the stick.
+      expect(scene["scroll"]).toBeLessThan(0);
+      // The stick answers on the very tick the climb ends.
+      expect(player.pos.x).toBeLessThan(PLAYER_SPAWN.x);
+    });
+
+    it("can't be hit before the pilot has the stick", () => {
+      bulletAt("enemy", PLAYER_SPAWN);
+      enemyAt("straight", PLAYER_SPAWN);
+
+      scene.update();
+
+      expect(state.realLives).toBe(STARTING_LIVES);
+    });
   });
 
   it("starts the level with the words it leaves, and bombs to match", () => {
@@ -387,6 +455,7 @@ describe("GameScene collisions", () => {
     state.level = 2;
     const level2 = new GameScene({ get: () => ({}) } as unknown as p5, manager);
     manager.change(level2);
+    fly(level2);
     const wave = LEVELS[1].waves.find((wave) => wave.camo)!;
     // The waves before it come and are cleared first, so only this one is left to look at.
     level2["scroll"] = wave.at - 1;

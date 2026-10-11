@@ -1,4 +1,5 @@
 import {
+  AIRFIELD_AT,
   BANNER_CHANCE,
   BUILDING_CHANCE,
   CANVAS_WIDTH,
@@ -9,6 +10,7 @@ import {
   LAMP_CHANCE,
   MAX_BLOCK_CELLS,
   MIN_BLOCK_CELLS,
+  PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
 } from "../config";
 import type { AnchorKind, TerrainDef, Vec } from "../types";
@@ -45,6 +47,8 @@ export interface ChunkLayout {
   buildings: Building[];
   craters: Vec[];
   anchors: Anchor[];
+  // Launch platforms, which may run past the chunk's edges.
+  airfields: Rect[];
 }
 
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
@@ -109,6 +113,9 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
   );
   const buildings: Building[] = [];
   const plazas: Vec[] = [];
+  const airfields = [airfield(index, AIRFIELD_AT)].filter(
+    (rect) => rect.y < CHUNK_HEIGHT && rect.y + rect.h > 0,
+  );
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
@@ -122,8 +129,21 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
   for (const [top, bottom] of rows) {
     for (const [left, right] of columns) {
       const roll = rng();
-      const kind: Terrain =
-        roll < terrain.blocks.plaza
+      // The blocks under a platform are an open plaza, so no roof rises through the runway.
+      const cleared = airfields.some((rect) =>
+        overlaps(
+          {
+            x: left * CELL_SIZE,
+            y: top * CELL_SIZE,
+            w: (right - left) * CELL_SIZE,
+            h: (bottom - top) * CELL_SIZE,
+          },
+          rect,
+        ),
+      );
+      const kind: Terrain = cleared
+        ? "plaza"
+        : roll < terrain.blocks.plaza
           ? "plaza"
           : roll < terrain.blocks.plaza + terrain.blocks.rubble
             ? "rubble"
@@ -140,7 +160,7 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
 
       if (kind !== "plaza") continue;
 
-      if (rng() < BUILDING_CHANCE)
+      if (!cleared && rng() < BUILDING_CHANCE)
         buildings.push(building(rng, left + 1, top + 1, right - 1, bottom - 1));
       else
         plazas.push({
@@ -156,8 +176,28 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
     corners,
     buildings,
     craters: found,
-    anchors: anchors(streetCells, plazas, buildings, found),
+    // Nothing stands on the runway.
+    anchors: anchors(streetCells, plazas, buildings, found).filter(
+      (anchor) => !airfields.some((rect) => inside(anchor, rect)),
+    ),
+    airfields,
   };
+}
+
+// Centered across the screen, with its eye at level distance `at`, in the chunk's pixels.
+function airfield(index: number, at: number): Rect {
+  const { w, h } = PLATFORM_SIZE;
+  const eye = (index + 1) * CHUNK_HEIGHT - at;
+  return { x: (CANVAS_WIDTH - w) / 2, y: eye - h / 2, w, h };
+}
+
+function inside(point: Vec, rect: Rect): boolean {
+  return (
+    point.x >= rect.x &&
+    point.x <= rect.x + rect.w &&
+    point.y >= rect.y &&
+    point.y <= rect.y + rect.h
+  );
 }
 
 // Centered on a street cell, an open plaza, a roof, or a skylight, so a sprite sits square on its ground.

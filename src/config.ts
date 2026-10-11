@@ -72,6 +72,18 @@ export const GAME_OVER_TEXT_DELAY = 30;
 
 export const SCROLL_SPEED = 1;
 
+// The start platform's eye, as a level distance: far enough back that the takeoff is over before
+// distance 0, where the level's waves begin.
+export const AIRFIELD_AT = -800;
+// launch-platform.png's size, which the layout keeps clear of buildings and anchors.
+export const PLATFORM_SIZE = { w: 112, h: 256 };
+// The runway rolls under the parked plane, speeding up to SCROLL_SPEED; past the lift-off line it climbs.
+export const TAKEOFF_RAMP_FRAMES = 90;
+export const LIFTOFF_FRAMES = 90;
+// Runway lamps: one row in every RUNWAY_LAMP_SPACING is lit, moving a row each RUNWAY_LAMP_STEP px of scroll.
+export const RUNWAY_LAMP_SPACING = 5;
+export const RUNWAY_LAMP_STEP = 4;
+
 // The city is cut into chunks taller than the screen, so at most two are ever on it.
 export const CELL_SIZE = 32;
 export const CHUNK_HEIGHT = 1024;

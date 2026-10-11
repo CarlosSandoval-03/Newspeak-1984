@@ -43,6 +43,7 @@ export class Player extends Entity {
   private dashCooldown = 0;
   private dashDir: Vec = { x: 0, y: -1 };
   private trail: Vec[] = [];
+  altitude = 1;
 
   constructor(
     input: Input,
@@ -170,6 +171,13 @@ export class Player extends Entity {
     });
     context.globalAlpha = 1;
 
-    this.drawAircraft(p, this.images[name], this.images[`${name}-shadow`]);
+    this.drawAircraft(
+      p,
+      this.images[name],
+      this.images[`${name}-shadow`],
+      0,
+      1,
+      this.altitude,
+    );
   }
 }

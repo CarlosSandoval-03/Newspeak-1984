@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { damageMaps, fonts, images, tilesets } from "./assets";
+import { PLATFORM_SIZE } from "./config";
 import type { DamageMap, PlatformDef, TilesetDef } from "./types";
 
 // Vite can list public/ at test time; the game itself never reads these globs.
@@ -101,6 +102,9 @@ describe("asset data", () => {
     const platform = json<PlatformDef>("launch-platform");
     const { width, height } = pngSize("launch-platform");
 
+    // The layout places the platform by its size and its eye at the center, without the sprite.
+    expect({ w: width, h: height }).toEqual(PLATFORM_SIZE);
+    expect(platform.park).toEqual({ x: width / 2, y: height / 2 });
     expect(platform.liftoff.y).toBeLessThan(platform.park.y);
     expect(platform.park.y).toBeLessThan(platform.touchdown.y);
 

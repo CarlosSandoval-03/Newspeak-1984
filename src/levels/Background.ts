@@ -10,6 +10,8 @@ import {
   RED,
   RED_DARK,
   RED_LIGHT,
+  RUNWAY_LAMP_SPACING,
+  RUNWAY_LAMP_STEP,
   STEEL,
 } from "../config";
 import type { TerrainDef, TilesetDef } from "../types";
@@ -21,6 +23,7 @@ import {
   PARAPET,
   ROWS,
   type ChunkLayout,
+  type Rect,
   type Terrain,
 } from "./layout";
 
@@ -78,7 +81,7 @@ export class Background {
   private readonly assets: Assets;
   private readonly chunks = new Map<
     number,
-    { graphics: p5.Graphics; lamps: Lamp[] }
+    { graphics: p5.Graphics; lamps: Lamp[]; airfields: Rect[] }
   >();
   private tiles: Record<
     TilesetName,
@@ -118,6 +121,32 @@ export class Background {
         p.fill(on ? RED_LIGHT : RED_DARK);
         p.rect(lamp.x, Math.round(y) + lamp.y, LAMP_SIZE, LAMP_SIZE);
       }
+
+    for (const { index, y } of visible)
+      for (const airfield of this.chunk(index).airfields)
+        this.runwayLamps(airfield, Math.round(y), scroll);
+  }
+
+  // A row of lit sockets runs up the runway, the way the plane takes off.
+  private runwayLamps(airfield: Rect, chunkY: number, scroll: number): void {
+    const { p } = this;
+    const { lamps } = this.assets.platform;
+    const rows = [...new Set(lamps.map((lamp) => lamp.y))].sort(
+      (a, b) => a - b,
+    );
+    const step = Math.floor(scroll / RUNWAY_LAMP_STEP);
+
+    p.fill(RED_LIGHT);
+    for (const lamp of lamps) {
+      const row = rows.indexOf(lamp.y);
+      if ((row + step) % RUNWAY_LAMP_SPACING !== 0) continue;
+      p.rect(
+        airfield.x + lamp.x,
+        chunkY + airfield.y + lamp.y,
+        LAMP_SIZE,
+        LAMP_SIZE,
+      );
+    }
   }
 
   private chunk(index: number) {
@@ -133,6 +162,7 @@ export class Background {
       lamps: layout.buildings.flatMap((building) =>
         building.lamp ? [building.lamp] : [],
       ),
+      airfields: layout.airfields,
     };
     this.chunks.set(index, chunk);
     return chunk;
@@ -167,6 +197,10 @@ export class Background {
 
     graphics.noStroke();
     for (const building of layout.buildings) roof(graphics, building);
+
+    graphics.imageMode(graphics.CORNER);
+    for (const { x, y } of layout.airfields)
+      graphics.image(image["launch-platform"], x, y);
   }
 
   // Built on first use, so a scene that never draws needs no tilesets.

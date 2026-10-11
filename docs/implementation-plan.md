@@ -10,7 +10,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` | Done |
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Done |
-| 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
+| 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | In progress |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
 | — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
 
@@ -449,6 +449,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the full loop Menu → Dictionary → Game → Ministry → … → Ending, in which the regime rewrites your score.
 
+**Progress:** every level starts with a takeoff: the plane sits parked on the eye of the Party's launch platform while the runway rolls under it, its lamps chasing forward, and it climbs once the lift-off line passes beneath it, its shadow drifting out to show the height. The pilot has no control and can't be hit until it is in the air.
+
 ### Files
 
 `entities/Boss.ts` (level bosses), `systems/Ministry.ts`, `scenes/MinistryScene.ts`, `scenes/EndingScene.ts`, and updates to `entities/Player.ts` (altitude and autopilot), `levels/layout.ts` (the airfield), `levels/levels.ts`, `scenes/GameScene.ts`, `state.ts`, and `config.ts`.
@@ -468,6 +470,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - **Decision:** as in *1942*, every level starts with a takeoff from the Party's launch platform (`launch-platform.png`) and ends with a landing on another. The regime launches its pilot, and recovers him to be judged. The player has no control during either; the plane is invulnerable, and nothing spawns.
 - **Altitude:** `Player.altitude` is 0 on the ground and 1 in flight. The sprite never grows, because pixel art only takes integer scales; the height is the shadow, drawn at `altitude × (6, 10)` with alpha `0.4 / max(1, altitude)`. The platform's runway is concrete, not ink, so the shadow shows as it separates.
 - The layout puts a platform on the airfield at the level start and at `length + LANDING_LEAD` (rule 7 in [technical.md › City layout](technical.md#city-layout)). `launch-platform.json` gives the parking spot (the eye), the lift-off and touchdown lines, and the lamp sockets.
+- **Decision:** the start platform's eye lies at `AIRFIELD_AT` (−800), behind distance 0, and the scroll starts there, so the takeoff is over before the level's own distances begin and its waves, eyes, and pickups keep their positions.
 - **Takeoff (1–4):** the plane starts parked on the eye at the player's start position. The scroll ramps from 0 to `SCROLL_SPEED` over `TAKEOFF_RAMP_FRAMES` while the plane holds its screen position, so the runway rolls under it. When the lift-off line passes under the plane, altitude eases from 0 to 1 over `LIFTOFF_FRAMES`; then control returns and the waves begin.
 - **Landing (5–8):** when the boss dies, enemy bullets are cleared, nothing more spawns, and the scroll resumes. The autopilot eases the plane to the runway's x and the start y. Altitude eases from 1 to 0, timed to reach 0 as the touchdown line reaches the plane; then the scroll slows evenly so the eye stops under the plane. After `LANDING_HOLD_FRAMES`, the MinistryScene.
 - A pilot who loses a life respawns in the air, as before; there is no new takeoff.
@@ -671,3 +674,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 32 | The rebel never lands: after the Eye the plane leaves, and the official record stops at level 4 | 4 | Confirmed |
 | 33 | Three real lives per run (`STARTING_LIVES`) | 1 | Confirmed |
 | 34 | Eyes never collide with the player: their only threat is being seen | 2 | Confirmed |
+| 35 | The takeoff runs behind distance 0 (the start platform's eye at `AIRFIELD_AT`), so level data keeps its distances | 4 | Confirmed |

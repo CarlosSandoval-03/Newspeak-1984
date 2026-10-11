@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
+  AIRFIELD_AT,
   BOMB_BOSS_DAMAGE,
   BOMB_FLASH_ALPHA,
   BOMB_FLASH_FRAMES,
@@ -10,12 +11,15 @@ import {
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
+  LIFTOFF_FRAMES,
   PAPER,
   PLAYER_HALF_SIZE,
+  PLAYER_SPAWN,
   THOUGHT_POLICE_STATS,
   TURRET_STATS,
   RED,
   SCROLL_SPEED,
+  TAKEOFF_RAMP_FRAMES,
 } from "../config";
 import { circlesOverlap } from "../core/Collisions";
 import type { Scene } from "../core/Scene";
@@ -64,7 +68,13 @@ export class GameScene implements Scene {
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
   private diary: Diary | null = null;
-  private scroll = 0;
+  // Parked on the start platform's eye.
+  private scroll = AIRFIELD_AT + PLAYER_SPAWN.y;
+  private speed = 0;
+  private takeoffFrames = 0;
+  private liftoffFrames = 0;
+  // Until then the plane flies itself, and nothing can touch it.
+  private flying = false;
   private gameOverIn = 0;
   private flash = 0;
 
@@ -91,6 +101,7 @@ export class GameScene implements Scene {
     this.vignette = new Vignette(p);
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
+    this.player.altitude = 0;
     this.spawner = new Spawner(level, {
       enemy: (kind, pos, { drops, camo }) => {
         const enemy = new Enemy(
@@ -134,16 +145,22 @@ export class GameScene implements Scene {
       return;
     }
 
-    if (this.player.alive) this.player.update();
+    if (!this.flying) this.takeOff();
+    if (this.flying && this.player.alive) this.player.update();
     if (this.flash > 0) this.flash--;
     if (
+      this.flying &&
       this.player.alive &&
       state.bombs > 0 &&
       this.manager.input.wasPressed("bomb")
     )
       this.bomb();
     this.newspeak.update();
-    if (this.player.alive && this.manager.input.wasPressed("truth"))
+    if (
+      this.flying &&
+      this.player.alive &&
+      this.manager.input.wasPressed("truth")
+    )
       this.newspeak.revealTruth();
     this.spawner.update(
       this.scroll,
@@ -194,7 +211,7 @@ export class GameScene implements Scene {
       }
       this.spawner.restart(this.scroll);
     }
-    this.scroll += SCROLL_SPEED;
+    this.scroll += this.speed;
   }
 
   draw(): void {
@@ -223,6 +240,23 @@ export class GameScene implements Scene {
   }
 
   exit(): void {}
+
+  // The runway rolls under the parked plane, and once the lift-off line has passed beneath it,
+  // the plane climbs; the pilot only takes the stick in the air.
+  private takeOff(): void {
+    const { park, liftoff } = this.manager.assets.platform;
+
+    this.takeoffFrames++;
+    this.speed =
+      SCROLL_SPEED * Math.min(1, this.takeoffFrames / TAKEOFF_RAMP_FRAMES);
+
+    const plane = this.scroll - PLAYER_SPAWN.y;
+    if (plane < AIRFIELD_AT + park.y - liftoff.y) return;
+
+    const t = ++this.liftoffFrames / LIFTOFF_FRAMES;
+    this.player.altitude = t * t * (3 - 2 * t);
+    this.flying = this.liftoffFrames === LIFTOFF_FRAMES;
+  }
 
   // Clears what is on screen: every enemy aircraft, each one a kill, and every shot but the pilot's;
   // the Thought Police only take a heavy blow. Enemies still above the top edge come through, and the
@@ -291,7 +325,8 @@ export class GameScene implements Scene {
       ...this.eyes,
     ];
     // Re-checked on every pair: a hit earlier in the same tick changes it.
-    const exposed = () => player.alive && !player.invulnerable;
+    const exposed = () =>
+      this.flying && player.alive && !player.invulnerable;
 
     for (const bullet of this.bullets) {
       if (!bullet.alive) continue;

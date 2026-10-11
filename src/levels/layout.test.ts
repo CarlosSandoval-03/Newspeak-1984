@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  AIRFIELD_AT,
+  CANVAS_WIDTH,
   CELL_SIZE,
   CHUNK_HEIGHT,
   CRATER_SIZE,
   MIN_BLOCK_CELLS,
+  PLATFORM_SIZE,
 } from "../config";
 import type { AnchorKind, TerrainDef } from "../types";
 import {
@@ -253,6 +256,34 @@ describe("anchors", () => {
     });
 
     expect([...seen].sort()).toEqual([...kinds].sort());
+  });
+
+  it("lays the start platform with its eye at AIRFIELD_AT, on open ground", () => {
+    const touches = (a: Rect, b: Rect) =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const index = Math.floor(AIRFIELD_AT / CHUNK_HEIGHT);
+
+    for (const recipe of [
+      ...recipes,
+      { seed: 5, blocks: { plaza: 1, rubble: 0 } },
+    ]) {
+      const { airfields, buildings, anchors } = chunkLayout(recipe, index);
+      const [airfield] = airfields;
+
+      expect(airfields).toHaveLength(1);
+      expect(airfield.x + airfield.w / 2).toBe(CANVAS_WIDTH / 2);
+      expect((index + 1) * CHUNK_HEIGHT - (airfield.y + airfield.h / 2)).toBe(
+        AIRFIELD_AT,
+      );
+      expect({ w: airfield.w, h: airfield.h }).toEqual(PLATFORM_SIZE);
+      expect(buildings.some((building) => touches(building, airfield))).toBe(
+        false,
+      );
+      expect(
+        anchors.some((anchor) => touches({ ...anchor, w: 0, h: 0 }, airfield)),
+      ).toBe(false);
+    }
+    everyChunk(({ airfields }) => expect(airfields).toEqual([]));
   });
 
   it("gives every roof and skylight an anchor", () => {

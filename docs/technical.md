@@ -199,7 +199,7 @@ The level is cut into chunks of 480 × `CHUNK_HEIGHT` px (15 columns of 32 px ce
 4. **River:** a band of water across the full width at `at`, with a street row on each side. `bridges` of the vertical streets continue over it on `bridge.png`.
 5. **Railway:** one vertical street widens into a two-cell corridor from `from` to `to`, with `railway.png` tiled along it.
 6. **Landmark:** a plaza block sized for the 128 px ministry, centered at `at`.
-7. **Airfield:** at the level start and at `length + LANDING_LEAD`, a plaza strip down the middle with no buildings, where `launch-platform.png` lies centered at x 240. The rebel's last level has no landing airfield.
+7. **Airfield:** at the level start (its eye at `AIRFIELD_AT`) and at `length + LANDING_LEAD`, `launch-platform.png` lies centered at x 240. The blocks under it become open plaza with no building, and no anchor lies on it, so nothing stands on the runway. The rebel's last level has no landing airfield.
 
 Streets keep asphalt between any two other terrains, which is what the Wang tilesets need: a cell can mix asphalt with only *one* of plaza, rubble, or water. To keep it so, a block sets only its **inner** corners: its edge cells hold its curb, and a one-cell street stays pure asphalt. A block at the screen's side runs off it, with no curb there. Each chunk's top row is a street and its bottom corners are asphalt, so chunks join on asphalt whatever their neighbors hold. A chunk is 1024 px (32 rows), and a level's vertical streets are drawn once from `mulberry32(seed)`.
 
@@ -228,7 +228,7 @@ Layers per chunk, all read from its layout:
 3. **Buildings:** procedural rooftops, with their skylights and banners.
 4. **Landmarks and messages:** the level's ministry, rooftop murals, ground slogans.
 
-**Text is not baked into chunks.** Draw changing slogans each frame at their scrolled position, or redraw only that region when the text flips. Towed banners move, so they are drawn every frame. The same holds for the rooftop lamps: they blink, so each chunk keeps their positions and they are drawn over it every frame, each with its own phase so they never blink in step.
+**Text is not baked into chunks.** Draw changing slogans each frame at their scrolled position, or redraw only that region when the text flips. Towed banners move, so they are drawn every frame. The same holds for the rooftop lamps: they blink, so each chunk keeps their positions and they are drawn over it every frame, each with its own phase so they never blink in step. The launch platform is baked into its chunk, but its runway lamps chase, so they are drawn over it every frame too.
 
 Keep the ground dark (`#1a1a1a` asphalt, `#3a3a3a` plazas and rubble) so moving sprites (`#7a7a7a`, `#e8e4d8`) always stand out.
 
