@@ -8,12 +8,16 @@ import {
   CRATER_CHANCE,
   FIXTURE_DENSITY,
   LAMP_CHANCE,
+  LANDING_LEAD,
   MAX_BLOCK_CELLS,
   MIN_BLOCK_CELLS,
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
 } from "../config";
-import type { AnchorKind, TerrainDef, Vec } from "../types";
+import type { AnchorKind, LevelDef, Vec } from "../types";
+
+// What the city needs from a level: its recipe, and where it ends, for the landing platform.
+export type City = Pick<LevelDef, "terrain" | "length">;
 
 export type Terrain = "asphalt" | "plaza" | "rubble";
 
@@ -36,6 +40,11 @@ export interface Building extends Rect {
   lamp: (Vec & { phase: number }) | null;
 }
 
+// A landing platform's lamps chase toward the plane coming in, a start platform's away with it.
+export interface Airfield extends Rect {
+  landing: boolean;
+}
+
 export interface Anchor extends Vec {
   kind: AnchorKind;
 }
@@ -48,7 +57,7 @@ export interface ChunkLayout {
   craters: Vec[];
   anchors: Anchor[];
   // Launch platforms, which may run past the chunk's edges.
-  airfields: Rect[];
+  airfields: Airfield[];
 }
 
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
@@ -106,14 +115,18 @@ function spans(streetCells: number[], first: number, length: number) {
   return edges.slice(1).map((end, i) => [edges[i] + 1, end] as const);
 }
 
-export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
+export function chunkLayout(city: City, index: number): ChunkLayout {
+  const { terrain } = city;
   const rng = random(terrain.seed + index);
   const corners: Terrain[][] = Array.from({ length: ROWS + 1 }, () =>
     Array<Terrain>(COLUMNS + 1).fill("asphalt"),
   );
   const buildings: Building[] = [];
   const plazas: Vec[] = [];
-  const airfields = [airfield(index, AIRFIELD_AT)].filter(
+  const airfields = [
+    airfield(index, AIRFIELD_AT, false),
+    airfield(index, city.length + LANDING_LEAD, true),
+  ].filter(
     (rect) => rect.y < CHUNK_HEIGHT && rect.y + rect.h > 0,
   );
 
@@ -185,10 +198,10 @@ export function chunkLayout(terrain: TerrainDef, index: number): ChunkLayout {
 }
 
 // Centered across the screen, with its eye at level distance `at`, in the chunk's pixels.
-function airfield(index: number, at: number): Rect {
+function airfield(index: number, at: number, landing: boolean): Airfield {
   const { w, h } = PLATFORM_SIZE;
   const eye = (index + 1) * CHUNK_HEIGHT - at;
-  return { x: (CANVAS_WIDTH - w) / 2, y: eye - h / 2, w, h };
+  return { x: (CANVAS_WIDTH - w) / 2, y: eye - h / 2, w, h, landing };
 }
 
 function inside(point: Vec, rect: Rect): boolean {
@@ -238,14 +251,14 @@ function anchors(
   return found;
 }
 
-const layouts = new WeakMap<TerrainDef, Map<number, ChunkLayout>>();
+const layouts = new WeakMap<City, Map<number, ChunkLayout>>();
 
-function cachedLayout(terrain: TerrainDef, index: number): ChunkLayout {
-  let chunks = layouts.get(terrain);
-  if (!chunks) layouts.set(terrain, (chunks = new Map()));
+function cachedLayout(city: City, index: number): ChunkLayout {
+  let chunks = layouts.get(city);
+  if (!chunks) layouts.set(city, (chunks = new Map()));
 
   let layout = chunks.get(index);
-  if (!layout) chunks.set(index, (layout = chunkLayout(terrain, index)));
+  if (!layout) chunks.set(index, (layout = chunkLayout(city, index)));
   return layout;
 }
 
@@ -258,7 +271,7 @@ const ANCHOR_REACH = 4;
  * Throws if none lies within ANCHOR_REACH chunks, since that is a mistake in the level data.
  */
 export function anchorNear(
-  terrain: TerrainDef,
+  city: City,
   kind: AnchorKind,
   at: number,
   x = CANVAS_WIDTH / 2,
@@ -271,7 +284,7 @@ export function anchorNear(
     for (const index of new Set([home - reach, home + reach])) {
       const top = (index + 1) * CHUNK_HEIGHT;
 
-      for (const anchor of cachedLayout(terrain, index).anchors) {
+      for (const anchor of cachedLayout(city, index).anchors) {
         if (anchor.kind !== kind) continue;
 
         const found = { x: anchor.x, y: top - anchor.y };

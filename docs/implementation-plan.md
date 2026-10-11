@@ -66,7 +66,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
 | `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs; step 2 adds the red vignette to `effects`, step 3 the typewriter |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
-| `scenes/GameScene.ts`, `GameScene.test.ts` | Done | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over the background, and loops the waves once cleared; the tests cover the collision rules, the game over delay, and the loop. Draws the HUD last. |
+| `scenes/GameScene.ts`, `GameScene.test.ts` | Done | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over the background, and loops the waves once cleared (step 4 replaces the loop with the level's end); the tests cover the collision rules, the game over delay, and the loop. Draws the HUD last. |
 | `scenes/GameOverScene.ts`, `GameOverScene.test.ts` | Done | The VAPORIZED screen (see **Game over** below) |
 | `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Done | Stubs; step 3 fills in `DictionaryScene` |
 
@@ -162,7 +162,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 - `enter()` resets the level state and builds the background and spawner.
 - `update()` order: input → player → spawner → entities → collisions → cull dead entities → scroll.
 - `draw()` order: background → enemies → bullets → player → explosions → HUD.
-- For now, once the last wave is cleared the waves start over: the Spawner measures them from the scroll at which the pass began. The scroll itself never goes back, so the city flies on instead of jumping. Proper level ends come in step 4.
+- For now, once the last wave is cleared the waves start over: the Spawner measures them from the scroll at which the pass began. The scroll itself never goes back, so the city flies on instead of jumping. Step 4 replaced this with the level's end.
 
 ### Shapes (`types.ts`)
 
@@ -394,7 +394,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
   - it restores this level's removed word, at least at level 1, and refills REMEMBER's bombs if that is the word;
   - in level 1 it pays `DIARY_BONUS_SCORE` (1000) instead;
   - either way it adds `DIARY_SUSPICION` (25), records `diaries`, and pushes the page's index (`level - 1`) to `runStats.pagesRead`.
-- One page a level: once read, a later pass of the waves (level 5 loops) lays no new diary. Level 1's lies on the skylight nearest 1350.
+- One page a level. Level 1's lies on the skylight nearest 1350.
 - The HUD types the page's `line` in the band (`#33251f`, `LEATHER_DARK`) with a `Typewriter` at `DIARY_CPF` (a character every 4 frames, a quarter of a page's speed, since it is read mid-fight), keeps it `DIARY_HOLD` (300) frames once typed, then clears it. The scene hands the HUD the line; the HUD reads no state.
 
 **DictionaryScene** (shown before every level)
@@ -449,7 +449,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the full loop Menu → Dictionary → Game → Ministry → … → Ending, in which the regime rewrites your score.
 
-**Progress:** every level starts with a takeoff: the plane sits parked on the eye of the Party's launch platform while the runway rolls under it, its lamps chasing forward, and it climbs once the lift-off line passes beneath it, its shadow drifting out to show the height. The pilot has no control and can't be hit until it is in the air.
+**Progress:** every level starts with a takeoff: the plane sits parked on the eye of the Party's launch platform while the runway rolls under it, its lamps chasing forward, and it climbs once the lift-off line passes beneath it, its shadow drifting out to show the height. The pilot has no control and can't be hit until it is in the air. Each level now has a `length`: there the city stops, and once the sky is clear the regime flies the plane in. The landing platform comes down the screen, its lamps chasing toward the plane, which lines up with the runway, comes down at the touchdown line, and stops on the eye; then the next level's Dictionary opens, and after level 5 the Menu, until the endings exist. Ground things move at the city's speed, eyes can't see a plane the regime is flying, and guns hold their fire.
 
 ### Files
 
@@ -459,7 +459,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Level end**
 
-- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss starts the landing (below), and the landing ends the level. This replaces the step 1 loop.
+- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss starts the landing (below), and the landing ends the level. This replaces the step 1 loop. Until the bosses exist, the landing starts at `length` once no enemy and no Thought Police are left.
 - **Bosses are data:** sprite, hp, hitbox, whether it is a ground boss (moves with the scroll and stands on an anchor, `on: 'railway'` for the land battleship) or an air boss, and a list of attack phases (for example: aimed bursts → spread fan → enrage below 30% hp). One `Boss` class runs any of them. Each level has its own sprite (see [assets.md](assets.md)).
 - **Progressive damage:** the boss shows its wounds hole by hole as it loses hp, never in one swap. Its `boss-*-damage.json` lists the damage regions in reveal order. At load, copy the clean sprite into a `p5.Graphics`. Whenever the number of regions that should be visible (`ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END))`, capped at `n`, where `DAMAGE_END` ≈ 0.2 is the hp fraction at which all damage is shown) grows, reveal the new ones: `erase()` the rect, `noErase()`, then draw that rect from `boss-*-damaged.png`. Draw the boss from the graphics. Work happens only when a region appears, never per frame. See [technical.md › Progressive damage](technical.md#progressive-damage).
 
@@ -472,7 +472,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - The layout puts a platform on the airfield at the level start and at `length + LANDING_LEAD` (rule 7 in [technical.md › City layout](technical.md#city-layout)). `launch-platform.json` gives the parking spot (the eye), the lift-off and touchdown lines, and the lamp sockets.
 - **Decision:** the start platform's eye lies at `AIRFIELD_AT` (−800), behind distance 0, and the scroll starts there, so the takeoff is over before the level's own distances begin and its waves, eyes, and pickups keep their positions.
 - **Takeoff (1–4):** the plane starts parked on the eye at the player's start position. The scroll ramps from 0 to `SCROLL_SPEED` over `TAKEOFF_RAMP_FRAMES` while the plane holds its screen position, so the runway rolls under it. When the lift-off line passes under the plane, altitude eases from 0 to 1 over `LIFTOFF_FRAMES`; then control returns and the waves begin.
-- **Landing (5–8):** when the boss dies, enemy bullets are cleared, nothing more spawns, and the scroll resumes. The autopilot eases the plane to the runway's x and the start y. Altitude eases from 1 to 0, timed to reach 0 as the touchdown line reaches the plane; then the scroll slows evenly so the eye stops under the plane. After `LANDING_HOLD_FRAMES`, the MinistryScene.
+- **Landing (5–8):** when the boss dies, enemy bullets are cleared, nothing more spawns, and the scroll resumes. The autopilot eases the plane to the runway's x and the start y. Altitude eases from 1 to 0 over `DESCENT_DISTANCE`, timed to reach 0 as the touchdown line reaches the plane; then the scroll slows evenly so the eye stops under the plane. After `LANDING_HOLD_FRAMES`, the MinistryScene. Eyes can't see the plane and guns hold their fire while the regime flies it.
+- **Decision:** the landing platform's eye lies `LANDING_LEAD` (200) past `length`, so the stopped screen never shows it. To bring it in without a long empty flight, the scroll speeds up to `LANDING_SPEED` (3) and brakes at `LANDING_ACCEL`, both distance-driven, so the eye always stops exactly under the plane (about 7 s from the start of the landing).
 - A pilot who loses a life respawns in the air, as before; there is no new takeoff.
 - **Decision:** after level 5 the ending decides the last sequence. Below `REBEL_DIARY_THRESHOLD` pages, the pilot lands at the Ministry of Love as usual, visits the Ministry one last time, and gets the obedient ending. With enough pages the pilot never lands: no platform comes, the plane climbs off the top of the screen while altitude rises past 1 (the shadow drifts and fades), and the rebel ending follows at once. The Ministry never processes level 5, so the official record stops at level 4 while the real one includes it.
 
@@ -675,3 +676,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 33 | Three real lives per run (`STARTING_LIVES`) | 1 | Confirmed |
 | 34 | Eyes never collide with the player: their only threat is being seen | 2 | Confirmed |
 | 35 | The takeoff runs behind distance 0 (the start platform's eye at `AIRFIELD_AT`), so level data keeps its distances | 4 | Confirmed |
+| 36 | The landing brings the city in at up to 3× speed and brakes evenly to stop the eye under the plane | 4 | Confirmed |

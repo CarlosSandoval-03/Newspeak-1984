@@ -81,6 +81,15 @@ export const PLATFORM_SIZE = { w: 112, h: 256 };
 // The runway rolls under the parked plane, speeding up to SCROLL_SPEED; past the lift-off line it climbs.
 export const TAKEOFF_RAMP_FRAMES = 90;
 export const LIFTOFF_FRAMES = 90;
+// The landing platform's eye lies this far past the level's length, so the stopped screen never shows it.
+export const LANDING_LEAD = 200;
+// The autopilot brings the city in faster than it flies, then brakes evenly to stop the eye under the plane.
+export const LANDING_SPEED = 3;
+export const LANDING_ACCEL = 0.02;
+// Scroll distance over which the plane comes down, ending at the touchdown line.
+export const DESCENT_DISTANCE = 160;
+// Parked on the eye this long before the level is over.
+export const LANDING_HOLD_FRAMES = 90;
 // Runway lamps: one row in every RUNWAY_LAMP_SPACING is lit, moving a row each RUNWAY_LAMP_STEP px of scroll.
 export const RUNWAY_LAMP_SPACING = 5;
 export const RUNWAY_LAMP_STEP = 4;

@@ -55,7 +55,10 @@ describe("cellTile", () => {
     for (let seed = 0; seed < 20; seed++)
       for (let index = -1; index < 6; index++) {
         const { corners } = chunkLayout(
-          { seed, blocks: { plaza: 0.4, rubble: 0.4 } },
+          {
+            terrain: { seed, blocks: { plaza: 0.4, rubble: 0.4 } },
+            length: 3000,
+          },
           index,
         );
         for (let row = 0; row < ROWS; row++)

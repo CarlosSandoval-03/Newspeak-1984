@@ -43,7 +43,7 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
 
     it("has a skylight for its diary to lie on", () => {
       expect(() =>
-        anchorNear(level.terrain, "skylight", level.diary.at),
+        anchorNear(level, "skylight", level.diary.at),
       ).not.toThrow();
     });
 

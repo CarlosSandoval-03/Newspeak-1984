@@ -14,16 +14,17 @@ import {
   RUNWAY_LAMP_STEP,
   STEEL,
 } from "../config";
-import type { TerrainDef, TilesetDef } from "../types";
+import type { TilesetDef } from "../types";
 import {
+  type Airfield,
   BANNER_FOLD,
   type Building,
   chunkLayout,
+  type City,
   COLUMNS,
   PARAPET,
   ROWS,
   type ChunkLayout,
-  type Rect,
   type Terrain,
 } from "./layout";
 
@@ -77,20 +78,20 @@ export function tileKey(corners: TilesetDef["tiles"][number]["corners"]) {
 
 export class Background {
   private readonly p: p5;
-  private readonly terrain: TerrainDef;
+  private readonly city: City;
   private readonly assets: Assets;
   private readonly chunks = new Map<
     number,
-    { graphics: p5.Graphics; lamps: Lamp[]; airfields: Rect[] }
+    { graphics: p5.Graphics; lamps: Lamp[]; airfields: Airfield[] }
   >();
   private tiles: Record<
     TilesetName,
     Map<string, { x: number; y: number }>
   > | null = null;
 
-  constructor(p: p5, terrain: TerrainDef, assets: Assets) {
+  constructor(p: p5, city: City, assets: Assets) {
     this.p = p;
-    this.terrain = terrain;
+    this.city = city;
     this.assets = assets;
   }
 
@@ -127,19 +128,24 @@ export class Background {
         this.runwayLamps(airfield, Math.round(y), scroll);
   }
 
-  // A row of lit sockets runs up the runway, the way the plane takes off.
-  private runwayLamps(airfield: Rect, chunkY: number, scroll: number): void {
+  // Rows of lit sockets run up the runway with a plane taking off, and down it toward one landing.
+  private runwayLamps(
+    airfield: Airfield,
+    chunkY: number,
+    scroll: number,
+  ): void {
     const { p } = this;
     const { lamps } = this.assets.platform;
     const rows = [...new Set(lamps.map((lamp) => lamp.y))].sort(
       (a, b) => a - b,
     );
     const step = Math.floor(scroll / RUNWAY_LAMP_STEP);
+    const chase = airfield.landing ? -step : step;
 
     p.fill(RED_LIGHT);
     for (const lamp of lamps) {
       const row = rows.indexOf(lamp.y);
-      if ((row + step) % RUNWAY_LAMP_SPACING !== 0) continue;
+      if ((row + chase) % RUNWAY_LAMP_SPACING !== 0) continue;
       p.rect(
         airfield.x + lamp.x,
         chunkY + airfield.y + lamp.y,
@@ -153,7 +159,7 @@ export class Background {
     const built = this.chunks.get(index);
     if (built) return built;
 
-    const layout = chunkLayout(this.terrain, index);
+    const layout = chunkLayout(this.city, index);
     const graphics = this.p.createGraphics(COLUMNS * CELL_SIZE, CHUNK_HEIGHT);
     this.paint(graphics, layout);
 

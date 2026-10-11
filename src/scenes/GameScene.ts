@@ -10,7 +10,12 @@ import {
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
+  DESCENT_DISTANCE,
   GAME_OVER_DELAY,
+  LANDING_ACCEL,
+  LANDING_HOLD_FRAMES,
+  LANDING_LEAD,
+  LANDING_SPEED,
   LIFTOFF_FRAMES,
   PAPER,
   PLAYER_HALF_SIZE,
@@ -41,15 +46,17 @@ import { Newspeak } from "../systems/Newspeak";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
-import { ALERT } from "../types";
+import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
 import { HUD } from "../ui/HUD";
 import { DictionaryScene } from "./DictionaryScene";
 import { GameOverScene } from "./GameOverScene";
+import { MenuScene } from "./MenuScene";
 
 export class GameScene implements Scene {
   private readonly p: p5;
   private readonly manager: SceneManager;
+  private readonly level: LevelDef;
   private readonly player: Player;
   private readonly spawner: Spawner;
   private readonly hud: HUD;
@@ -73,18 +80,24 @@ export class GameScene implements Scene {
   private speed = 0;
   private takeoffFrames = 0;
   private liftoffFrames = 0;
-  // Until then the plane flies itself, and nothing can touch it.
+  // Until then, and again once landing, the plane flies itself and nothing can touch it.
   private flying = false;
+  private landing = false;
+  private landedFrames = 0;
   private gameOverIn = 0;
   private flash = 0;
 
   constructor(p: p5, manager: SceneManager) {
     const { input, assets } = manager;
     const level = LEVELS[state.level - 1];
-    const fire = (bullet: Bullet) => this.bullets.push(bullet);
+    // The guns fall silent while the plane flies itself.
+    const fire = (bullet: Bullet) => {
+      if (this.flying) this.bullets.push(bullet);
+    };
 
     this.p = p;
     this.manager = manager;
+    this.level = level;
     this.images = assets.image;
     this.fire = fire;
     this.font = assets.font.machine;
@@ -99,7 +112,7 @@ export class GameScene implements Scene {
       }),
     );
     this.vignette = new Vignette(p);
-    this.background = new Background(p, level.terrain, assets);
+    this.background = new Background(p, level, assets);
     this.player = new Player(input, assets.image, fire);
     this.player.altitude = 0;
     this.spawner = new Spawner(level, {
@@ -122,11 +135,7 @@ export class GameScene implements Scene {
         ),
       pickup: (word, pos) =>
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
-      // One page a level: once read, a later pass of the waves lays no new one.
-      diary: (pos) => {
-        if (state.stats.diaries === 0)
-          this.diary = new Diary(pos, assets.image);
-      },
+      diary: (pos) => (this.diary = new Diary(pos, assets.image)),
     });
   }
 
@@ -145,7 +154,10 @@ export class GameScene implements Scene {
       return;
     }
 
-    if (!this.flying) this.takeOff();
+    // The city stops at the level's length, for whatever is left of the fight.
+    if (this.landing) this.land();
+    else if (!this.flying) this.takeOff();
+    else if (this.scroll >= this.level.length) this.speed = 0;
     if (this.flying && this.player.alive) this.player.update();
     if (this.flash > 0) this.flash--;
     if (
@@ -162,11 +174,20 @@ export class GameScene implements Scene {
       this.manager.input.wasPressed("truth")
     )
       this.newspeak.revealTruth();
-    this.spawner.update(
-      this.scroll,
-      state.alertLevel,
-      this.police?.holding ?? false,
-    );
+    if (this.scroll < this.level.length)
+      this.spawner.update(
+        this.scroll,
+        state.alertLevel,
+        this.police?.holding ?? false,
+      );
+
+    // Ground things ride the city, which stops and starts again to land.
+    for (const ground of [
+      ...this.turrets,
+      ...this.eyes.filter((eye) => eye.type === "tower"),
+      ...(this.diary ? [this.diary] : []),
+    ])
+      ground.vel.y = this.speed;
 
     for (const enemy of this.enemies) {
       enemy.update();
@@ -201,16 +222,15 @@ export class GameScene implements Scene {
     if (!this.police && state.alertLevel === ALERT.thoughtPolice)
       this.summonPolice();
 
-    // Levels have no end yet, so clearing one's waves leads to the next level's Dictionary, and the
-    // last level starts its waves over while the city flies on. Never mid-fight with the Thought Police.
-    if (this.spawner.done && this.enemies.length === 0 && !this.police) {
-      if (state.level < LEVELS.length) {
-        state.level++;
-        this.manager.change(new DictionaryScene(this.p, this.manager));
-        return;
-      }
-      this.spawner.restart(this.scroll);
-    }
+    // Once the sky is clear at the city's end; never mid-fight with the Thought Police.
+    if (
+      this.flying &&
+      this.player.alive &&
+      this.scroll >= this.level.length &&
+      this.enemies.length === 0 &&
+      !this.police
+    )
+      this.startLanding();
     this.scroll += this.speed;
   }
 
@@ -256,6 +276,45 @@ export class GameScene implements Scene {
     const t = ++this.liftoffFrames / LIFTOFF_FRAMES;
     this.player.altitude = t * t * (3 - 2 * t);
     this.flying = this.liftoffFrames === LIFTOFF_FRAMES;
+  }
+
+  private startLanding(): void {
+    this.flying = false;
+    this.landing = true;
+    for (const bullet of this.bullets)
+      if (bullet.owner !== "player") bullet.alive = false;
+  }
+
+  // The city comes in fast, then brakes evenly so the landing platform's eye stops under the plane,
+  // which lines up with the runway and comes down to touch it at the touchdown line.
+  private land(): void {
+    const { park, touchdown } = this.manager.assets.platform;
+    const parked = this.level.length + LANDING_LEAD + PLAYER_SPAWN.y;
+    const left = parked - this.scroll;
+
+    this.speed = Math.min(
+      this.speed + LANDING_ACCEL,
+      LANDING_SPEED,
+      Math.sqrt(2 * LANDING_ACCEL * left),
+      left,
+    );
+    const t = Math.min(
+      1,
+      Math.max(0, (left - (touchdown.y - park.y)) / DESCENT_DISTANCE),
+    );
+    this.player.altitude = t * t * (3 - 2 * t);
+    this.player.autopilot(PLAYER_SPAWN);
+
+    if (left > 0.01) return;
+    this.scroll = parked;
+    this.speed = 0;
+    if (++this.landedFrames < LANDING_HOLD_FRAMES) return;
+
+    // The last level has no next one until the endings exist, so the run goes back to the Menu.
+    if (state.level < LEVELS.length) {
+      state.level++;
+      this.manager.change(new DictionaryScene(this.p, this.manager));
+    } else this.manager.change(new MenuScene(this.p, this.manager));
   }
 
   // Clears what is on screen: every enemy aircraft, each one a kill, and every shot but the pilot's;
@@ -304,12 +363,12 @@ export class GameScene implements Scene {
       );
   }
 
-  // A dead pilot can't be seen, so the cones go quiet during the crash.
+  // A dead pilot can't be seen, so the cones go quiet during the crash, and while the regime flies the plane.
   private watch(): void {
     const { player } = this;
 
     for (const eye of this.eyes)
-      eye.detecting = player.alive && eye.sees(player.pos);
+      eye.detecting = this.flying && player.alive && eye.sees(player.pos);
     const seenBy = this.eyes.filter((eye) => eye.detecting);
 
     this.suspicion.update(seenBy, player.pos);

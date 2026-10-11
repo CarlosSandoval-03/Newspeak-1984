@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { loadAssets } from "../src/assets";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../src/config";
+import { CANVAS_HEIGHT, CANVAS_WIDTH, SCROLL_SPEED } from "../src/config";
 import { Input } from "../src/core/Input";
 import { SceneManager } from "../src/core/SceneManager";
 import { initLanguage } from "../src/i18n";
@@ -81,6 +81,11 @@ if (!scenario) {
       resetGame();
       scene = new GameScene(p, manager);
       manager.change(scene);
+      // In the air at distance 0, as before takeoffs existed, so the timings stay comparable.
+      scene["flying"] = true;
+      scene["speed"] = SCROLL_SPEED;
+      scene["scroll"] = 0;
+      scene["player"].altitude = 1;
       scenario.setup?.(scene, pilot);
     };
 

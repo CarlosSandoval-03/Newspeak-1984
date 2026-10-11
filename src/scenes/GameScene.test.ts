@@ -4,12 +4,15 @@ import type { Assets } from "../assets";
 import {
   AIRFIELD_AT,
   ALERT_SPAWN_MULT,
+  DESCENT_DISTANCE,
   DIARY_BONUS_SCORE,
   BOMB_BOSS_DAMAGE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
+  LANDING_HOLD_FRAMES,
+  LANDING_LEAD,
   LIFTOFF_FRAMES,
   PLAYER_SPAWN,
   SCROLL_SPEED,
@@ -36,6 +39,7 @@ import { ALERT, type EnemyKind, type Vec } from "../types";
 import { DictionaryScene } from "./DictionaryScene";
 import { GameScene } from "./GameScene";
 import { GameOverScene } from "./GameOverScene";
+import { MenuScene } from "./MenuScene";
 
 // Each image is stood in for by its own name; nothing here draws.
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
@@ -252,42 +256,100 @@ describe("GameScene collisions", () => {
     expect(state.realLives).toBe(0);
   });
 
-  it("leads on to the next level's Dictionary once its waves are cleared", () => {
-    const change = vi.spyOn(manager, "change");
-    scene["scroll"] = 1_000_000;
-    scene.update();
-    expect(change).not.toHaveBeenCalled();
+  describe("the level's end", () => {
+    const { length } = LEVELS[0];
+    // The scroll at which the landing platform's eye lies under the parked plane.
+    const parked = length + LANDING_LEAD + PLAYER_SPAWN.y;
 
-    scene["enemies"] = [];
-    scene.update();
+    beforeEach(() => {
+      scene["scroll"] = length;
+    });
 
-    expect(state.level).toBe(2);
-    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
-  });
+    it("stops the city at the level's length, and lands once the sky is clear", () => {
+      const enemy = enemyAt("straight", { x: 100, y: 100 });
+      const turret = new Turret(
+        { x: 300, y: 200 },
+        () => PLAYER_SPAWN,
+        images,
+        () => {},
+      );
+      scene["turrets"].push(turret);
 
-  it("waits for the Thought Police to go before leaving the level", () => {
-    scene["scroll"] = 1_000_000;
-    scene.update();
-    scene["suspicion"].add(100);
-    scene.update();
-    scene["enemies"] = [];
+      scene.update();
+      expect(scene["scroll"]).toBe(length);
+      expect(turret.pos.y).toBe(200);
+      expect(scene["landing"]).toBe(false);
 
-    scene.update();
+      enemy.alive = false;
+      bulletAt("enemy", { x: 50, y: 50 });
+      scene.update();
+      expect(scene["landing"]).toBe(true);
+      expect(scene["flying"]).toBe(false);
+      expect(scene["bullets"].every((bullet) => !bullet.alive)).toBe(true);
+    });
 
-    expect(state.level).toBe(1);
-  });
+    it("waits for the Thought Police to go before landing", () => {
+      scene["suspicion"].add(100);
+      scene.update();
+      scene["enemies"] = [];
 
-  it("starts the last level's waves over, without rewinding the city", () => {
-    state.level = LEVELS.length;
-    scene["scroll"] = 1_000_000;
-    scene.update();
-    expect(scene["spawner"].done).toBe(true);
+      scene.update();
 
-    scene["enemies"] = [];
-    scene.update();
+      expect(scene["landing"]).toBe(false);
+    });
 
-    expect(scene["spawner"].done).toBe(false);
-    expect(scene["scroll"]).toBeGreaterThan(1_000_000);
+    it("lines the plane up, touches down at the line, and stops it on the eye", () => {
+      const change = vi.spyOn(manager, "change");
+      const player = scene["player"];
+      const touchdown = parked - (platform.touchdown.y - platform.park.y);
+      player.pos = { x: 60, y: 200 };
+
+      let stoppedFor = 0;
+      // The plane's height follows the scroll each tick starts at.
+      while (change.mock.calls.length === 0) {
+        const scroll: number = scene["scroll"];
+        scene.update();
+        if (scroll < touchdown - DESCENT_DISTANCE)
+          expect(player.altitude).toBe(1);
+        if (scroll >= touchdown) expect(player.altitude).toBe(0);
+        expect(scene["scroll"]).toBeLessThanOrEqual(parked);
+        if (scene["scroll"] === parked) stoppedFor++;
+      }
+
+      expect(player.pos).toEqual(PLAYER_SPAWN);
+      expect(stoppedFor).toBe(LANDING_HOLD_FRAMES);
+      expect(state.level).toBe(2);
+      expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+    });
+
+    it("can't be seen or shot at while the regime flies the plane", () => {
+      const eye = eyeAbove({ x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - 100 });
+      scene["landing"] = true;
+      scene["flying"] = false;
+
+      for (let i = 0; i < 300; i++) {
+        scene.update();
+        // As any gun would, through the scene's own hand.
+        scene["fire"](new Bullet("enemy", { x: 0, y: 0 }, { x: 0, y: 0 }));
+      }
+
+      expect(eye.detecting).toBe(false);
+      expect(state.suspicion).toBe(0);
+      expect(scene["bullets"]).toHaveLength(0);
+    });
+
+    it("goes back to the Menu after the last level, until the endings exist", () => {
+      const change = vi.spyOn(manager, "change");
+      state.level = LEVELS.length;
+      scene["scroll"] = parked;
+      scene["speed"] = 0;
+      scene["flying"] = false;
+      scene["landing"] = true;
+
+      for (let i = 0; i < LANDING_HOLD_FRAMES; i++) scene.update();
+
+      expect(change).toHaveBeenCalledWith(expect.any(MenuScene));
+    });
   });
 
   it("raises suspicion while an eye sees the player, and only then", () => {
@@ -508,20 +570,14 @@ describe("GameScene collisions", () => {
       expect(state.stats.diaries).toBe(0);
     });
 
-    it("is laid once a level, even when the waves start over", () => {
-      const { terrain, diary } = LEVELS[0];
+    it("is laid on its skylight as the city brings it on screen", () => {
+      const { diary } = LEVELS[0];
       // Just past its skylight, so it would lie on screen.
-      const onScreen = anchorNear(terrain, "skylight", diary.at).y + 100;
+      const onScreen = anchorNear(LEVELS[0], "skylight", diary.at).y + 100;
 
       scene["scroll"] = onScreen;
       scene.update();
       expect(scene["diary"]).not.toBeNull();
-
-      state.stats.diaries = 1;
-      scene["diary"] = null;
-      scene["spawner"].restart(0);
-      scene.update();
-      expect(scene["diary"]).toBeNull();
     });
   });
 

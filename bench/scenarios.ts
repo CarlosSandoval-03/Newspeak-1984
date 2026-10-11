@@ -127,6 +127,10 @@ export const SCENARIOS: Record<string, Scenario> = {
     description:
       "The city alone, scrolling 24 times faster, to time building its chunks",
     frames: 900,
+    // Far past any level's length, so the city never stops for a landing.
+    setup: (scene) => {
+      scene["level"].length = Number.MAX_SAFE_INTEGER;
+    },
     step: (scene) => {
       state.realLives = 9;
       scene["scroll"] += 23;

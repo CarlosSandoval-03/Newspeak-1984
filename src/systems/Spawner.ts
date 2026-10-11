@@ -162,7 +162,7 @@ export class Spawner {
     spawn: (pos: Vec) => void,
   ): Placement {
     const anchor = anchorNear(
-      this.level.terrain,
+      this.level,
       def.on,
       start + def.at,
       def.x,

@@ -5,13 +5,15 @@ import {
   CELL_SIZE,
   CHUNK_HEIGHT,
   CRATER_SIZE,
+  LANDING_LEAD,
   MIN_BLOCK_CELLS,
   PLATFORM_SIZE,
 } from "../config";
-import type { AnchorKind, TerrainDef } from "../types";
+import type { AnchorKind } from "../types";
 import {
   anchorNear,
   chunkLayout,
+  type City,
   COLUMNS,
   type ChunkLayout,
   PARAPET,
@@ -21,16 +23,20 @@ import {
   type Terrain,
 } from "./layout";
 
+// Long enough that the landing platform lies far past every chunk checked.
+const LENGTH = 100_000;
 // Mixed recipes push every rule: plaza, rubble, and open asphalt side by side.
-const recipes: TerrainDef[] = Array.from({ length: 30 }, (_, i) => ({
-  seed: 1000 + i * 7919,
-  blocks: { plaza: 0.4, rubble: 0.4 },
+const recipes: City[] = Array.from({ length: 30 }, (_, i) => ({
+  terrain: { seed: 1000 + i * 7919, blocks: { plaza: 0.4, rubble: 0.4 } },
+  length: LENGTH,
 }));
 const CHUNKS = 8;
+const plazas = (share: number): City => ({
+  terrain: { seed: 5, blocks: { plaza: share, rubble: 0 } },
+  length: LENGTH,
+});
 
-const everyChunk = (
-  check: (layout: ChunkLayout, recipe: TerrainDef) => void,
-) => {
+const everyChunk = (check: (layout: ChunkLayout, recipe: City) => void) => {
   for (const recipe of recipes)
     for (let index = 0; index < CHUNKS; index++)
       check(chunkLayout(recipe, index), recipe);
@@ -53,7 +59,7 @@ describe("chunkLayout", () => {
 
   it("joins consecutive chunks on their streets", () => {
     for (const recipe of recipes) {
-      const columns = streetColumns(recipe.seed);
+      const columns = streetColumns(recipe.terrain.seed);
 
       for (let index = 0; index < CHUNKS; index++) {
         const lower = chunkLayout(recipe, index);
@@ -81,7 +87,9 @@ describe("chunkLayout", () => {
   });
 
   it("keeps blocks at least MIN_BLOCK_CELLS wide", () => {
-    for (const { seed } of recipes) {
+    for (const {
+      terrain: { seed },
+    } of recipes) {
       const edges = [-1, ...streetColumns(seed), COLUMNS];
       for (let i = 1; i < edges.length; i++)
         expect(edges[i] - edges[i - 1] - 1).toBeGreaterThanOrEqual(
@@ -91,8 +99,8 @@ describe("chunkLayout", () => {
   });
 
   it("follows the recipe's shares", () => {
-    const empty = chunkLayout({ seed: 5, blocks: { plaza: 0, rubble: 0 } }, 0);
-    const full = chunkLayout({ seed: 5, blocks: { plaza: 1, rubble: 0 } }, 0);
+    const empty = chunkLayout(plazas(0), 0);
+    const full = chunkLayout(plazas(1), 0);
 
     expect(empty.corners.flat().every((t) => t === "asphalt")).toBe(true);
     expect(empty.buildings).toHaveLength(0);
@@ -258,31 +266,35 @@ describe("anchors", () => {
     expect([...seen].sort()).toEqual([...kinds].sort());
   });
 
-  it("lays the start platform with its eye at AIRFIELD_AT, on open ground", () => {
+  it("lays a platform at the start and past the length, each on open ground", () => {
     const touches = (a: Rect, b: Rect) =>
       a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-    const index = Math.floor(AIRFIELD_AT / CHUNK_HEIGHT);
 
-    for (const recipe of [
-      ...recipes,
-      { seed: 5, blocks: { plaza: 1, rubble: 0 } },
-    ]) {
-      const { airfields, buildings, anchors } = chunkLayout(recipe, index);
-      const [airfield] = airfields;
+    for (const recipe of [...recipes, plazas(1)])
+      for (const [eye, landing] of [
+        [AIRFIELD_AT, false],
+        [recipe.length + LANDING_LEAD, true],
+      ] as const) {
+        const index = Math.floor(eye / CHUNK_HEIGHT);
+        const { airfields, buildings, anchors } = chunkLayout(recipe, index);
+        const [airfield] = airfields;
 
-      expect(airfields).toHaveLength(1);
-      expect(airfield.x + airfield.w / 2).toBe(CANVAS_WIDTH / 2);
-      expect((index + 1) * CHUNK_HEIGHT - (airfield.y + airfield.h / 2)).toBe(
-        AIRFIELD_AT,
-      );
-      expect({ w: airfield.w, h: airfield.h }).toEqual(PLATFORM_SIZE);
-      expect(buildings.some((building) => touches(building, airfield))).toBe(
-        false,
-      );
-      expect(
-        anchors.some((anchor) => touches({ ...anchor, w: 0, h: 0 }, airfield)),
-      ).toBe(false);
-    }
+        expect(airfields).toHaveLength(1);
+        expect(airfield.landing).toBe(landing);
+        expect(airfield.x + airfield.w / 2).toBe(CANVAS_WIDTH / 2);
+        expect(
+          (index + 1) * CHUNK_HEIGHT - (airfield.y + airfield.h / 2),
+        ).toBe(eye);
+        expect({ w: airfield.w, h: airfield.h }).toEqual(PLATFORM_SIZE);
+        expect(buildings.some((building) => touches(building, airfield))).toBe(
+          false,
+        );
+        expect(
+          anchors.some((anchor) =>
+            touches({ ...anchor, w: 0, h: 0 }, airfield),
+          ),
+        ).toBe(false);
+      }
     everyChunk(({ airfields }) => expect(airfields).toEqual([]));
   });
 
@@ -341,8 +353,6 @@ describe("anchorNear", () => {
   });
 
   it("fails loudly when the recipe has no such ground", () => {
-    const open = { seed: 5, blocks: { plaza: 0, rubble: 0 } };
-
-    expect(() => anchorNear(open, "rooftop", 500)).toThrow(/rooftop/);
+    expect(() => anchorNear(plazas(0), "rooftop", 500)).toThrow(/rooftop/);
   });
 });

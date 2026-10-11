@@ -60,7 +60,7 @@ export interface TerrainDef {
   blocks: { plaza: number; rubble: number };
 }
 
-// Where a ground element can stand; later steps add bridge, railway, landmark, and platform.
+// Where a ground element can stand; later steps add bridge, railway, and landmark.
 export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight";
 
 export type EyeType = "tower" | "drone";
@@ -89,9 +89,11 @@ export interface TurretDef {
   x?: number;
 }
 
-// Later steps add the boss and the length.
+// Later steps add the boss.
 export interface LevelDef {
   terrain: TerrainDef;
+  // The scroll distance at which the city stops and the level ends.
+  length: number;
   waves: WaveDef[];
   eyes: EyeDef[];
   turrets: TurretDef[];

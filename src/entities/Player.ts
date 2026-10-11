@@ -116,6 +116,24 @@ export class Player extends Entity {
     }
   }
 
+  // The regime flies the plane: toward `target`, slowing as it nears it, banking into turns, never firing.
+  autopilot(target: Vec): void {
+    const dx = target.x - this.pos.x;
+    const dy = target.y - this.pos.y;
+    const distance = Math.hypot(dx, dy);
+    const step = Math.min(distance, Math.max(distance / 16, 0.5), PLAYER_SPEED);
+
+    this.vel = distance
+      ? { x: (dx / distance) * step, y: (dy / distance) * step }
+      : { x: 0, y: 0 };
+    this.bank = Math.abs(this.vel.x) > 0.5 ? Math.sign(this.vel.x) : 0;
+    this.dashFrames = 0;
+    this.trail = [];
+    // Still counted down, or a blink caught mid-way would hide the plane for good.
+    if (this.invulnFrames > 0) this.invulnFrames--;
+    super.update();
+  }
+
   // Only an awake ESCAPE dashes, and its level, read at each dash, sets how soon the next one is ready.
   // With no direction held it goes forward, the one way that is always away from the bottom edge.
   private dash(dx: number, dy: number): void {

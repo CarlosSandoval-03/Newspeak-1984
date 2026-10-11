@@ -24,6 +24,7 @@ const cone = { facing: 90, range: 100, sweepAmp: 0, sweepSpeed: 0 };
 const level: LevelDef = {
   // Level 1's recipe, so there are rooftops, and skylights for the diary.
   terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
+  length: 100_000,
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },
@@ -96,7 +97,7 @@ describe("Spawner", () => {
   });
 
   it("is done after the last wave and eye, and starts over from where it restarts", () => {
-    const ground = anchorNear(level.terrain, "street", 600).y;
+    const ground = anchorNear(level, "street", 600).y;
     const last = ground - EYE_STATS.tower.halfSize;
 
     spawner.update(last - 1, ALERT.normal);
@@ -129,7 +130,7 @@ describe("Spawner", () => {
   });
 
   it("stands a tower on its anchor, entering as the ground under it does", () => {
-    const anchor = anchorNear(level.terrain, "street", 600);
+    const anchor = anchorNear(level, "street", 600);
     const due = anchor.y - EYE_STATS.tower.halfSize;
 
     spawner.update(due - 1, ALERT.normal);
@@ -143,7 +144,7 @@ describe("Spawner", () => {
   });
 
   it("keeps a late tower pinned to its spot on the ground", () => {
-    const anchor = anchorNear(level.terrain, "street", 600);
+    const anchor = anchorNear(level, "street", 600);
 
     spawner.update(anchor.y + 200, ALERT.normal);
 
@@ -152,7 +153,7 @@ describe("Spawner", () => {
 
   it("finds a tower's anchor again on every pass", () => {
     spawner.restart(5000);
-    const anchor = anchorNear(level.terrain, "street", 5600);
+    const anchor = anchorNear(level, "street", 5600);
 
     spawner.update(anchor.y, ALERT.normal);
 
@@ -288,7 +289,7 @@ describe("Spawner", () => {
   });
 
   it("lays the diary on the skylight nearest its place, entering with the ground", () => {
-    const anchor = anchorNear(level.terrain, "skylight", 450);
+    const anchor = anchorNear(level, "skylight", 450);
     const due = anchor.y - DIARY_HALF_SIZE;
 
     spawner.update(due - 1, ALERT.normal);
@@ -299,7 +300,7 @@ describe("Spawner", () => {
   });
 
   it("stands a turret on the anchor its data points to, entering with the ground", () => {
-    const anchor = anchorNear(level.terrain, "street", 300, 400);
+    const anchor = anchorNear(level, "street", 300, 400);
     const due = anchor.y - TURRET_STATS.halfSize;
 
     spawner.update(due - 1, ALERT.normal);
