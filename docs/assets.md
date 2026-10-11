@@ -107,7 +107,7 @@ Side-view scenes, drawn at an integer scale (240×160 → 2× = 480×320).
 | `vaporized.png` | 240×160 | Game over | Squadron photo with one pilot's head erased: the diarist, and now the player. |
 | `pilot-portrait.png` | 64×64 | Ministry, endings | The player's pilot; same style as the Leader and the Officer so they can face each other. |
 | `officer-portrait.png` | 64×64 | Dictionary (briefing), Ministry | The Inner Party officer who gives the pilot orders: a face for the regime besides the leader. Completes the trio leader–officer–pilot. |
-| `memory-hole.png` | 240×160 | Ministry | A records clerk at his typewriter beside the memory hole, the slot where records are burned. The real score goes down the hole before the official one is typed. |
+| `memory-hole.png` | 240×160 | Ministry | A records clerk at his typewriter beside the memory hole, the slot where records are burned. The real score goes down the hole once the official one and its corrections are typed. |
 | `pause-telescreen.png` | 240×160 | Pause | A telescreen eye with a red iris: even stopping is watched. |
 | `ending-obedient.png` | 240×160 | Obedient ending | The pilot alone in a café under the Leader's telescreen. Uses red. |
 | `ending-rebel.png` | 240×160 | Rebel ending | The pilot's plane over open country, pale sky. No red; the only bright scene. |
@@ -146,7 +146,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `player-bank-*.png` | Use while the horizontal input is held. | — | 1 |
 | `launch-platform.png` | **Runway lamps:** light the sockets from the JSON in `#e0503a`, chasing toward the direction of travel (forward on takeoff, backward on landing). | — | 4 |
 | `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as the Ministry's verdict worsens. | Thin frame, rank caption. | 3, 4 |
-| `memory-hole.png` | Shown at 2×, cut above the floor. The crossed-out real score slides into the slot (the burning window) before the official one is typed. | Papers fluttering into the slot. | 4 |
+| `memory-hole.png` | Shown at 2×, cut above the floor. The crossed-out real score slides into the slot (the burning window) once the official one and the corrections are typed, before the stamp. | Papers fluttering into the slot. | 4 |
 | `pause-telescreen.png` | "PAUSED" in VT323. | Suspicion creeps up slowly while paused. | 5 |
 
 ## Drawn entirely with p5

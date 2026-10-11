@@ -99,19 +99,21 @@ describe("MinistryScene", () => {
     expect(page).not.toContain("towers");
   });
 
-  it("types the record, strikes and drops its score, then types the correction and stamps it", () => {
+  it("types the record and strikes its score, types the correction, then drops the score and stamps", () => {
     const scene = open();
 
     while (!scene["recordTyping"].done) tick(scene);
     expect(scene["strikeAge"]).toBe(0);
 
-    for (let i = 0; i < STRIKE_FRAMES + SLIDE_FRAMES; i++) {
+    for (let i = 0; i < STRIKE_FRAMES; i++) {
       expect(scene["correctionTyping"].shown(0)).toBe("");
       tick(scene);
     }
-    expect(scene["slideAge"]).toBe(SLIDE_FRAMES);
 
     while (!scene["correctionTyping"].done) tick(scene);
+    expect(scene["slideAge"]).toBe(0);
+
+    for (let i = 0; i < SLIDE_FRAMES; i++) tick(scene);
     expect(scene["settled"]).toBe(false);
     for (let i = 0; i < STAMP_DELAY; i++) tick(scene);
     expect(scene["settled"]).toBe(true);

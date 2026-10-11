@@ -48,8 +48,8 @@ const PROMPT_Y = 632;
 const PROMPT_SIZE = 20;
 
 // The Records Department closes the level's file in front of the pilot: the real score is struck
-// out and goes down the memory hole, and the official one is typed in with the corrections that
-// justify it, under the verdict's stamp.
+// out, the official one is typed in with the corrections that justify it, and only then does the
+// real one go down the memory hole, before the verdict's stamp lands.
 export class MinistryScene implements Scene {
   private readonly p: p5;
   private readonly manager: SceneManager;
@@ -83,8 +83,8 @@ export class MinistryScene implements Scene {
   enter(): void {}
 
   // Enter first settles the page, then leaves, so a press never skips what wasn't seen. Otherwise
-  // one thing happens at a time: the record is typed, its score struck and sent down the hole, then
-  // the correction is typed and stamped.
+  // one thing happens at a time: the record is typed and its score struck, the correction is typed,
+  // then the struck score is sent down the hole and the file stamped.
   update(): void {
     if (this.manager.input.wasPressed("confirm")) {
       if (this.settled) {
@@ -96,8 +96,8 @@ export class MinistryScene implements Scene {
 
     if (!this.recordTyping.done) this.recordTyping.update();
     else if (this.strikeAge < STRIKE_FRAMES) this.strikeAge++;
-    else if (this.slideAge < SLIDE_FRAMES) this.slideAge++;
     else if (!this.correctionTyping.done) this.correctionTyping.update();
+    else if (this.slideAge < SLIDE_FRAMES) this.slideAge++;
     else if (this.stampAge < STAMP_DELAY) this.stampAge++;
   }
 
@@ -179,7 +179,7 @@ export class MinistryScene implements Scene {
     p.text(shown, x, y);
   }
 
-  // Struck out once typed, then slid into the slot, fading as it falls in.
+  // Struck out once typed, and once the correction is in, slid into the slot, fading as it falls in.
   private drawReportedScore(): void {
     const { p } = this;
     const line = this.record[this.record.length - 1];
@@ -202,7 +202,7 @@ export class MinistryScene implements Scene {
     context.globalAlpha = 1;
   }
 
-  // On whichever page is being typed; none while the score is struck and slides.
+  // On whichever page is being typed; none while the score is struck.
   private drawTypingCursor(): void {
     const { p } = this;
 
@@ -211,7 +211,7 @@ export class MinistryScene implements Scene {
         drawCursor(p, this.record, this.recordTyping);
       return;
     }
-    if (this.slideAge < SLIDE_FRAMES || this.correctionTyping.done) return;
+    if (this.strikeAge < STRIKE_FRAMES || this.correctionTyping.done) return;
     if (this.correctionTyping.cursorVisible)
       drawCursor(p, this.correction, this.correctionTyping);
   }
