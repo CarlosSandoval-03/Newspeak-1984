@@ -54,6 +54,7 @@ Apply these to every change, and to code you touch for another reason. Be critic
 
 ## Comments
 - A comment says why: an intent, a constraint, or a non-obvious decision the code can't show. Never restate what the code, a name, or a type already says, and never describe what a file contains.
+- **Complex functions are the exception:** an orchestrating `update()` or `draw()`, or any function that runs several logical steps or a non-trivial algorithm, opens with a short comment summing up what it does and in what order, and each logical block inside it gets a one-line comment saying what that block does (and why, when it isn't obvious). Simple functions keep only why-comments.
 - Comments are self-contained: no references to docs, other files, tickets, or conversations. If the reader needs more, the knowledge belongs in `docs/`, not in a pointer.
 - TSDoc (`/** */`) on an export only when its name and signature don't say enough; `//` for everything else.
 - No commented-out code, section banners, or template boilerplate. A comment that no longer matches the code is deleted or fixed in the same change.
