@@ -3,12 +3,33 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   CURSOR_BLINK_FRAMES,
+  PAPER,
   RED,
   TYPEWRITER_CPF,
   VIGNETTE_ALPHA,
   VIGNETTE_FADE_FRAMES,
   VIGNETTE_PULSE_FRAMES,
 } from "../config";
+import type { Vec } from "../types";
+
+const LINE_HEIGHT = 1.2;
+const SCORE_DIGITS = 6;
+// Through the middle of the capitals.
+const STRIKE_RISE = 0.3;
+const STRIKE_WEIGHT = 2;
+// Pressed by hand, never square; the box is sized from the word's own size.
+const STAMP_ANGLE = -0.14;
+const STAMP_PADDING = 0.3;
+const STAMP_HEIGHT = 1.4;
+const STAMP_WEIGHT = 3;
+
+// A line of a typed page, in its own place and size.
+export interface PageLine {
+  text: string;
+  x: number;
+  y: number;
+  size: number;
+}
 
 // Types a page, line after line, a few characters a frame; `finish()` is Enter, revealing the rest.
 // It only counts characters: the scene draws them, so each line keeps its own font and place.
@@ -83,6 +104,82 @@ export function wrap(text: string, columns: number): string[] {
   }
   if (line) lines.push(line);
   return lines;
+}
+
+// Lines stacked down from (x, y), each as tall as its size and the line height.
+export function stack(
+  texts: readonly string[],
+  { x, y, size }: Omit<PageLine, "text">,
+): PageLine[] {
+  return texts.map((text, i) => ({
+    text,
+    x,
+    y: Math.round(y + i * size * LINE_HEIGHT),
+    size,
+  }));
+}
+
+export function scoreDigits(score: number): string {
+  return String(score).padStart(SCORE_DIGITS, "0");
+}
+
+// A one-character block where the typewriter's next character will land, in the line's own size.
+export function drawCursor(
+  p: p5,
+  lines: readonly PageLine[],
+  typewriter: Typewriter,
+): void {
+  const { line, column } = typewriter.cursor;
+  const { x, y, size, text } = lines[line];
+
+  p.textSize(size);
+  p.fill(PAPER);
+  p.rect(
+    Math.round(x + p.textWidth(text.slice(0, column))),
+    Math.round(y - size * 0.8),
+    Math.ceil(p.textWidth("M")),
+    size,
+  );
+}
+
+// A red line through `width` pixels of a line drawn at (x, y) in `size`.
+export function drawStrike(
+  p: p5,
+  { x, y, size }: Omit<PageLine, "text">,
+  width: number,
+): void {
+  p.fill(RED);
+  p.rect(x, Math.round(y - size * STRIKE_RISE), width, STRIKE_WEIGHT);
+}
+
+// The regime's rubber stamp: the word in red, boxed and tilted, at `center`, in the current font.
+export function drawStamp(
+  p: p5,
+  word: string,
+  center: Vec,
+  size: number,
+): void {
+  p.push();
+  p.translate(center.x, center.y);
+  p.rotate(STAMP_ANGLE);
+  p.textSize(size);
+  p.textAlign(p.CENTER, p.CENTER);
+
+  p.noFill();
+  p.stroke(RED);
+  p.strokeWeight(STAMP_WEIGHT);
+  p.rectMode(p.CENTER);
+  p.rect(
+    0,
+    0,
+    p.textWidth(word) + size * STAMP_PADDING * 2,
+    size * STAMP_HEIGHT,
+  );
+
+  p.noStroke();
+  p.fill(RED);
+  p.text(word, 0, 0);
+  p.pop();
 }
 
 export function drawScanlines(): void {}

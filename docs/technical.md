@@ -49,7 +49,7 @@ newspeak-1984/
     ├── entities/         # Entity, Destructible, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, BossDamage, ThoughtPolice, Pickup, Diary
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner, Flight
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
-    ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter)
+    ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps)
     └── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
 ```
 

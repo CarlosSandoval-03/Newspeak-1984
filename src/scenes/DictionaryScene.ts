@@ -3,7 +3,6 @@ import {
   CANVAS_WIDTH,
   INK,
   PAPER,
-  RED,
   STEEL,
   STRIKE_FRAMES,
   WORD_REMOVAL_ORDER,
@@ -14,7 +13,14 @@ import { currentStrings, format, t } from "../i18n";
 import { state } from "../state";
 import { removedAt } from "../systems/Newspeak";
 import type { Word } from "../types";
-import { Typewriter, wrap } from "../ui/effects";
+import {
+  drawCursor,
+  drawStrike,
+  type PageLine,
+  stack,
+  Typewriter,
+  wrap,
+} from "../ui/effects";
 import { GameScene } from "./GameScene";
 
 // Illustrations at 2×; the heading and the words stand in a column right of the cover.
@@ -32,19 +38,9 @@ const PROMPT_Y = 600;
 const PROMPT_SIZE = 20;
 const HEADING_SIZE = 20;
 const PROSE_SIZE = 16;
-const LINE_HEIGHT = 1.2;
-// Through the middle of the capitals.
-const STRIKE_RISE = 0.3;
-const STRIKE_WEIGHT = 2;
 
 // "earlier" words were struck in past editions; "now" is struck while the player watches.
-type Line = {
-  text: string;
-  x: number;
-  y: number;
-  size: number;
-  strike: "earlier" | "now" | null;
-};
+type Line = PageLine & { strike: "earlier" | "now" | null };
 
 // The official dictionary before each level: the edition, the words, and this level's word struck
 // out, announced in advance by the Officer. Censorship as a ritual.
@@ -105,7 +101,8 @@ export class DictionaryScene implements Scene {
     p.textFont(font.paperwork);
     p.textAlign(p.LEFT, p.BASELINE);
     this.lines.forEach((line, i) => this.line(line, this.typewriter.shown(i)));
-    if (!this.typewriter.done && this.typewriter.cursorVisible) this.cursor();
+    if (!this.typewriter.done && this.typewriter.cursorVisible)
+      drawCursor(p, this.lines, this.typewriter);
 
     if (this.settled) this.prompt();
   }
@@ -151,30 +148,7 @@ export class DictionaryScene implements Scene {
     // An earlier word is struck as it is typed; this level's after it, while the player watches.
     const share =
       line.strike === "earlier" ? 1 : this.strikeAge / STRIKE_FRAMES;
-    const w = Math.round(p.textWidth(shown) * share);
-    p.fill(RED);
-    p.rect(
-      line.x,
-      Math.round(line.y - line.size * STRIKE_RISE),
-      w,
-      STRIKE_WEIGHT,
-    );
-  }
-
-  // A one-character block where the next character will land, in the line's own size.
-  private cursor(): void {
-    const { p } = this;
-    const { line, column } = this.typewriter.cursor;
-    const { x, y, size, text } = this.lines[line];
-
-    p.textSize(size);
-    p.fill(PAPER);
-    p.rect(
-      Math.round(x + p.textWidth(text.slice(0, column))),
-      Math.round(y - size * 0.8),
-      Math.ceil(p.textWidth("M")),
-      size,
-    );
+    drawStrike(p, line, Math.round(p.textWidth(shown) * share));
   }
 }
 
@@ -230,18 +204,14 @@ function page(): Line[] {
   ];
 }
 
-// Lines stacked down from (x, y), each as tall as its size and the line height.
 function block(
   texts: string[],
-  { x, y, size, strike = null }: Omit<Line, "text" | "strike"> & {
+  {
+    strike = null,
+    ...place
+  }: Omit<PageLine, "text"> & {
     strike?: Line["strike"];
   },
 ): Line[] {
-  return texts.map((text, i) => ({
-    text,
-    x,
-    y: Math.round(y + i * size * LINE_HEIGHT),
-    size,
-    strike,
-  }));
+  return stack(texts, place).map((line) => ({ ...line, strike }));
 }

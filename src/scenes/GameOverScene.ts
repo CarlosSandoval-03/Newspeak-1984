@@ -6,7 +6,6 @@ import {
   INK,
   PAPER,
   PHOTO_FADE_FRAMES,
-  RED,
   SIGNAL_OFF_FRAMES,
   STAMP_DELAY,
   STEEL,
@@ -15,14 +14,12 @@ import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { t } from "../i18n";
 import { state } from "../state";
+import { drawStamp } from "../ui/effects";
 import { MenuScene } from "./MenuScene";
 
 // The photo fills the top half at 2×; the stamp lands on the erased pilot's chest.
 const PHOTO_HEIGHT = 320;
 const STAMP_CENTER = { x: CANVAS_WIDTH / 2, y: 190 };
-const STAMP_ANGLE = -0.14;
-const STAMP_PADDING = 12;
-const STAMP_HEIGHT = 56;
 const STAMP_SIZE = 40;
 const TEXT_SIZE = 20;
 const LINE_Y = 400;
@@ -80,7 +77,8 @@ export class GameOverScene implements Scene {
 
     this.drawPhoto();
     p.textFont(this.manager.assets.font.machine);
-    if (this.age >= STAMP_AT) this.drawStamp();
+    if (this.age >= STAMP_AT)
+      drawStamp(p, t("gameOver.stamp"), STAMP_CENTER, STAMP_SIZE);
     if (this.textShown) this.drawText();
   }
 
@@ -160,27 +158,5 @@ export class GameOverScene implements Scene {
     p.text(t("gameOver.line", { id: state.pilotId }), center, LINE_Y);
     p.fill(STEEL);
     p.text(t("gameOver.pressEnter"), center, PRESS_ENTER_Y);
-  }
-
-  private drawStamp(): void {
-    const { p } = this;
-    const word = t("gameOver.stamp");
-
-    p.push();
-    p.translate(STAMP_CENTER.x, STAMP_CENTER.y);
-    p.rotate(STAMP_ANGLE);
-    p.textSize(STAMP_SIZE);
-    p.textAlign(p.CENTER, p.CENTER);
-
-    p.noFill();
-    p.stroke(RED);
-    p.strokeWeight(3);
-    p.rectMode(p.CENTER);
-    p.rect(0, 0, p.textWidth(word) + STAMP_PADDING * 2, STAMP_HEIGHT);
-
-    p.noStroke();
-    p.fill(RED);
-    p.text(word, 0, 0);
-    p.pop();
   }
 }

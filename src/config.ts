@@ -238,6 +238,8 @@ export const VIGNETTE_ALPHA = 0.5;
 export const TYPEWRITER_CPF = 1;
 // A red strike-through grows left to right over this long, so the player watches the word go.
 export const STRIKE_FRAMES = 15;
+// The struck real score slides into the memory hole over this long, fading as it goes.
+export const SLIDE_FRAMES = 45;
 export const CURSOR_BLINK_FRAMES = 30;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;

@@ -146,7 +146,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `player-bank-*.png` | Use while the horizontal input is held. | — | 1 |
 | `launch-platform.png` | **Runway lamps:** light the sockets from the JSON in `#e0503a`, chasing toward the direction of travel (forward on takeoff, backward on landing). | — | 4 |
 | `officer-portrait.png` | Briefing text next to it (Courier Prime); colder lines as the Ministry's verdict worsens. | Thin frame, rank caption. | 3, 4 |
-| `memory-hole.png` | The crossed-out real score slides into the slot before the official one is typed. | Papers fluttering into the slot. | 4 |
+| `memory-hole.png` | Shown at 2×, cut above the floor. The crossed-out real score slides into the slot (the burning window) before the official one is typed. | Papers fluttering into the slot. | 4 |
 | `pause-telescreen.png` | "PAUSED" in VT323. | Suspicion creeps up slowly while paused. | 5 |
 
 ## Drawn entirely with p5

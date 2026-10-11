@@ -12,7 +12,6 @@ import {
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
-  LANDING_HOLD_FRAMES,
   LANDING_LEAD,
   PAPER,
   PLAYER_SPAWN,
@@ -37,10 +36,9 @@ import { anchorNear, streetColumns } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
-import { DictionaryScene } from "./DictionaryScene";
 import { GameScene } from "./GameScene";
 import { GameOverScene } from "./GameOverScene";
-import { MenuScene } from "./MenuScene";
+import { MinistryScene } from "./MinistryScene";
 
 // Each image is stood in for by its own name; nothing here draws.
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
@@ -365,7 +363,7 @@ describe("GameScene collisions", () => {
       expect(state.realLives).toBe(STARTING_LIVES - 1);
     });
 
-    it("has the Ministry judge the level, then opens the next level's Dictionary once landed", () => {
+    it("has the Ministry judge the level once the plane has landed", () => {
       const change = vi.spyOn(manager, "change");
       scene["bossDown"] = true;
       // An unremarkable level: obedience 1, so the record keeps the score as it was.
@@ -375,9 +373,12 @@ describe("GameScene collisions", () => {
 
       expect(scene["flight"].landed).toBe(true);
       expect(scene["flight"].scroll).toBe(parked);
-      expect(state.level).toBe(2);
+      expect(state.level).toBe(1);
       expect(state.officialScore).toBe(1000);
-      expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+      expect(change).toHaveBeenCalledWith(expect.any(MinistryScene));
+      expect(change.mock.calls[0][0]).toMatchObject({
+        report: { realScore: 1000, officialScore: 1000 },
+      });
     });
 
     it("can't be seen or shot at while the regime flies the plane", () => {
@@ -395,18 +396,6 @@ describe("GameScene collisions", () => {
       expect(eye.detecting).toBe(false);
       expect(state.suspicion).toBe(0);
       expect(scene["bullets"]).toHaveLength(0);
-    });
-
-    it("goes back to the Menu after the last level, until the endings exist", () => {
-      const change = vi.spyOn(manager, "change");
-      state.level = LEVELS.length;
-      scene["flight"].scroll = parked;
-      scene["flight"].speed = 0;
-      scene["flight"]["phase"] = "landing";
-
-      for (let i = 0; i < LANDING_HOLD_FRAMES; i++) scene.update();
-
-      expect(change).toHaveBeenCalledWith(expect.any(MenuScene));
     });
   });
 

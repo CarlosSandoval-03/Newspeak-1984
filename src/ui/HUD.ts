@@ -17,12 +17,11 @@ import {
 import { t } from "../i18n";
 import type { Propaganda, WordView } from "../systems/Propaganda";
 import type { BossKind } from "../types";
-import { Typewriter } from "./effects";
+import { scoreDigits, Typewriter } from "./effects";
 
 const MARGIN = 8;
 const RIGHT_EDGE = 472;
 const TOP_BASELINE = 20;
-const SCORE_DIGITS = 6;
 const SECOND_BASELINE = 42;
 const METER = { x: 88, y: 32, w: 120, h: 8 };
 const STATE_X = 216;
@@ -97,10 +96,7 @@ export class HUD {
 
   private scoreLine(): void {
     const { p, propaganda } = this;
-    const score = String(propaganda.displayedScore()).padStart(
-      SCORE_DIGITS,
-      "0",
-    );
+    const score = scoreDigits(propaganda.displayedScore());
 
     p.textAlign(p.LEFT, p.BASELINE);
     this.text(`${t("hud.score")} ${score}`, MARGIN, TOP_BASELINE);

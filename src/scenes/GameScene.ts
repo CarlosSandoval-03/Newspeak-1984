@@ -47,9 +47,8 @@ import { Suspicion } from "../systems/Suspicion";
 import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
-import { DictionaryScene } from "./DictionaryScene";
 import { GameOverScene } from "./GameOverScene";
-import { MenuScene } from "./MenuScene";
+import { MinistryScene } from "./MinistryScene";
 
 type Kill = Enemy | Turret | ThoughtPolice | LevelBoss;
 
@@ -189,13 +188,9 @@ export class GameScene implements Scene {
     this.manager.change(new GameOverScene(this.p, this.manager, this.p.get()));
   }
 
-  // The last level has no next one until the endings exist, so the run goes back to the Menu.
+  // Landed: the Ministry closes the level's file before anything else happens.
   private leaveLevel(): void {
-    judgeLevel();
-    if (state.level < LEVELS.length) {
-      state.level++;
-      this.manager.change(new DictionaryScene(this.p, this.manager));
-    } else this.manager.change(new MenuScene(this.p, this.manager));
+    this.manager.change(new MinistryScene(this.p, this.manager, judgeLevel()));
   }
 
   // Only a pilot with the stick acts. The bomb flash fades either way, and TRUTH's clock runs
