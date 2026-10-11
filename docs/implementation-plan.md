@@ -351,7 +351,11 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - The ground is out of reach: towers, drones, and AA guns stand below the blast. Otherwise a bomb would also blind every eye on screen, and REMEMBER would raise suspicion.
 - The screen flashes paper (`BOMB_FLASH_ALPHA` 0.7) and fades back over `BOMB_FLASH_FRAMES` (24), drawn over the explosions and under the vignette and the HUD.
 
-**Camouflaged enemies** (new `camo` flag on `Enemy`): drawn at very low alpha. They become fully visible while TRUTH is active. They appear from level 2 on.
+**Decision:** TRUTH (`V`, while the pilot flies) lasts `TRUTH_DURATION_FRAMES` (180, 270, 360 frames at levels 1–3), read when it is called. Its cooldown, `TRUTH_COOLDOWN_FRAMES` (480), starts when the truth fades, so a longer TRUTH never shortens the wait. Calling it again while it lasts does nothing. `Newspeak` owns its clock (`truthActive`), so the words row and, in step 5, `Propaganda` read it there.
+
+**Camouflaged enemies** (`camo: true` on a wave, a `camo` flag on `Enemy`): drawn with their shadow at `CAMO_ALPHA` (12%), a faint shimmer. Only the look changes: they still fly, fire, and can be hit, and their bullets show where they are. Each tick the scene marks every enemy `revealed` while TRUTH is active, and a revealed one is drawn in full. They appear from level 2 on, and the level tests keep them out of level 1.
+
+**Decision:** until step 4 writes the real levels, level 2 is a stand-in: level 1 again with its fighter waves at 660, 1560, and 2280 camouflaged. Its FREE pickups now come crossed out, so the temptation can be tested too.
 
 **Removal** (`Newspeak.applyLevel(level)`)
 

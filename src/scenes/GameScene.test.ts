@@ -352,6 +352,35 @@ describe("GameScene collisions", () => {
     });
   });
 
+  it("flies level 2's camouflaged waves in camouflage", () => {
+    state.level = 2;
+    const level2 = new GameScene({ get: () => ({}) } as unknown as p5, manager);
+    manager.change(level2);
+    const wave = LEVELS[1].waves.find((wave) => wave.camo)!;
+    // The waves before it come and are cleared first, so only this one is left to look at.
+    level2["scroll"] = wave.at - 1;
+    level2.update();
+    level2["enemies"] = [];
+
+    level2.update();
+
+    expect(level2["enemies"]).toHaveLength(wave.count);
+    expect(level2["enemies"].every((enemy) => enemy.camo)).toBe(true);
+  });
+
+  it("reveals camouflaged enemies while TRUTH is active, with V", () => {
+    state.wordLevels.TRUTH = 1;
+    const enemy = enemyAt("straight", { x: 100, y: 100 });
+    enemy.camo = true;
+
+    scene.update();
+    expect(enemy.revealed).toBe(false);
+
+    keys.dispatchEvent(Object.assign(new Event("keydown"), { code: "KeyV" }));
+    scene.update();
+    expect(enemy.revealed).toBe(true);
+  });
+
   describe("pickups", () => {
     const pickupAt = (pos: Vec) => {
       const pickup = new Pickup("FREE", pos, {} as p5.Font);

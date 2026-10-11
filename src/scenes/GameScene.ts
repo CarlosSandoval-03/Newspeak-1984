@@ -79,7 +79,7 @@ export class GameScene implements Scene {
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);
     this.spawner = new Spawner(level, {
-      enemy: (kind, pos, drops) => {
+      enemy: (kind, pos, { drops, camo }) => {
         const enemy = new Enemy(
           kind,
           pos,
@@ -88,6 +88,7 @@ export class GameScene implements Scene {
           fire,
         );
         enemy.drops = drops;
+        enemy.camo = camo;
         this.enemies.push(enemy);
       },
       eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),
@@ -123,13 +124,19 @@ export class GameScene implements Scene {
       this.manager.input.wasPressed("bomb")
     )
       this.bomb();
+    this.newspeak.update();
+    if (this.player.alive && this.manager.input.wasPressed("truth"))
+      this.newspeak.revealTruth();
     this.spawner.update(
       this.scroll,
       state.alertLevel,
       this.police?.holding ?? false,
     );
 
-    for (const enemy of this.enemies) enemy.update();
+    for (const enemy of this.enemies) {
+      enemy.update();
+      enemy.revealed = this.newspeak.truthActive;
+    }
     this.police?.update();
     for (const eye of this.eyes) eye.update();
     for (const turret of this.turrets) turret.update();

@@ -97,6 +97,11 @@ export const BOMB_BOSS_DAMAGE = 10;
 // The screen flashes paper and fades back, the moment the pilot remembers.
 export const BOMB_FLASH_FRAMES = 24;
 export const BOMB_FLASH_ALPHA = 0.7;
+// TRUTH: how long the truth is seen at each upgrade level from 1, then how long until it can be again.
+export const TRUTH_DURATION_FRAMES = [180, 270, 360];
+export const TRUTH_COOLDOWN_FRAMES = 480;
+// A camouflaged enemy is a faint shimmer unless TRUTH shows it.
+export const CAMO_ALPHA = 0.12;
 // FREE's volley at each upgrade level, from dormant (0) up: degrees off straight ahead, one bullet each.
 export const FREE_SPREAD_DEGREES = [
   [0],

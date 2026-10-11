@@ -33,6 +33,13 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
       }
     });
 
+    it("hides enemies in camouflage only from level 2 on", () => {
+      const camouflaged = level.waves.filter((wave) => wave.camo);
+
+      if (number === 1) expect(camouflaged).toEqual([]);
+      else expect(camouflaged.length).toBeGreaterThan(0);
+    });
+
     it("keeps every pickup on screen", () => {
       for (const pickup of level.pickups) {
         expect(pickup.x - PICKUP_RADIUS).toBeGreaterThanOrEqual(0);

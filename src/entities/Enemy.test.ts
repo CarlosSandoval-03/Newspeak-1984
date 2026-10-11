@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  CAMO_ALPHA,
   ALERT_FIRE_MULT,
   BOMBER_FAN_COUNT,
   BOMBER_FAN_SPREAD_DEGREES,
@@ -163,6 +164,34 @@ describe("Enemy", () => {
     ticks(enemy, HIT_FLASH_FRAMES);
     enemy.draw(p);
     expect(lastSprite()).toBe("enemy-bomber");
+  });
+
+  it("is a faint shimmer when camouflaged, unless revealed", () => {
+    const context = { globalAlpha: 1 };
+    const alphas: number[] = [];
+    const p = {
+      CENTER: "center",
+      imageMode: () => {},
+      image: () => alphas.push(context.globalAlpha),
+      drawingContext: context,
+    } as unknown as p5;
+    const enemy = make("straight");
+    const drawn = () => {
+      alphas.length = 0;
+      enemy.draw(p);
+      // The shadow, then the ship.
+      return alphas;
+    };
+
+    expect(drawn()[1]).toBe(1);
+
+    enemy.camo = true;
+    expect(drawn()[1]).toBe(CAMO_ALPHA);
+    expect(drawn()[0]).toBeLessThan(CAMO_ALPHA);
+
+    enemy.revealed = true;
+    expect(drawn()[1]).toBe(1);
+    expect(context.globalAlpha).toBe(1);
   });
 
   it("dies when its hp runs out", () => {

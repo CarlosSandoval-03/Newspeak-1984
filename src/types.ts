@@ -42,6 +42,8 @@ export interface WaveDef {
   spacing: number;
   // Carried by the wave's last enemy, and dropped only if it is shot down.
   drops?: Word;
+  // Nearly invisible unless TRUTH is active; from level 2 on.
+  camo?: boolean;
 }
 
 // Falls in from the top edge at `x`, like a drone, since it is not on the ground.

@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   PICKUP_BONUS_SCORE,
   REMOVED_PICKUP_SUSPICION,
+  TRUTH_COOLDOWN_FRAMES,
+  TRUTH_DURATION_FRAMES,
   WORD_MAX_LEVEL,
 } from "../config";
 import { resetGame, state } from "../state";
@@ -92,6 +94,60 @@ describe("Newspeak", () => {
       expect(state.wordLevels.FREE).toBe(0);
       expect(state.realScore).toBe(0);
       expect(state.suspicion).toBe(REMOVED_PICKUP_SUSPICION);
+    });
+  });
+
+  describe("TRUTH", () => {
+    const ticks = (n: number) => {
+      for (let i = 0; i < n; i++) newspeak.update();
+    };
+
+    it("shows nothing while the word sleeps, or once it is removed", () => {
+      newspeak.revealTruth();
+      expect(newspeak.truthActive).toBe(false);
+
+      state.wordLevels.TRUTH = 1;
+      state.words.delete("TRUTH");
+      newspeak.revealTruth();
+      expect(newspeak.truthActive).toBe(false);
+    });
+
+    it("lasts longer at each upgrade", () => {
+      for (let level = 1; level <= TRUTH_DURATION_FRAMES.length; level++) {
+        newspeak = new Newspeak(new Suspicion());
+        state.wordLevels.TRUTH = level;
+
+        newspeak.revealTruth();
+        ticks(TRUTH_DURATION_FRAMES[level - 1] - 1);
+        expect(newspeak.truthActive, `level ${level}`).toBe(true);
+        ticks(1);
+        expect(newspeak.truthActive, `level ${level}`).toBe(false);
+      }
+    });
+
+    it("waits out its cooldown from when the truth fades", () => {
+      state.wordLevels.TRUTH = 1;
+      newspeak.revealTruth();
+      ticks(TRUTH_DURATION_FRAMES[0]);
+
+      ticks(TRUTH_COOLDOWN_FRAMES - 1);
+      newspeak.revealTruth();
+      expect(newspeak.truthActive).toBe(false);
+
+      ticks(1);
+      newspeak.revealTruth();
+      expect(newspeak.truthActive).toBe(true);
+    });
+
+    it("can't be stretched by asking again while it lasts", () => {
+      state.wordLevels.TRUTH = 1;
+      newspeak.revealTruth();
+      ticks(TRUTH_DURATION_FRAMES[0] - 1);
+
+      newspeak.revealTruth();
+      ticks(1);
+
+      expect(newspeak.truthActive).toBe(false);
     });
   });
 });

@@ -36,11 +36,13 @@ export abstract class Entity {
 
   // Integer positions keep pixel art crisp; the shadow goes first so the aircraft covers it.
   // `turn` rotates a sprite drawn facing down; the shadow keeps its offset, since the sun doesn't turn.
+  // `alpha` fades the aircraft and its shadow together.
   protected drawAircraft(
     p: p5,
     sprite: p5.Image,
     shadow: p5.Image,
     turn = 0,
+    alpha = 1,
   ): void {
     const x = Math.round(this.pos.x);
     const y = Math.round(this.pos.y);
@@ -49,11 +51,11 @@ export abstract class Entity {
     p.imageMode(p.CENTER);
 
     // globalAlpha instead of tint(): tint rebuilds the image on every call.
-    context.globalAlpha = SHADOW_ALPHA;
+    context.globalAlpha = SHADOW_ALPHA * alpha;
     blit(p, shadow, x + SHADOW_OFFSET.x, y + SHADOW_OFFSET.y, turn);
-    context.globalAlpha = 1;
-
+    context.globalAlpha = alpha;
     blit(p, sprite, x, y, turn);
+    context.globalAlpha = 1;
   }
 }
 

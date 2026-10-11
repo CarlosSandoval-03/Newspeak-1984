@@ -22,7 +22,11 @@ import {
 
 type Spawn = {
   // `drops` is the word the enemy lets fall when shot down, if any.
-  enemy: (kind: EnemyKind, pos: Vec, drops: Word | null) => void;
+  enemy: (
+    kind: EnemyKind,
+    pos: Vec,
+    traits: { drops: Word | null; camo: boolean },
+  ) => void;
   eye: (def: EyeDef, pos: Vec) => void;
   turret: (pos: Vec) => void;
   pickup: (word: Word, pos: Vec) => void;
@@ -83,7 +87,10 @@ export class Spawner {
             x: wave.x + column * wave.spacing,
             y: -half - row * (half * 2 + REINFORCEMENT_GAP),
           },
-          i === total - 1 ? (wave.drops ?? null) : null,
+          {
+            drops: i === total - 1 ? (wave.drops ?? null) : null,
+            camo: wave.camo ?? false,
+          },
         );
       }
     }
@@ -95,7 +102,7 @@ export class Spawner {
       this.spawn.enemy(
         "homing",
         { x: half + Math.random() * (CANVAS_WIDTH - half * 2), y: -half },
-        null,
+        { drops: null, camo: false },
       );
     }
 

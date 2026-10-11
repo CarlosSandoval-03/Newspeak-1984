@@ -2,6 +2,7 @@ import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
   ALERT_FIRE_MULT,
+  CAMO_ALPHA,
   BOMBER_FAN_COUNT,
   BOMBER_FAN_SPREAD_DEGREES,
   BOMBER_FIRE_INTERVAL,
@@ -56,6 +57,10 @@ export class Enemy extends Entity {
   readonly score: number;
   // Let fall where it is shot down; a crash takes the word down with it.
   drops: Word | null = null;
+  // Only its look changes: a camouflaged enemy still flies, fires, and can be hit.
+  camo = false;
+  // Set by the scene while TRUTH is active.
+  revealed = false;
   private hp: number;
   private readonly startX: number;
   private age = 0;
@@ -159,6 +164,7 @@ export class Enemy extends Entity {
       this.images[body],
       this.images[`${sprite}-shadow`],
       turn,
+      this.camo && !this.revealed ? CAMO_ALPHA : 1,
     );
     if (this.kind === "homing") this.drawRotor(p, turn);
   }

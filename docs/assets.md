@@ -135,7 +135,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `boss-eye.png` | **Pupil**: a `#1a1a1a` circle over the lens, shifted toward the player. | Pupil narrows as hp drops. | 4 |
 | `boss-landship.png` | — (scrolls with the ground). | Muzzle flash on the main cannon. | 4 |
 | `diary.png` | ~60% alpha. | One-pixel glint every few seconds. | 3 |
-| `enemy-fighter.png` (camo) | Very low alpha unless TRUTH is active. | — | 3 |
+| `enemy-fighter.png` (camo) | 12% alpha, shadow included, unless TRUTH is active. | — | 3 |
 | `dictionary-cover.png` | Heading and edition (`DICTIONARY OF NEWSPEAK`, `ELEVENTH EDITION`) and word list with red strike-throughs, in Courier Prime. | — | 3 |
 | Endings | Text typed below the illustration; the rebel ending also shows the diary pages read. | — | 4 |
 | `diary.png` (pickup) | One line of the page typed at the bottom of the screen on a leather band, without pausing. | — | 3 |

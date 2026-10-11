@@ -48,7 +48,7 @@ describe("Spawner", () => {
     turrets = [];
     pickups = [];
     spawner = new Spawner(level, {
-      enemy: (kind, pos, drops) => spawned.push({ kind, pos, drops }),
+      enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
       eye: (def, pos) => watching.push({ def, pos }),
       turret: (pos) => turrets.push(pos),
       pickup: (word, pos) => pickups.push({ word, pos }),
@@ -215,7 +215,7 @@ describe("Spawner", () => {
         vi.spyOn(Math, "random").mockReturnValue(roll);
         spawned = [];
         new Spawner(level, {
-          enemy: (kind, pos, drops) => spawned.push({ kind, pos, drops }),
+          enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
           eye: () => {},
           turret: () => {},
           pickup: () => {},
@@ -242,6 +242,27 @@ describe("Spawner", () => {
     expect(
       spawned.filter(({ kind }) => kind === "bomber").map(({ drops }) => drops),
     ).toEqual([null, "FREE"]);
+  });
+
+  it("camouflages every enemy of a wave marked so, and only those", () => {
+    const camo: boolean[] = [];
+    new Spawner(
+      {
+        ...level,
+        waves: [
+          { at: 0, kind: "straight", count: 2, x: 50, spacing: 40, camo: true },
+          { at: 0, kind: "sine", count: 1, x: 200, spacing: 0 },
+        ],
+      },
+      {
+        enemy: (_kind, _pos, traits) => camo.push(traits.camo),
+        eye: () => {},
+        turret: () => {},
+        pickup: () => {},
+      },
+    ).update(0, ALERT.alert);
+
+    expect(camo).toEqual([true, true, true, false, false]);
   });
 
   it("drops a pickup in above the top edge when the scroll reaches it", () => {

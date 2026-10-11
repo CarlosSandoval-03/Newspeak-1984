@@ -1,6 +1,8 @@
 import {
   PICKUP_BONUS_SCORE,
   REMOVED_PICKUP_SUSPICION,
+  TRUTH_COOLDOWN_FRAMES,
+  TRUTH_DURATION_FRAMES,
   WORD_MAX_LEVEL,
   WORD_REMOVAL_ORDER,
 } from "../config";
@@ -16,9 +18,30 @@ export function removedAt(level: number): Word | null {
 // Owns which words the pilot still has, and what they are worth.
 export class Newspeak {
   private readonly suspicion: Suspicion;
+  private truthFrames = 0;
+  private truthCooldown = 0;
 
   constructor(suspicion: Suspicion) {
     this.suspicion = suspicion;
+  }
+
+  get truthActive(): boolean {
+    return this.truthFrames > 0;
+  }
+
+  // The cooldown starts once the truth fades, so a longer TRUTH never shortens the wait.
+  update(): void {
+    if (this.truthFrames > 0) {
+      if (--this.truthFrames === 0) this.truthCooldown = TRUTH_COOLDOWN_FRAMES;
+    } else if (this.truthCooldown > 0) this.truthCooldown--;
+  }
+
+  // Only an awake TRUTH shows anything, and only once it is ready again.
+  revealTruth(): void {
+    const level = state.words.has("TRUTH") ? state.wordLevels.TRUTH : 0;
+    if (level === 0 || this.truthActive || this.truthCooldown > 0) return;
+
+    this.truthFrames = TRUTH_DURATION_FRAMES[level - 1];
   }
 
   // Takes every word due by this level, not just this level's, so a run can start from any level.
