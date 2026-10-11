@@ -5,8 +5,10 @@ import {
   BOMB_BOSS_DAMAGE,
   BOMB_FLASH_ALPHA,
   BOMB_FLASH_FRAMES,
+  BOSS_STATS,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  CELL_SIZE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
@@ -29,6 +31,7 @@ import {
 import { circlesOverlap } from "../core/Collisions";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
+import { LevelBoss } from "../entities/Boss";
 import type { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
@@ -39,6 +42,7 @@ import { Player } from "../entities/Player";
 import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { Background } from "../levels/Background";
+import { streetColumns } from "../levels/layout";
 import { currentStrings } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { record, resetLevelState, state } from "../state";
@@ -71,6 +75,8 @@ export class GameScene implements Scene {
   private eyes: Eye[] = [];
   private turrets: Turret[] = [];
   private police: ThoughtPolice | null = null;
+  private boss: LevelBoss | null = null;
+  private bossDown = false;
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
@@ -194,6 +200,7 @@ export class GameScene implements Scene {
       enemy.revealed = this.newspeak.truthActive;
     }
     this.police?.update();
+    this.boss?.update();
     for (const eye of this.eyes) eye.update();
     for (const turret of this.turrets) turret.update();
     for (const bullet of this.bullets) bullet.update();
@@ -219,18 +226,21 @@ export class GameScene implements Scene {
       this.police = null;
       this.suspicion.release();
     }
-    if (!this.police && state.alertLevel === ALERT.thoughtPolice)
+    if (this.boss && !this.boss.alive) {
+      this.boss = null;
+      this.bossDown = true;
+    }
+    // Never once the city has stopped: the end of a level belongs to its boss.
+    const end = this.scroll >= this.level.length;
+    if (!this.police && !end && state.alertLevel === ALERT.thoughtPolice)
       this.summonPolice();
 
-    // Once the sky is clear at the city's end; never mid-fight with the Thought Police.
-    if (
-      this.flying &&
-      this.player.alive &&
-      this.scroll >= this.level.length &&
-      this.enemies.length === 0 &&
-      !this.police
-    )
-      this.startLanding();
+    // The boss waits for the Thought Police to go; the landing, for the boss and the last enemy.
+    if (this.flying && end && !this.police) {
+      if (!this.boss && !this.bossDown) this.summonBoss();
+      if (this.bossDown && this.player.alive && this.enemies.length === 0)
+        this.startLanding();
+    }
     this.scroll += this.speed;
   }
 
@@ -240,9 +250,11 @@ export class GameScene implements Scene {
     this.background.draw(this.scroll);
     this.diary?.draw(p);
     for (const turret of this.turrets) turret.draw(p);
+    if (this.boss?.def.ground) this.boss.draw(p);
     for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
     this.police?.draw(p);
+    if (this.boss && !this.boss.def.ground) this.boss.draw(p);
     for (const pickup of this.pickups) pickup.draw(p);
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
@@ -256,7 +268,14 @@ export class GameScene implements Scene {
       context.globalAlpha = 1;
     }
     this.vignette.draw();
-    this.hud.draw(this.police?.health ?? null);
+    const { police, boss } = this;
+    this.hud.draw(
+      police
+        ? { health: police.health, regime: true }
+        : boss
+          ? { health: boss.health, regime: boss.def.regime }
+          : null,
+    );
   }
 
   exit(): void {}
@@ -318,7 +337,7 @@ export class GameScene implements Scene {
   }
 
   // Clears what is on screen: every enemy aircraft, each one a kill, and every shot but the pilot's;
-  // the Thought Police only take a heavy blow. Enemies still above the top edge come through, and the
+  // the Thought Police and the bosses only take a heavy blow. Enemies still above the top edge come through, and the
   // ground is out of reach: towers, drones, and guns stand below the blast.
   private bomb(): void {
     state.bombs--;
@@ -332,13 +351,40 @@ export class GameScene implements Scene {
     for (const bullet of this.bullets)
       if (bullet.owner !== "player") bullet.alive = false;
 
-    const { police } = this;
+    const { police, boss } = this;
     if (
       police &&
       !police.isOffscreen(THOUGHT_POLICE_STATS.halfSize) &&
       police.hit(BOMB_BOSS_DAMAGE)
     )
       this.kill(police);
+    if (
+      boss &&
+      !boss.isOffscreen(boss.def.halfSize) &&
+      boss.hit(BOMB_BOSS_DAMAGE)
+    )
+      this.kill(boss);
+  }
+
+  // A ground boss rides the vertical street nearest the middle of the screen.
+  private summonBoss(): void {
+    const { boss: kind, terrain } = this.level;
+    const middle = CANVAS_WIDTH / 2;
+    const x = BOSS_STATS[kind].ground
+      ? streetColumns(terrain.seed)
+          .map((column) => (column + 0.5) * CELL_SIZE)
+          .reduce((best, x) =>
+            Math.abs(x - middle) < Math.abs(best - middle) ? x : best,
+          )
+      : middle;
+
+    this.boss = new LevelBoss(
+      kind,
+      x,
+      () => this.player.pos,
+      this.images,
+      this.fire,
+    );
   }
 
   // Suspicion stays at the top while they hold the sky, so they come once until they're gone.
@@ -380,6 +426,7 @@ export class GameScene implements Scene {
     const targets = [
       ...this.enemies,
       ...(this.police ? [this.police] : []),
+      ...(this.boss ? [this.boss] : []),
       ...this.turrets,
       ...this.eyes,
     ];
@@ -417,10 +464,15 @@ export class GameScene implements Scene {
       this.hitPlayer();
     }
 
-    // Ramming the Thought Police costs a life and leaves them flying.
-    const { police } = this;
-    if (police?.alive && exposed() && circlesOverlap(police, player))
-      this.hitPlayer();
+    // Ramming the Thought Police or an air boss costs a life and leaves them flying.
+    for (const giant of [this.police, this.boss])
+      if (
+        giant?.alive &&
+        !(giant instanceof LevelBoss && giant.def.ground) &&
+        exposed() &&
+        circlesOverlap(giant, player)
+      )
+        this.hitPlayer();
 
     const { diary } = this;
     if (diary?.alive && player.alive && circlesOverlap(diary, player)) {
@@ -437,10 +489,18 @@ export class GameScene implements Scene {
     }
   }
 
-  private kill(target: Enemy | Turret | ThoughtPolice): void {
+  private kill(target: Enemy | Turret | ThoughtPolice | LevelBoss): void {
     state.realScore += target.score;
     record("kills");
-    if (target instanceof ThoughtPolice)
+    if (target instanceof LevelBoss)
+      this.explosions.push(
+        new Explosion(
+          target.pos,
+          target.def.halfSize * 2,
+          target.def.regime ? RED : PAPER,
+        ),
+      );
+    else if (target instanceof ThoughtPolice)
       this.explosions.push(
         new Explosion(target.pos, THOUGHT_POLICE_STATS.halfSize * 2, RED),
       );

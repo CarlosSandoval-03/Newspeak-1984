@@ -25,7 +25,7 @@ describe("HUD", () => {
 
   const draw = (
     shown: Partial<Propaganda>,
-    bossHealth: number | null = null,
+    boss: { health: number; regime: boolean } | null = null,
     prepare: (hud: HUD) => void = () => {},
   ) => {
     const text = vi.fn();
@@ -62,7 +62,7 @@ describe("HUD", () => {
 
     const hud = new HUD(p, {} as Assets["font"], propaganda);
     prepare(hud);
-    hud.draw(bossHealth);
+    hud.draw(boss);
     return {
       shown: text.mock.calls.map((call) => call[0]),
       rects,
@@ -96,16 +96,17 @@ describe("HUD", () => {
     expect(red(100)).toBe(118);
   });
 
-  it("shows a red boss bar only while a boss is on screen", () => {
-    const reds = (bossHealth: number | null) =>
-      draw({}, bossHealth)
-        .rects.filter((rect) => rect.color === RED)
-        .map((rect) => rect.w);
+  it("shows a boss bar only while a boss is on screen, red for the regime's own", () => {
+    const bars = (boss: { health: number; regime: boolean } | null) =>
+      draw({}, boss)
+        .rects.filter((rect) => rect.y === 50 && rect.color !== INK)
+        .map(({ color, w }) => ({ color, w }));
 
-    // The meter's empty red fill is always there; the bar comes on top of it.
-    expect(reds(null)).toEqual([0]);
-    expect(reds(1)).toEqual([0, 464]);
-    expect(reds(0.5)).toEqual([0, 232]);
+    expect(bars(null)).toEqual([]);
+    expect(bars({ health: 1, regime: true })).toEqual([{ color: RED, w: 464 }]);
+    expect(bars({ health: 0.5, regime: false })).toEqual([
+      { color: PAPER, w: 232 },
+    ]);
   });
 
   describe("the words row", () => {

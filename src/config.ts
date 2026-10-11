@@ -1,4 +1,4 @@
-import type { EnemyKind, EyeType, Word } from "./types";
+import type { BossDef, BossKind, EnemyKind, EyeType, Word } from "./types";
 
 export const CANVAS_WIDTH = 480;
 export const CANVAS_HEIGHT = 640;
@@ -257,6 +257,161 @@ export const THOUGHT_POLICE_FAN_DEGREES = 90;
 export const THOUGHT_POLICE_TIMEOUT = 1200;
 // Where suspicion settles once they are killed or outlasted: still on alert, short of pursuit.
 export const THOUGHT_POLICE_RESET = 50;
+// The level bosses, one per level. Each drops in at BOSS_ENTRY_SPEED and only fires once in place;
+// its later phases, as its hp runs low, fire wider and more often.
+export const BOSS_ENTRY_SPEED = 1;
+export const BOSS_STATS: Record<BossKind, BossDef> = {
+  fortress: {
+    halfSize: 64,
+    radius: 44,
+    hp: 120,
+    score: 5000,
+    ground: false,
+    regime: false,
+    hoverY: 120,
+    sway: { amp: 100, period: 420 },
+    phases: [
+      {
+        from: 1,
+        interval: 50,
+        volleys: [
+          { aim: "player", count: 3, spread: 16 },
+          { aim: "down", count: 5, spread: 60 },
+        ],
+      },
+      {
+        from: 0.3,
+        interval: 35,
+        volleys: [
+          { aim: "player", count: 5, spread: 24 },
+          { aim: "down", count: 9, spread: 120 },
+        ],
+      },
+    ],
+  },
+  // Slow and tall, it floods the screen with wide fans.
+  airship: {
+    halfSize: 80,
+    radius: 40,
+    hp: 160,
+    score: 6000,
+    ground: false,
+    regime: false,
+    hoverY: 130,
+    sway: { amp: 60, period: 600 },
+    phases: [
+      {
+        from: 1,
+        interval: 70,
+        volleys: [
+          { aim: "down", count: 7, spread: 100 },
+          { aim: "player", count: 1, spread: 0 },
+        ],
+      },
+      {
+        from: 0.3,
+        interval: 45,
+        volleys: [
+          { aim: "down", count: 11, spread: 140 },
+          { aim: "player", count: 3, spread: 12 },
+        ],
+      },
+    ],
+  },
+  // Its main cannon fires straight down the street it rides.
+  landship: {
+    halfSize: 64,
+    radius: 48,
+    hp: 150,
+    score: 7000,
+    ground: true,
+    regime: false,
+    hoverY: 150,
+    sway: { amp: 30, period: 480 },
+    phases: [
+      {
+        from: 1,
+        interval: 60,
+        volleys: [
+          { aim: "down", count: 3, spread: 10 },
+          { aim: "player", count: 3, spread: 20 },
+        ],
+      },
+      {
+        from: 0.3,
+        interval: 40,
+        volleys: [
+          { aim: "down", count: 5, spread: 20 },
+          { aim: "player", count: 5, spread: 30 },
+        ],
+      },
+    ],
+  },
+  // Wide and fast, it sweeps the whole screen.
+  wing: {
+    halfSize: 80,
+    radius: 44,
+    hp: 140,
+    score: 8000,
+    ground: false,
+    regime: false,
+    hoverY: 110,
+    sway: { amp: 150, period: 240 },
+    phases: [
+      {
+        from: 1,
+        interval: 45,
+        volleys: [{ aim: "down", count: 5, spread: 50 }],
+      },
+      {
+        from: 0.3,
+        interval: 30,
+        volleys: [
+          { aim: "down", count: 7, spread: 80 },
+          { aim: "player", count: 3, spread: 16 },
+        ],
+      },
+    ],
+  },
+  // The Party's own fortress: three phases, and red fire.
+  eye: {
+    halfSize: 80,
+    radius: 56,
+    hp: 250,
+    score: 10000,
+    ground: false,
+    regime: true,
+    hoverY: 140,
+    sway: { amp: 80, period: 500 },
+    phases: [
+      {
+        from: 1,
+        interval: 50,
+        volleys: [
+          { aim: "player", count: 3, spread: 16 },
+          { aim: "down", count: 9, spread: 140 },
+        ],
+      },
+      {
+        from: 0.6,
+        interval: 40,
+        volleys: [
+          { aim: "player", count: 5, spread: 24 },
+          { aim: "down", count: 11, spread: 160 },
+        ],
+      },
+      {
+        from: 0.3,
+        interval: 30,
+        volleys: [
+          { aim: "player", count: 5, spread: 24 },
+          { aim: "down", count: 13, spread: 180 },
+          { aim: "player", count: 3, spread: 8 },
+        ],
+      },
+    ],
+  },
+};
 // Each escort flies this far to one side of the Thought Police, and a little behind.
 export const ESCORT_OFFSET = { x: 80, y: 24 };
 export const ESCORT_FIRE_INTERVAL = 80;

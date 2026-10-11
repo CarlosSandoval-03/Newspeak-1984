@@ -449,7 +449,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the full loop Menu → Dictionary → Game → Ministry → … → Ending, in which the regime rewrites your score.
 
-**Progress:** every level starts with a takeoff: the plane sits parked on the eye of the Party's launch platform while the runway rolls under it, its lamps chasing forward, and it climbs once the lift-off line passes beneath it, its shadow drifting out to show the height. The pilot has no control and can't be hit until it is in the air. Each level now has a `length`: there the city stops, and once the sky is clear the regime flies the plane in. The landing platform comes down the screen, its lamps chasing toward the plane, which lines up with the runway, comes down at the touchdown line, and stops on the eye; then the next level's Dictionary opens, and after level 5 the Menu, until the endings exist. Ground things move at the city's speed, eyes can't see a plane the regime is flying, and guns hold their fire.
+**Progress:** every level starts with a takeoff: the plane sits parked on the eye of the Party's launch platform while the runway rolls under it, its lamps chasing forward, and it climbs once the lift-off line passes beneath it, its shadow drifting out to show the height. The pilot has no control and can't be hit until it is in the air. Each level now has a `length`: there the city stops, and once the sky is clear the regime flies the plane in. The landing platform comes down the screen, its lamps chasing toward the plane, which lines up with the runway, comes down at the touchdown line, and stops on the eye; then the next level's Dictionary opens, and after level 5 the Menu, until the endings exist. Ground things move at the city's speed, eyes can't see a plane the regime is flying, and guns hold their fire. When the city stops, the level's boss comes in: the flying fortress, the war zeppelin, the land battleship riding a street, the flying wing, and the Eye in red. Each sways and fires its phases' volleys in turn, wider and faster as its hp runs low, with an hp bar (paper, or red for the Eye) and a hit flash; a bomb takes `BOMB_BOSS_DAMAGE` from it, ramming an air boss costs a life, and the landing starts once it is down and the sky is clear.
 
 ### Files
 
@@ -459,8 +459,11 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Level end**
 
-- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss starts the landing (below), and the landing ends the level. This replaces the step 1 loop. Until the bosses exist, the landing starts at `length` once no enemy and no Thought Police are left.
+- Each `LevelDef` gets `length` (a scroll distance) and `boss`. Once the scroll reaches `length`, scrolling stops and the boss enters. Defeating the boss starts the landing (below), and the landing ends the level. This replaces the step 1 loop. The landing also waits for the last enemy to leave or fall.
 - **Bosses are data:** sprite, hp, hitbox, whether it is a ground boss (moves with the scroll and stands on an anchor, `on: 'railway'` for the land battleship) or an air boss, and a list of attack phases (for example: aimed bursts → spread fan → enrage below 30% hp). One `Boss` class runs any of them. Each level has its own sprite (see [assets.md](assets.md)).
+- **Decision:** the bosses' numbers live in `config.ts` as `BOSS_STATS`, one `BossDef` per `BossKind`, and `LevelDef.boss` names the kind, the way waves name enemy kinds. A volley is `count` bullets over `spread` degrees, aimed at the player or straight down; a phase starts once the hp share left falls to its `from`, and its volleys take turns every `interval` frames. Every boss drops in at `BOSS_ENTRY_SPEED` and only fires once in place. `LevelBoss` (in `entities/Boss.ts`) runs them, on the `Boss` base the Thought Police share.
+- **Decision:** until the layout has the railway, the land battleship rides the vertical street nearest the middle of the screen, swaying along it; a ground boss casts no shadow and can't be rammed. The stand-in levels 3–5 replay level 2 with their own bosses.
+- **Decision:** the Thought Police never come once the city has stopped at `length`; if they are already there, the boss waits for them to go.
 - **Progressive damage:** the boss shows its wounds hole by hole as it loses hp, never in one swap. Its `boss-*-damage.json` lists the damage regions in reveal order. At load, copy the clean sprite into a `p5.Graphics`. Whenever the number of regions that should be visible (`ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END))`, capped at `n`, where `DAMAGE_END` ≈ 0.2 is the hp fraction at which all damage is shown) grows, reveal the new ones: `erase()` the rect, `noErase()`, then draw that rect from `boss-*-damaged.png`. Draw the boss from the graphics. Work happens only when a region appears, never per frame. See [technical.md › Progressive damage](technical.md#progressive-damage).
 
 **Takeoff and landing** (`GameScene`, `entities/Player.ts`)
@@ -646,7 +649,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 3 | Plain `Vec` type instead of `p5.Vector` | 1 | Confirmed |
 | 4 | The control scheme in [gameplay.md › Controls](gameplay.md#controls) | 1 | Confirmed |
 | 5 | Game over: the `VAPORIZED` stamp, then `Enter` returns to the Menu; the run leaves no record | 1 | Confirmed |
-| 6 | Thought Police: suspicion frozen while they are on screen; killed or outlasted, it resets to 50; never during a boss; `AlertLevel` 3 | 2 | Confirmed |
+| 6 | Thought Police: suspicion frozen while they are on screen; killed or outlasted, it resets to 50; never once the city stops for the boss; `AlertLevel` 3 | 2 | Confirmed |
 | 7 | Eye vision ignores line of sight | 2 | Confirmed |
 | 8 | TRUTH is an active, timed ability | 3 | Confirmed |
 | 9 | 5 levels, one for each word in the removal order | 3 | Confirmed |

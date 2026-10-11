@@ -89,7 +89,36 @@ export interface TurretDef {
   x?: number;
 }
 
-// Later steps add the boss.
+export type BossKind = "fortress" | "airship" | "landship" | "wing" | "eye";
+
+// `count` bullets over `spread` degrees, centered on the player or straight down.
+export interface VolleyDef {
+  aim: "player" | "down";
+  count: number;
+  spread: number;
+}
+
+// A phase starts once the boss's share of hp left falls to `from`; its volleys take turns.
+export interface PhaseDef {
+  from: number;
+  interval: number;
+  volleys: VolleyDef[];
+}
+
+export interface BossDef {
+  halfSize: number;
+  radius: number;
+  hp: number;
+  score: number;
+  // A ground boss rides a street in and sways along it, under the plane; an air boss sways across the sky.
+  ground: boolean;
+  // The Party's own: red bullets and a red hp bar.
+  regime: boolean;
+  hoverY: number;
+  sway: { amp: number; period: number };
+  phases: PhaseDef[];
+}
+
 export interface LevelDef {
   terrain: TerrainDef;
   // The scroll distance at which the city stops and the level ends.
@@ -100,6 +129,8 @@ export interface LevelDef {
   pickups: PickupDef[];
   // On the skylight nearest `at`, so players learn where to look.
   diary: { at: number };
+  // Comes once the city stops at `length`; the landing waits for it to go down.
+  boss: BossKind;
 }
 
 // Ordered, because each level keeps the effects of the ones below it.

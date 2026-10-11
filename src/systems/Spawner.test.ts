@@ -25,6 +25,7 @@ const level: LevelDef = {
   // Level 1's recipe, so there are rooftops, and skylights for the diary.
   terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
   length: 100_000,
+  boss: "fortress",
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },

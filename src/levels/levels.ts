@@ -97,6 +97,7 @@ const LEVEL_1: LevelDef = {
   ],
   // Midway, once the first waves have taught the player to watch the rooftops.
   diary: { at: 1350 },
+  boss: "fortress",
 };
 
 // A stand-in until the real level 2 is written: level 1 again with three fighter waves camouflaged,
@@ -107,7 +108,15 @@ const LEVEL_2: LevelDef = {
   waves: LEVEL_1.waves.map((wave) =>
     CAMOUFLAGED.has(wave.at) ? { ...wave, camo: true } : wave,
   ),
+  boss: "airship",
 };
 
-// Levels 3 to 5 replay the stand-in too, so every removal can be played until step 4.
-export const LEVELS: LevelDef[] = [LEVEL_1, LEVEL_2, LEVEL_2, LEVEL_2, LEVEL_2];
+// Levels 3 to 5 replay the stand-in with their own bosses, so every removal and every boss can be
+// played until the real levels are written.
+export const LEVELS: LevelDef[] = [
+  LEVEL_1,
+  LEVEL_2,
+  { ...LEVEL_2, boss: "landship" },
+  { ...LEVEL_2, boss: "wing" },
+  { ...LEVEL_2, boss: "eye" },
+];

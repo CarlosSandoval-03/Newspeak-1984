@@ -69,8 +69,8 @@ export class HUD {
     else if (--this.diaryHold === 0) this.diary = null;
   }
 
-  // `bossHealth` is the boss's share of hp left, or null while no boss is on screen.
-  draw(bossHealth: number | null = null): void {
+  // `boss` is the share of hp left of whichever boss is on screen, and whether it is the Party's own.
+  draw(boss: { health: number; regime: boolean } | null = null): void {
     const { p, propaganda } = this;
     const score = String(propaganda.displayedScore()).padStart(
       SCORE_DIGITS,
@@ -101,13 +101,13 @@ export class HUD {
       SECOND_BASELINE,
     );
 
-    // Red, because so far the only boss is the regime's own.
-    if (bossHealth !== null) {
+    // Red belongs to the regime, so a foreign boss's bar is paper.
+    if (boss) {
       const { x, y, w, h } = BOSS_BAR;
       p.fill(INK);
       p.rect(x, y, w, h);
-      p.fill(RED);
-      p.rect(x, y, Math.round(w * bossHealth), h);
+      p.fill(boss.regime ? RED : PAPER);
+      p.rect(x, y, Math.round(w * boss.health), h);
     }
 
     this.words(propaganda.displayedWords());

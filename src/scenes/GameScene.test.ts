@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
   AIRFIELD_AT,
+  BOSS_STATS,
+  CANVAS_WIDTH,
+  CELL_SIZE,
   ALERT_SPAWN_MULT,
   DESCENT_DISTANCE,
   DIARY_BONUS_SCORE,
@@ -14,6 +17,7 @@ import {
   LANDING_HOLD_FRAMES,
   LANDING_LEAD,
   LIFTOFF_FRAMES,
+  PAPER,
   PLAYER_SPAWN,
   SCROLL_SPEED,
   STARTING_LIVES,
@@ -32,7 +36,7 @@ import { Diary } from "../entities/Diary";
 import { Eye } from "../entities/Eye";
 import { Pickup } from "../entities/Pickup";
 import { Turret } from "../entities/Turret";
-import { anchorNear } from "../levels/layout";
+import { anchorNear, streetColumns } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
@@ -265,8 +269,7 @@ describe("GameScene collisions", () => {
       scene["scroll"] = length;
     });
 
-    it("stops the city at the level's length, and lands once the sky is clear", () => {
-      const enemy = enemyAt("straight", { x: 100, y: 100 });
+    it("stops the city at the level's length and brings in the level's boss", () => {
       const turret = new Turret(
         { x: 300, y: 200 },
         () => PLAYER_SPAWN,
@@ -276,8 +279,26 @@ describe("GameScene collisions", () => {
       scene["turrets"].push(turret);
 
       scene.update();
+
       expect(scene["scroll"]).toBe(length);
       expect(turret.pos.y).toBe(200);
+      expect(scene["boss"]?.kind).toBe(LEVELS[0].boss);
+    });
+
+    it("lands only once the boss is down and the sky is clear", () => {
+      scene.update();
+      const boss = scene["boss"]!;
+      while (boss.pos.y < 0) scene.update();
+      const enemy = enemyAt("straight", { x: 100, y: 300 });
+      boss.hit(BOSS_STATS.fortress.hp - 1);
+      bulletAt("player", boss.pos);
+      const score = state.realScore;
+
+      scene.update();
+      expect(state.realScore - score).toBe(BOSS_STATS.fortress.score);
+      // A foreign boss bursts in paper; only the regime's own burn red.
+      expect(scene["explosions"].at(-1)!["color"]).toBe(PAPER);
+      expect(scene["boss"]).toBeNull();
       expect(scene["landing"]).toBe(false);
 
       enemy.alive = false;
@@ -288,20 +309,76 @@ describe("GameScene collisions", () => {
       expect(scene["bullets"].every((bullet) => !bullet.alive)).toBe(true);
     });
 
-    it("waits for the Thought Police to go before landing", () => {
+    it("keeps the boss waiting while the Thought Police hold the sky", () => {
+      scene["scroll"] = length - 1;
       scene["suspicion"].add(100);
       scene.update();
-      scene["enemies"] = [];
+      expect(scene["police"]).not.toBeNull();
+
+      scene.update();
+      expect(scene["boss"]).toBeNull();
+
+      scene["police"]!.alive = false;
+      scene.update();
+      scene.update();
+      expect(scene["boss"]).not.toBeNull();
+    });
+
+    it("never calls the Thought Police once the city has stopped", () => {
+      scene["suspicion"].add(100);
 
       scene.update();
 
-      expect(scene["landing"]).toBe(false);
+      expect(scene["police"]).toBeNull();
+    });
+
+    it("rides a ground boss in on the street nearest the middle", () => {
+      state.level = 3;
+      const level3 = new GameScene({ get: () => ({}) } as unknown as p5, manager);
+      manager.change(level3);
+      fly(level3);
+      level3["scroll"] = LEVELS[2].length;
+
+      level3.update();
+
+      const boss = level3["boss"]!;
+      expect(boss.def.ground).toBe(true);
+      const streets = streetColumns(LEVELS[2].terrain.seed).map(
+        (column) => (column + 0.5) * CELL_SIZE,
+      );
+      const off = (x: number) => Math.abs(x - CANVAS_WIDTH / 2);
+      expect(streets).toContain(boss.pos.x);
+      expect(off(boss.pos.x)).toBe(Math.min(...streets.map(off)));
+
+      // The plane flies over it, as over any ground.
+      while (boss.pos.y < 0) level3.update();
+      level3["player"].pos = { ...boss.pos };
+      level3.update();
+      expect(state.realLives).toBe(STARTING_LIVES);
+    });
+
+    it("takes a bomb as a heavy blow, and costs a life when rammed in the air", () => {
+      state.bombs = 1;
+      scene.update();
+      const boss = scene["boss"]!;
+      while (boss.pos.y < 0) scene.update();
+      scene["player"].pos = { ...boss.pos };
+      const health = boss.health;
+
+      keys.dispatchEvent(Object.assign(new Event("keydown"), { code: "KeyC" }));
+      scene.update();
+
+      expect(boss.health).toBeCloseTo(
+        health - BOMB_BOSS_DAMAGE / BOSS_STATS.fortress.hp,
+      );
+      expect(state.realLives).toBe(STARTING_LIVES - 1);
     });
 
     it("lines the plane up, touches down at the line, and stops it on the eye", () => {
       const change = vi.spyOn(manager, "change");
       const player = scene["player"];
       const touchdown = parked - (platform.touchdown.y - platform.park.y);
+      scene["bossDown"] = true;
       player.pos = { x: 60, y: 200 };
 
       let stoppedFor = 0;
