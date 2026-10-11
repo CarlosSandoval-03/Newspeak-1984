@@ -30,6 +30,36 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: dist
+      - if: startsWith(github.ref, 'refs/tags/v')
+        run: cp LICENSE dist/
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: game
+          path: dist
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      FOLDER: newspeak-1984-${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: game
+          path: ${{ env.FOLDER }}
+      - run: zip -r "$FOLDER.zip" "$FOLDER"
+      # Browsers refuse module scripts and font loads from file://, so the notes say how to serve it.
+      - run: >
+          gh release create "$GITHUB_REF_NAME" "$FOLDER.zip"
+          --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          --notes "To play offline, unzip and serve the folder, for example with
+          \`python3 -m http.server\` inside it, then open http://localhost:8000.
+          Opening index.html directly does not work."
 
   deploy:
     if: startsWith(github.ref, 'refs/tags/v')

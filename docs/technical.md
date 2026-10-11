@@ -26,7 +26,7 @@ newspeak-1984/
 ├── pnpm-workspace.yaml   # pnpm settings (saveExact)
 ├── .prettierrc           # Prettier with its defaults
 ├── .githooks/            # commit-msg, pre-commit
-├── .github/workflows/    # ci.yml: checks, and deploys tags to GitHub Pages
+├── .github/workflows/    # ci.yml: checks; tags deploy to GitHub Pages and publish a release zip
 ├── README.md             # project overview and how to run it
 ├── docs/                 # this documentation (start at docs/README.md)
 ├── bench/                # performance benchmarks: scenarios, the page that times them, the runner
@@ -314,7 +314,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 
 ### CI and deploy
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request: install with the frozen lockfile, typecheck, test, build. Pushing a `vX.Y.Z` tag runs the same checks, fails if the tag doesn't match the `package.json` version, and deploys `dist/` to GitHub Pages, so the published game is always a release.
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request: install with the frozen lockfile, typecheck, test, build. Pushing a `vX.Y.Z` tag runs the same checks, fails if the tag doesn't match the `package.json` version, deploys `dist/` to GitHub Pages, so the published game is always a release, and creates a GitHub Release with `dist/` and the license zipped as `newspeak-1984-vX.Y.Z.zip`, to play offline. The zip must be served (for example `python3 -m http.server` inside it), since browsers refuse module scripts and font loads from `file://`; the release notes say so.
 
 ```mermaid
 flowchart LR
@@ -323,6 +323,7 @@ flowchart LR
     matches -->|"no"| failed["CI fails"]
     matches -->|"yes"| release["Install, typecheck,<br/>test, build"]
     release --> deploy["Deploy dist/<br/>to GitHub Pages"]
+    release --> zip["GitHub Release<br/>with dist/ zipped"]
 ```
 
 One-time setup on GitHub:
