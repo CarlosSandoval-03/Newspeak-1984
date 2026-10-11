@@ -131,7 +131,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     },
     step: (scene) => {
       state.realLives = 9;
-      scene["scroll"] += 23;
+      scene["flight"].scroll += 23;
       scene["enemies"] = [];
       scene["eyes"] = [];
       scene["turrets"] = [];

@@ -6,14 +6,18 @@ import { Bullet } from "./Bullet";
 import { Destructible } from "./Destructible";
 import type { Arena } from "./Entity";
 
+type BossStats = Pick<BossDef, "halfSize" | "radius" | "hp" | "score">;
+
 // Shared by the Thought Police and every level boss: a score, a clock, and an hp bar to show.
 export abstract class Boss extends Destructible {
   readonly score: number;
+  readonly halfSize: number;
   protected age = 0;
 
-  constructor(pos: Vec, radius: number, hp: number, score: number) {
+  constructor(pos: Vec, { halfSize, radius, hp, score }: BossStats) {
     super(pos, radius, hp);
     this.score = score;
+    this.halfSize = halfSize;
   }
 
   update(): void {
@@ -35,7 +39,7 @@ export class LevelBoss extends Boss {
 
   constructor(kind: BossKind, x: number, arena: Arena) {
     const def = BOSS_STATS[kind];
-    super({ x, y: -def.halfSize }, def.radius, def.hp, def.score);
+    super({ x, y: -def.halfSize }, def);
 
     this.kind = kind;
     this.def = def;

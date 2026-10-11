@@ -453,7 +453,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Files
 
-`entities/Boss.ts` (level bosses), `systems/Ministry.ts`, `scenes/MinistryScene.ts`, `scenes/EndingScene.ts`, and updates to `entities/Player.ts` (altitude and autopilot), `levels/layout.ts` (the airfield), `levels/levels.ts`, `scenes/GameScene.ts`, `state.ts`, and `config.ts`.
+`entities/Boss.ts` (level bosses), `systems/Flight.ts` (the scroll, takeoff, and landing), `systems/Ministry.ts`, `scenes/MinistryScene.ts`, `scenes/EndingScene.ts`, and updates to `entities/Player.ts` (altitude and autopilot), `levels/layout.ts` (the airfield), `levels/levels.ts`, `scenes/GameScene.ts`, `state.ts`, and `config.ts`.
 
 ### Specification
 

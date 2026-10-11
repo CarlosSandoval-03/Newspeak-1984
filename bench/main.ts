@@ -82,9 +82,9 @@ if (!scenario) {
       scene = new GameScene(p, manager);
       manager.change(scene);
       // In the air at distance 0, as before takeoffs existed, so the timings stay comparable.
-      scene["flying"] = true;
-      scene["speed"] = SCROLL_SPEED;
-      scene["scroll"] = 0;
+      scene["flight"]["phase"] = "flying";
+      scene["flight"].speed = SCROLL_SPEED;
+      scene["flight"].scroll = 0;
       scene["player"].altitude = 1;
       scenario.setup?.(scene, pilot);
     };

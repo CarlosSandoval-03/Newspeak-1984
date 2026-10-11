@@ -26,8 +26,10 @@ export class ThoughtPolice extends Boss {
   private readonly arena: Arena;
 
   constructor(arena: Arena) {
-    const { halfSize, radius, hp, score } = THOUGHT_POLICE_STATS;
-    super({ x: CANVAS_WIDTH / 2, y: -halfSize }, radius, hp, score);
+    super(
+      { x: CANVAS_WIDTH / 2, y: -THOUGHT_POLICE_STATS.halfSize },
+      THOUGHT_POLICE_STATS,
+    );
 
     this.vel = { x: 0, y: THOUGHT_POLICE_SPEED };
     this.arena = arena;

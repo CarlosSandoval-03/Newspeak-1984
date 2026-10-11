@@ -2,12 +2,10 @@ import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
-  AIRFIELD_AT,
   BOSS_STATS,
   CANVAS_WIDTH,
   CELL_SIZE,
   ALERT_SPAWN_MULT,
-  DESCENT_DISTANCE,
   DIARY_BONUS_SCORE,
   BOMB_BOSS_DAMAGE,
   ENEMY_STATS,
@@ -16,7 +14,6 @@ import {
   GAME_OVER_DELAY,
   LANDING_HOLD_FRAMES,
   LANDING_LEAD,
-  LIFTOFF_FRAMES,
   PAPER,
   PLAYER_SPAWN,
   SCROLL_SPEED,
@@ -57,8 +54,8 @@ const platform: Assets["platform"] = {
 
 // Past the takeoff, with the stick, as most situations here need.
 function fly(scene: GameScene): void {
-  scene["flying"] = true;
-  scene["speed"] = SCROLL_SPEED;
+  scene["flight"]["phase"] = "flying";
+  scene["flight"].speed = SCROLL_SPEED;
   scene["player"].altitude = 1;
 }
 
@@ -122,33 +119,20 @@ describe("GameScene collisions", () => {
       manager.change(scene);
     });
 
-    it("rolls the runway under the parked plane, which climbs past the lift-off line", () => {
+    it("gives the pilot no stick and no gun until the plane is in the air", () => {
       const player = scene["player"];
-      const liftoffScroll =
-        AIRFIELD_AT + PLAYER_SPAWN.y + platform.park.y - platform.liftoff.y;
       press("ArrowLeft");
       press("Space");
 
-      let altitude = 0;
-      while (!scene["flying"]) {
-        const before = scene["scroll"];
+      while (!scene["flight"].flying) {
         scene.update();
         manager.input.endFrame();
+        if (scene["flight"].flying) break;
 
-        expect(scene["scroll"]).toBeGreaterThan(before);
-        if (!scene["flying"]) {
-          expect(player.pos).toEqual(PLAYER_SPAWN);
-          expect(scene["bullets"]).toHaveLength(0);
-        }
-        expect(player.altitude).toBeGreaterThanOrEqual(altitude);
-        if (scene["scroll"] < liftoffScroll) expect(player.altitude).toBe(0);
-        altitude = player.altitude;
+        expect(player.pos).toEqual(PLAYER_SPAWN);
+        expect(scene["bullets"]).toHaveLength(0);
       }
 
-      expect(player.altitude).toBe(1);
-      expect(scene["liftoffFrames"]).toBe(LIFTOFF_FRAMES);
-      // The level's own distances begin only once the pilot has the stick.
-      expect(scene["scroll"]).toBeLessThan(0);
       // The stick answers on the very tick the climb ends.
       expect(player.pos.x).toBeLessThan(PLAYER_SPAWN.x);
     });
@@ -264,7 +248,7 @@ describe("GameScene collisions", () => {
     const parked = length + LANDING_LEAD + PLAYER_SPAWN.y;
 
     beforeEach(() => {
-      scene["scroll"] = length;
+      scene["flight"].scroll = length;
     });
 
     it("stops the city at the level's length and brings in the level's boss", () => {
@@ -276,7 +260,7 @@ describe("GameScene collisions", () => {
 
       scene.update();
 
-      expect(scene["scroll"]).toBe(length);
+      expect(scene["flight"].scroll).toBe(length);
       expect(turret.pos.y).toBe(200);
       expect(scene["boss"]?.kind).toBe(LEVELS[0].boss);
     });
@@ -295,18 +279,18 @@ describe("GameScene collisions", () => {
       // A foreign boss bursts in paper; only the regime's own burn red.
       expect(scene["explosions"].at(-1)!["color"]).toBe(PAPER);
       expect(scene["boss"]).toBeNull();
-      expect(scene["landing"]).toBe(false);
+      expect(scene["flight"].landing).toBe(false);
 
       enemy.alive = false;
       bulletAt("enemy", { x: 50, y: 50 });
       scene.update();
-      expect(scene["landing"]).toBe(true);
-      expect(scene["flying"]).toBe(false);
+      expect(scene["flight"].landing).toBe(true);
+      expect(scene["flight"].flying).toBe(false);
       expect(scene["bullets"].every((bullet) => !bullet.alive)).toBe(true);
     });
 
     it("keeps the boss waiting while the Thought Police hold the sky", () => {
-      scene["scroll"] = length - 1;
+      scene["flight"].scroll = length - 1;
       scene["suspicion"].add(100);
       scene.update();
       expect(scene["police"]).not.toBeNull();
@@ -330,10 +314,13 @@ describe("GameScene collisions", () => {
 
     it("rides a ground boss in on the street nearest the middle", () => {
       state.level = 3;
-      const level3 = new GameScene({ get: () => ({}) } as unknown as p5, manager);
+      const level3 = new GameScene(
+        { get: () => ({}) } as unknown as p5,
+        manager,
+      );
       manager.change(level3);
       fly(level3);
-      level3["scroll"] = LEVELS[2].length;
+      level3["flight"].scroll = LEVELS[2].length;
 
       level3.update();
 
@@ -370,40 +357,28 @@ describe("GameScene collisions", () => {
       expect(state.realLives).toBe(STARTING_LIVES - 1);
     });
 
-    it("lines the plane up, touches down at the line, and stops it on the eye", () => {
+    it("opens the next level's Dictionary once the plane has landed", () => {
       const change = vi.spyOn(manager, "change");
-      const player = scene["player"];
-      const touchdown = parked - (platform.touchdown.y - platform.park.y);
       scene["bossDown"] = true;
-      player.pos = { x: 60, y: 200 };
 
-      let stoppedFor = 0;
-      // The plane's height follows the scroll each tick starts at.
-      while (change.mock.calls.length === 0) {
-        const scroll: number = scene["scroll"];
-        scene.update();
-        if (scroll < touchdown - DESCENT_DISTANCE)
-          expect(player.altitude).toBe(1);
-        if (scroll >= touchdown) expect(player.altitude).toBe(0);
-        expect(scene["scroll"]).toBeLessThanOrEqual(parked);
-        if (scene["scroll"] === parked) stoppedFor++;
-      }
+      while (change.mock.calls.length === 0) scene.update();
 
-      expect(player.pos).toEqual(PLAYER_SPAWN);
-      expect(stoppedFor).toBe(LANDING_HOLD_FRAMES);
+      expect(scene["flight"].landed).toBe(true);
+      expect(scene["flight"].scroll).toBe(parked);
       expect(state.level).toBe(2);
       expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
     });
 
     it("can't be seen or shot at while the regime flies the plane", () => {
       const eye = eyeAbove({ x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - 100 });
-      scene["landing"] = true;
-      scene["flying"] = false;
+      scene["flight"]["phase"] = "landing";
 
       for (let i = 0; i < 300; i++) {
         scene.update();
         // As any gun would, through the scene's own hand.
-        scene["arena"].fire(new Bullet("enemy", { x: 0, y: 0 }, { x: 0, y: 0 }));
+        scene["arena"].fire(
+          new Bullet("enemy", { x: 0, y: 0 }, { x: 0, y: 0 }),
+        );
       }
 
       expect(eye.detecting).toBe(false);
@@ -414,10 +389,9 @@ describe("GameScene collisions", () => {
     it("goes back to the Menu after the last level, until the endings exist", () => {
       const change = vi.spyOn(manager, "change");
       state.level = LEVELS.length;
-      scene["scroll"] = parked;
-      scene["speed"] = 0;
-      scene["flying"] = false;
-      scene["landing"] = true;
+      scene["flight"].scroll = parked;
+      scene["flight"].speed = 0;
+      scene["flight"]["phase"] = "landing";
 
       for (let i = 0; i < LANDING_HOLD_FRAMES; i++) scene.update();
 
@@ -482,7 +456,7 @@ describe("GameScene collisions", () => {
     const first = LEVELS[0].waves[0];
     state.suspicion = 50;
     state.alertLevel = ALERT.alert;
-    scene["scroll"] = first.at;
+    scene["flight"].scroll = first.at;
 
     scene.update();
 
@@ -593,7 +567,7 @@ describe("GameScene collisions", () => {
     fly(level2);
     const wave = LEVELS[1].waves.find((wave) => wave.camo)!;
     // The waves before it come and are cleared first, so only this one is left to look at.
-    level2["scroll"] = wave.at - 1;
+    level2["flight"].scroll = wave.at - 1;
     level2.update();
     level2["enemies"] = [];
 
@@ -648,7 +622,7 @@ describe("GameScene collisions", () => {
       // Just past its skylight, so it would lie on screen.
       const onScreen = anchorNear(LEVELS[0], "skylight", diary.at).y + 100;
 
-      scene["scroll"] = onScreen;
+      scene["flight"].scroll = onScreen;
       scene.update();
       expect(scene["diary"]).not.toBeNull();
     });
@@ -810,7 +784,7 @@ describe("GameScene collisions", () => {
     it("hold the waves back while they're here", () => {
       fullSuspicion();
       scene.update();
-      scene["scroll"] = LEVELS[0].waves[0].at;
+      scene["flight"].scroll = LEVELS[0].waves[0].at;
 
       for (let i = 0; i < 60; i++) scene.update();
 
