@@ -388,6 +388,12 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - There is one per level, on the skylight anchor nearest to the `at` in level data (`diary: { at }`), so players learn where to look. **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
 - Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word, awake at least at level 1 even if it was still dormant when it was taken, so the diary always gives back a power. In level 1 nothing has been removed yet, so it gives a score bonus instead.
 - Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed in the diary band without pausing, sliding left once it reaches the margin, and stays `DIARY_HOLD` frames after it is typed ([art-direction.md › The HUD](art-direction.md#the-hud)). Record which pages were read in `runStats`.
+- **Decision:** the diary (`entities/Diary.ts`) lies on the ground with the city: no shadow, at `DIARY_ALPHA` (60%), drawn just over the ground and under everything else. It is reached by flying over it, with a small `DIARY_RADIUS` (12), and not by a pilot who is down. `Newspeak.readDiary()` applies it:
+  - it restores this level's removed word, at least at level 1, and refills REMEMBER's bombs if that is the word;
+  - in level 1 it pays `DIARY_BONUS_SCORE` (1000) instead;
+  - either way it adds `DIARY_SUSPICION` (25), records `diaries`, and pushes the page's index (`level - 1`) to `runStats.pagesRead`.
+- One page a level: once read, a later pass of the waves (level 5 loops) lays no new diary. Level 1's lies on the skylight nearest 1350.
+- The HUD types the page's `line` in the band (`#33251f`, `LEATHER_DARK`) with a `Typewriter`, keeps it `DIARY_HOLD` (180) frames once typed, then clears it. The scene hands the HUD the line; the HUD reads no state.
 
 **DictionaryScene** (shown before every level)
 

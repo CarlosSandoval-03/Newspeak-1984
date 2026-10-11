@@ -89,13 +89,15 @@ export interface TurretDef {
   x?: number;
 }
 
-// Later steps add the diary, the boss, and the length.
+// Later steps add the boss and the length.
 export interface LevelDef {
   terrain: TerrainDef;
   waves: WaveDef[];
   eyes: EyeDef[];
   turrets: TurretDef[];
   pickups: PickupDef[];
+  // On the skylight nearest `at`, so players learn where to look.
+  diary: { at: number };
 }
 
 // Ordered, because each level keeps the effects of the ones below it.

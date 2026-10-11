@@ -1,4 +1,6 @@
 import {
+  DIARY_BONUS_SCORE,
+  DIARY_SUSPICION,
   PICKUP_BONUS_SCORE,
   REMOVED_PICKUP_SUSPICION,
   TRUTH_COOLDOWN_FRAMES,
@@ -6,7 +8,7 @@ import {
   WORD_MAX_LEVEL,
   WORD_REMOVAL_ORDER,
 } from "../config";
-import { state } from "../state";
+import { record, state } from "../state";
 import type { Word } from "../types";
 import type { Suspicion } from "./Suspicion";
 
@@ -59,6 +61,24 @@ export class Newspeak {
   applyLevel(level: number): void {
     for (const word of WORD_REMOVAL_ORDER.slice(0, Math.max(0, level - 1)))
       state.words.delete(word);
+  }
+
+  // A page of the erased pilot's diary gives back the last word taken, for this level only and at
+  // least awake, so it always returns a power; in level 1, with none taken yet, it pays a bonus.
+  // Either way the regime notices, and the page is counted for the ending.
+  readDiary(): void {
+    const word = removedAt(state.level);
+
+    if (word) {
+      state.words.add(word);
+      state.restoredWord = word;
+      state.wordLevels[word] = Math.max(1, state.wordLevels[word]);
+      if (word === "REMEMBER") state.bombs = state.wordLevels.REMEMBER;
+    } else state.realScore += DIARY_BONUS_SCORE;
+
+    this.suspicion.add(DIARY_SUSPICION);
+    record("diaries");
+    state.runStats.pagesRead.push(state.level - 1);
   }
 
   // The first pickup wakes a word and the rest upgrade it; a removed word gives nothing but notice.

@@ -6,6 +6,7 @@ import {
   SINE_AMPLITUDE,
 } from "../config";
 import { removedAt } from "../systems/Newspeak";
+import { anchorNear } from "./layout";
 import { LEVELS } from "./levels";
 
 describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
@@ -38,6 +39,12 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
 
       if (number === 1) expect(camouflaged).toEqual([]);
       else expect(camouflaged.length).toBeGreaterThan(0);
+    });
+
+    it("has a skylight for its diary to lie on", () => {
+      expect(() =>
+        anchorNear(level.terrain, "skylight", level.diary.at),
+      ).not.toThrow();
     });
 
     it("keeps every pickup on screen", () => {

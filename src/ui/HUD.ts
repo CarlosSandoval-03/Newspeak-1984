@@ -1,9 +1,13 @@
 import type p5 from "p5";
+import type { Assets } from "../assets";
 import {
   ALERT_THRESHOLDS,
+  CANVAS_WIDTH,
   CONCRETE,
+  DIARY_HOLD,
   INK,
   LEATHER,
+  LEATHER_DARK,
   PAPER,
   RED,
   STEEL,
@@ -11,6 +15,7 @@ import {
 } from "../config";
 import { t } from "../i18n";
 import type { Propaganda, WordView } from "../systems/Propaganda";
+import { Typewriter } from "./effects";
 
 const MARGIN = 8;
 const RIGHT_EDGE = 472;
@@ -30,19 +35,37 @@ const STRIKE_WEIGHT = 2;
 // TRUTH's inverted box, from above the capitals to just under the baseline.
 const BOX_RISE = 15;
 const BOX_HEIGHT = 18;
+const DIARY_BAND = { y: 560, h: 24 };
+const DIARY_BASELINE = 577;
+const DIARY_SIZE = 16;
 // Indexed by alert level.
 const STATES = ["normal", "alert", "pursuit", "thoughtPolice"] as const;
 
 // Every value comes through Propaganda: the HUD shows what the Party allows, not what is real.
 export class HUD {
   private readonly p: p5;
-  private readonly font: p5.Font;
+  private readonly fonts: Assets["font"];
   private readonly propaganda: Propaganda;
+  private diary: Typewriter | null = null;
+  private diaryHold = 0;
 
-  constructor(p: p5, font: p5.Font, propaganda: Propaganda) {
+  constructor(p: p5, fonts: Assets["font"], propaganda: Propaganda) {
     this.p = p;
-    this.font = font;
+    this.fonts = fonts;
     this.propaganda = propaganda;
+  }
+
+  // A line of the erased pilot's diary, typed in its band without pausing the game.
+  typeDiary(line: string): void {
+    this.diary = new Typewriter([line]);
+    this.diaryHold = DIARY_HOLD;
+  }
+
+  // Typed, then held a while, then gone.
+  update(): void {
+    if (!this.diary) return;
+    if (!this.diary.done) this.diary.update();
+    else if (--this.diaryHold === 0) this.diary = null;
   }
 
   // `bossHealth` is the boss's share of hp left, or null while no boss is on screen.
@@ -54,7 +77,8 @@ export class HUD {
     );
 
     p.noStroke();
-    p.textFont(this.font);
+    if (this.diary) this.drawDiary(this.diary);
+    p.textFont(this.fonts.machine);
     p.textSize(20);
 
     p.textAlign(p.LEFT, p.BASELINE);
@@ -132,6 +156,33 @@ export class HUD {
       view.status === "recharging" ? STEEL : view.restored ? LEATHER : PAPER;
     for (let i = 0; i < view.pips + view.spent; i++)
       this.pip(x + i * PIP_STEP, PIP_SIZE, i < view.pips ? filled : CONCRETE);
+  }
+
+  // The one human voice, on leather. Once the carriage reaches the right margin the line slides
+  // left, as a typewriter's paper would, so a line can be longer than the band.
+  private drawDiary(diary: Typewriter): void {
+    const { p } = this;
+    const shown = diary.shown(0);
+
+    p.fill(LEATHER_DARK);
+    p.rect(0, DIARY_BAND.y, CANVAS_WIDTH, DIARY_BAND.h);
+
+    p.textFont(this.fonts.paperwork);
+    p.textSize(DIARY_SIZE);
+    p.textAlign(p.LEFT, p.BASELINE);
+    const w = p.textWidth(shown);
+    const cursor = Math.ceil(p.textWidth("M"));
+    const x = Math.round(Math.min(MARGIN, RIGHT_EDGE - cursor - w));
+
+    p.fill(PAPER);
+    p.text(shown, x, DIARY_BASELINE);
+    if (!diary.done && diary.cursorVisible)
+      p.rect(
+        Math.round(x + w),
+        DIARY_BASELINE - DIARY_SIZE + 3,
+        cursor,
+        DIARY_SIZE,
+      );
   }
 
   // With the text's ink shadow, so a pip reads over any ground.

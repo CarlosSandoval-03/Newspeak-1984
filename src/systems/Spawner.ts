@@ -1,6 +1,7 @@
 import {
   ALERT_SPAWN_MULT,
   CANVAS_WIDTH,
+  DIARY_HALF_SIZE,
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
@@ -30,6 +31,7 @@ type Spawn = {
   eye: (def: EyeDef, pos: Vec) => void;
   turret: (pos: Vec) => void;
   pickup: (word: Word, pos: Vec) => void;
+  diary: (pos: Vec) => void;
 };
 
 // Eyes, turrets, and pickups come by scroll distance, not in waves; `place` gets the scroll they finally came at.
@@ -112,7 +114,7 @@ export class Spawner {
 
   // Ground elements find their anchors again for the new pass, since the city under it is new.
   restart(scroll: number): void {
-    const { eyes, turrets, pickups } = this.level;
+    const { eyes, turrets, pickups, diary } = this.level;
 
     this.next = 0;
     this.start = scroll;
@@ -142,6 +144,12 @@ export class Spawner {
         place: () =>
           this.spawn.pickup(def.word, { x: def.x, y: -PICKUP_RADIUS }),
       })),
+      this.onGround(
+        { at: diary.at, on: "skylight" },
+        scroll,
+        DIARY_HALF_SIZE,
+        (pos) => this.spawn.diary(pos),
+      ),
     ].sort((a, b) => a.due - b.due);
   }
 

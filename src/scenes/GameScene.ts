@@ -23,12 +23,14 @@ import type { SceneManager } from "../core/SceneManager";
 import type { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
+import { Diary } from "../entities/Diary";
 import { Eye } from "../entities/Eye";
 import { Pickup } from "../entities/Pickup";
 import { Player } from "../entities/Player";
 import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { Background } from "../levels/Background";
+import { currentStrings } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { record, resetLevelState, state } from "../state";
 import { Newspeak } from "../systems/Newspeak";
@@ -61,6 +63,7 @@ export class GameScene implements Scene {
   private bullets: Bullet[] = [];
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
+  private diary: Diary | null = null;
   private scroll = 0;
   private gameOverIn = 0;
   private flash = 0;
@@ -77,7 +80,7 @@ export class GameScene implements Scene {
     this.font = assets.font.machine;
     this.hud = new HUD(
       p,
-      assets.font.machine,
+      assets.font,
       // Read at draw time, by when the pilot exists.
       new Propaganda({
         dashReady: () => this.player.dashReady,
@@ -108,6 +111,11 @@ export class GameScene implements Scene {
         ),
       pickup: (word, pos) =>
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
+      // One page a level: once read, a later pass of the waves lays no new one.
+      diary: (pos) => {
+        if (state.stats.diaries === 0)
+          this.diary = new Diary(pos, assets.image);
+      },
     });
   }
 
@@ -153,6 +161,8 @@ export class GameScene implements Scene {
     for (const bullet of this.bullets) bullet.update();
     for (const explosion of this.explosions) explosion.update();
     for (const pickup of this.pickups) pickup.update();
+    this.diary?.update();
+    this.hud.update();
 
     this.collide();
 
@@ -162,6 +172,7 @@ export class GameScene implements Scene {
     this.bullets = this.bullets.filter((bullet) => bullet.alive);
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
     this.pickups = this.pickups.filter((pickup) => pickup.alive);
+    if (!this.diary?.alive) this.diary = null;
 
     this.watch();
 
@@ -190,6 +201,7 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.scroll);
+    this.diary?.draw(p);
     for (const turret of this.turrets) turret.draw(p);
     for (const eye of this.eyes) eye.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
@@ -315,6 +327,13 @@ export class GameScene implements Scene {
     const { police } = this;
     if (police?.alive && exposed() && circlesOverlap(police, player))
       this.hitPlayer();
+
+    const { diary } = this;
+    if (diary?.alive && player.alive && circlesOverlap(diary, player)) {
+      diary.alive = false;
+      this.newspeak.readDiary();
+      this.hud.typeDiary(currentStrings().diary.pages[state.level - 1].line);
+    }
 
     // Even while blinking: only a pilot who is down can't reach for a word.
     for (const pickup of this.pickups) {

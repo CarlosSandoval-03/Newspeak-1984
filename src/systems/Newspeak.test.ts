@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  DIARY_BONUS_SCORE,
+  DIARY_SUSPICION,
   PICKUP_BONUS_SCORE,
   REMOVED_PICKUP_SUSPICION,
   TRUTH_COOLDOWN_FRAMES,
@@ -167,6 +169,43 @@ describe("Newspeak", () => {
       ticks(1);
 
       expect(newspeak.truthActive).toBe(false);
+    });
+  });
+
+  describe("reading the diary", () => {
+    it("pays a bonus in level 1, with no word taken yet, and is noticed", () => {
+      newspeak.readDiary();
+
+      expect(state.realScore).toBe(DIARY_BONUS_SCORE);
+      expect(state.restoredWord).toBeNull();
+      expect(state.suspicion).toBe(DIARY_SUSPICION);
+      expect(state.stats.diaries).toBe(1);
+      expect(state.runStats).toMatchObject({ diaries: 1, pagesRead: [0] });
+    });
+
+    it("gives back the word this level took, awake even if it slept", () => {
+      state.level = 3;
+      newspeak.applyLevel(3);
+
+      newspeak.readDiary();
+
+      expect(state.words.has("ESCAPE")).toBe(true);
+      expect(state.words.has("FREE")).toBe(false);
+      expect(state.restoredWord).toBe("ESCAPE");
+      expect(state.wordLevels.ESCAPE).toBe(1);
+      expect(state.realScore).toBe(0);
+      expect(state.runStats.pagesRead).toEqual([2]);
+    });
+
+    it("gives it back as strong as it was, and REMEMBER with its bombs", () => {
+      state.level = 4;
+      state.wordLevels.REMEMBER = 3;
+      newspeak.applyLevel(4);
+
+      newspeak.readDiary();
+
+      expect(state.wordLevels.REMEMBER).toBe(3);
+      expect(state.bombs).toBe(3);
     });
   });
 });

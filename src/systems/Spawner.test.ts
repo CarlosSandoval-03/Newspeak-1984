@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CANVAS_WIDTH,
+  DIARY_HALF_SIZE,
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
@@ -21,7 +22,8 @@ import { Spawner } from "./Spawner";
 
 const cone = { facing: 90, range: 100, sweepAmp: 0, sweepSpeed: 0 };
 const level: LevelDef = {
-  terrain: { seed: 1, blocks: { plaza: 0, rubble: 0 } },
+  // Level 1's recipe, so there are rooftops, and skylights for the diary.
+  terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },
@@ -33,6 +35,7 @@ const level: LevelDef = {
   ],
   turrets: [{ at: 300, on: "street", x: 400 }],
   pickups: [{ at: 250, x: 180, word: "REMEMBER" }],
+  diary: { at: 450 },
 };
 
 describe("Spawner", () => {
@@ -40,6 +43,7 @@ describe("Spawner", () => {
   let watching: { def: EyeDef; pos: Vec }[];
   let turrets: Vec[];
   let pickups: { word: Word; pos: Vec }[];
+  let diaries: Vec[];
   let spawner: Spawner;
 
   beforeEach(() => {
@@ -47,11 +51,13 @@ describe("Spawner", () => {
     watching = [];
     turrets = [];
     pickups = [];
+    diaries = [];
     spawner = new Spawner(level, {
       enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
       eye: (def, pos) => watching.push({ def, pos }),
       turret: (pos) => turrets.push(pos),
       pickup: (word, pos) => pickups.push({ word, pos }),
+      diary: (pos) => diaries.push(pos),
     });
   });
 
@@ -219,6 +225,7 @@ describe("Spawner", () => {
           eye: () => {},
           turret: () => {},
           pickup: () => {},
+          diary: () => {},
         }).update(0, ALERT.thoughtPolice);
 
         const [{ pos }] = gyros();
@@ -259,6 +266,7 @@ describe("Spawner", () => {
         eye: () => {},
         turret: () => {},
         pickup: () => {},
+        diary: () => {},
       },
     ).update(0, ALERT.alert);
 
@@ -277,6 +285,17 @@ describe("Spawner", () => {
     spawner.restart(1000);
     spawner.update(1250, ALERT.normal);
     expect(pickups).toHaveLength(2);
+  });
+
+  it("lays the diary on the skylight nearest its place, entering with the ground", () => {
+    const anchor = anchorNear(level.terrain, "skylight", 450);
+    const due = anchor.y - DIARY_HALF_SIZE;
+
+    spawner.update(due - 1, ALERT.normal);
+    expect(diaries).toHaveLength(0);
+
+    spawner.update(due, ALERT.normal);
+    expect(diaries).toEqual([{ x: anchor.x, y: -DIARY_HALF_SIZE }]);
   });
 
   it("stands a turret on the anchor its data points to, entering with the ground", () => {

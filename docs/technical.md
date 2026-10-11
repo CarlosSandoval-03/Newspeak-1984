@@ -46,7 +46,7 @@ newspeak-1984/
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
     ├── core/             # Scene, SceneManager, Input, Collisions, display (theme-agnostic)
-    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, ThoughtPolice, Pickup
+    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, ThoughtPolice, Pickup, Diary
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter)

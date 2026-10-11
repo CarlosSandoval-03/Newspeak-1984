@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
   ALERT_SPAWN_MULT,
+  DIARY_BONUS_SCORE,
   BOMB_BOSS_DAMAGE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
@@ -17,12 +18,15 @@ import {
   TURRET_STATS,
 } from "../config";
 import { Input } from "../core/Input";
+import { currentStrings } from "../i18n";
 import { SceneManager } from "../core/SceneManager";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/Enemy";
+import { Diary } from "../entities/Diary";
 import { Eye } from "../entities/Eye";
 import { Pickup } from "../entities/Pickup";
 import { Turret } from "../entities/Turret";
+import { anchorNear } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
@@ -406,6 +410,50 @@ describe("GameScene collisions", () => {
     keys.dispatchEvent(Object.assign(new Event("keydown"), { code: "KeyV" }));
     scene.update();
     expect(enemy.revealed).toBe(true);
+  });
+
+  describe("the diary", () => {
+    const diaryAt = (pos: Vec) => {
+      scene["diary"] = new Diary(pos, images);
+    };
+
+    it("is read by flying over it, and its line is typed in the band", () => {
+      diaryAt({ ...PLAYER_SPAWN });
+
+      scene.update();
+
+      expect(scene["diary"]).toBeNull();
+      expect(state.stats.diaries).toBe(1);
+      expect(state.realScore).toBe(DIARY_BONUS_SCORE);
+      const typed = scene["hud"]["diary"]!;
+      typed.finish();
+      expect(typed.shown(0)).toBe(currentStrings().diary.pages[0].line);
+    });
+
+    it("lies out of reach of a pilot who is down", () => {
+      diaryAt({ ...PLAYER_SPAWN });
+      scene["player"].alive = false;
+
+      scene.update();
+
+      expect(state.stats.diaries).toBe(0);
+    });
+
+    it("is laid once a level, even when the waves start over", () => {
+      const { terrain, diary } = LEVELS[0];
+      // Just past its skylight, so it would lie on screen.
+      const onScreen = anchorNear(terrain, "skylight", diary.at).y + 100;
+
+      scene["scroll"] = onScreen;
+      scene.update();
+      expect(scene["diary"]).not.toBeNull();
+
+      state.stats.diaries = 1;
+      scene["diary"] = null;
+      scene["spawner"].restart(0);
+      scene.update();
+      expect(scene["diary"]).toBeNull();
+    });
   });
 
   describe("pickups", () => {

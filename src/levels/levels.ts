@@ -93,6 +93,8 @@ const LEVEL_1: LevelDef = {
     { at: 420, x: 240, word: "FREE" },
     { at: 1800, x: 120, word: "REMEMBER" },
   ],
+  // Midway, once the first waves have taught the player to watch the rooftops.
+  diary: { at: 1350 },
 };
 
 // A stand-in until the real level 2 is written: level 1 again with three fighter waves camouflaged,

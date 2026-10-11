@@ -1,6 +1,17 @@
 import type p5 from "p5";
+import type { Assets } from "../assets";
 import { describe, expect, it, vi } from "vitest";
-import { CONCRETE, INK, LEATHER, PAPER, RED, STEEL } from "../config";
+import {
+  CANVAS_WIDTH,
+  CONCRETE,
+  DIARY_HOLD,
+  INK,
+  LEATHER,
+  LEATHER_DARK,
+  PAPER,
+  RED,
+  STEEL,
+} from "../config";
 import type { Propaganda, WordView } from "../systems/Propaganda";
 import { ALERT } from "../types";
 import { HUD } from "./HUD";
@@ -14,10 +25,12 @@ describe("HUD", () => {
   const draw = (
     shown: Partial<Propaganda>,
     bossHealth: number | null = null,
+    prepare: (hud: HUD) => void = () => {},
   ) => {
     const text = vi.fn();
     const rects: { color: unknown; x: number; y: number; w: number }[] = [];
     const inked: { text: string; color: unknown; x?: unknown }[] = [];
+    const placed: { text: string; x: number }[] = [];
     let color: unknown;
     const p = {
       LEFT: "left",
@@ -31,6 +44,7 @@ describe("HUD", () => {
       rect: (x: number, y: number, w: number) => rects.push({ color, x, y, w }),
       text: (s: string, x: number, ...rest: unknown[]) => {
         inked.push({ text: s, color });
+        placed.push({ text: s, x });
         if (s === "FREE" || s === "TRUTH") inked.at(-1)!.x = x;
         text(s, x, ...rest);
       },
@@ -45,8 +59,15 @@ describe("HUD", () => {
       ...shown,
     } as Propaganda;
 
-    new HUD(p, {} as p5.Font, propaganda).draw(bossHealth);
-    return { shown: text.mock.calls.map((call) => call[0]), rects, inked };
+    const hud = new HUD(p, {} as Assets["font"], propaganda);
+    prepare(hud);
+    hud.draw(bossHealth);
+    return {
+      shown: text.mock.calls.map((call) => call[0]),
+      rects,
+      inked,
+      placed,
+    };
   };
 
   it("shows the zero-padded score and the lives Propaganda reports", () => {
@@ -165,6 +186,42 @@ describe("HUD", () => {
       expect(inked.at(-1)).toMatchObject({ text: "TRUTH", color: INK });
       // The box is the word's 50 px plus 2 px each side; the bar is half of it.
       expect(pips(rects)).toEqual([{ color: PAPER, x: 6, y: 608, w: 27 }]);
+    });
+  });
+
+  describe("the diary band", () => {
+    const typed = (line: string, frames: number) =>
+      draw({}, null, (hud) => {
+        hud.typeDiary(line);
+        for (let i = 0; i < frames; i++) hud.update();
+      });
+
+    it("types the line on leather, a character at a time", () => {
+      const { rects, placed } = typed("I kept the old one.", 6);
+
+      expect(rects).toContainEqual({
+        color: LEATHER_DARK,
+        x: 0,
+        y: 560,
+        w: CANVAS_WIDTH,
+      });
+      expect(placed[0]).toEqual({ text: "I kept", x: 8 });
+    });
+
+    it("slides the line left once the carriage reaches the right margin", () => {
+      // 60 characters at 10 px each, and a 10 px cursor: 610 px, against a margin at 472.
+      const { placed } = typed("x".repeat(60), 60);
+
+      expect(placed[0]).toEqual({ text: "x".repeat(60), x: 472 - 10 - 600 });
+    });
+
+    it("holds the typed line a while, then clears the band", () => {
+      const line = "Look at the dates.";
+      const leather = (frames: number) =>
+        typed(line, frames).rects.some(({ color }) => color === LEATHER_DARK);
+
+      expect(leather(line.length + DIARY_HOLD - 1)).toBe(true);
+      expect(leather(line.length + DIARY_HOLD)).toBe(false);
     });
   });
 });

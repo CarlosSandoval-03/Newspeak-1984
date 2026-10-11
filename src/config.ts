@@ -14,6 +14,7 @@ export const RED_LIGHT = "#e0503a";
 
 // Material tones are for the ground and the diary; leather marks the one human voice.
 export const LEATHER = "#6e4a38";
+export const LEATHER_DARK = "#33251f";
 
 // KeyboardEvent.code, so the bindings stay put on AZERTY or Dvorak layouts.
 export const KEYS = {
@@ -50,6 +51,16 @@ export const PICKUP_RADIUS = 20;
 export const PICKUP_BONUS_SCORE = 500;
 // Reaching for a word the Party took away is noticed.
 export const REMOVED_PICKUP_SUSPICION = 10;
+// The diary lies on a skylight, small and dim: easy to miss, and only reached by flying over it.
+export const DIARY_HALF_SIZE = 16;
+export const DIARY_RADIUS = 12;
+export const DIARY_ALPHA = 0.6;
+// Reading it is the boldest thing the pilot can do, and the regime notices.
+export const DIARY_SUSPICION = 25;
+// Level 1 has no word to give back yet, so its page pays this instead.
+export const DIARY_BONUS_SCORE = 1000;
+// How long the page's line stays in the band once it is typed.
+export const DIARY_HOLD = 180;
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.
