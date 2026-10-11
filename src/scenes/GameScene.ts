@@ -446,9 +446,14 @@ export class GameScene implements Scene {
         this.hitPlayer();
   }
 
+  // Only by a pilot with the stick: the regime's autopilot never reaches for what it would forbid.
+  private get canReach(): boolean {
+    return this.flight.flying && this.player.alive;
+  }
+
   private readDiary(): void {
     const { diary, player } = this;
-    if (!diary?.alive || !player.alive || !circlesOverlap(diary, player))
+    if (!diary?.alive || !this.canReach || !circlesOverlap(diary, player))
       return;
 
     diary.alive = false;
@@ -456,10 +461,10 @@ export class GameScene implements Scene {
     this.hud.typeDiary(currentStrings().diary.pages[state.level - 1].line);
   }
 
-  // Even while blinking: only a pilot who is down can't reach for a word.
+  // Even while blinking: only a pilot who is down, or not flying the plane, can't reach for a word.
   private collectPickups(): void {
     for (const pickup of this.pickups) {
-      if (!this.player.alive || !circlesOverlap(pickup, this.player)) continue;
+      if (!this.canReach || !circlesOverlap(pickup, this.player)) continue;
 
       pickup.alive = false;
       this.newspeak.collect(pickup.word);

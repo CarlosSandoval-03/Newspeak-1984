@@ -111,6 +111,20 @@ describe("HUD", () => {
     ]);
   });
 
+  it("types a diary line at the bottom while a boss is named at the top", () => {
+    const { shown, rects } = draw(
+      {},
+      { name: "fortress", health: 1, regime: false },
+      (hud) => {
+        hud.typeDiary("I kept the old one.");
+        hud.update();
+      },
+    );
+
+    expect(shown).toContain("FLYING FORTRESS");
+    expect(rects.some(({ color }) => color === LEATHER_DARK)).toBe(true);
+  });
+
   it("names the giant in place of the suspicion line during a battle", () => {
     const { shown, rects } = draw(
       { displayedSuspicion: () => 50 },

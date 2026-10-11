@@ -390,7 +390,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - There is one per level, on the skylight anchor nearest to the `at` in level data (`diary: { at }`), so players learn where to look. **Decision:** it is drawn small and dim, close to the ground layer, so it is easy to miss.
 - Collecting it restores one removed word **for the rest of this level only**, adds **+25 suspicion**, and increments `stats.diaries`. **Decision:** it restores the **most recently removed** word, awake at least at level 1 even if it was still dormant when it was taken, so the diary always gives back a power. In level 1 nothing has been removed yet, so it gives a score bonus instead.
 - Each diary is one page of the erased pilot's diary (one page per level, in order; text in `i18n/` › `diary.pages`). On pickup, one line of the page is typed in the diary band without pausing, sliding left once it reaches the margin, and stays `DIARY_HOLD` frames after it is typed ([art-direction.md › The HUD](art-direction.md#the-hud)). Record which pages were read in `runStats`.
-- **Decision:** the diary (`entities/Diary.ts`) lies on the ground with the city: no shadow, at `DIARY_ALPHA` (60%), drawn just over the ground and under everything else. It is reached by flying over it, with a small `DIARY_RADIUS` (12), and not by a pilot who is down. `Newspeak.readDiary()` applies it:
+- **Decision:** the diary (`entities/Diary.ts`) lies on the ground with the city: no shadow, at `DIARY_ALPHA` (60%), drawn just over the ground and under everything else. It is reached by flying over it, with a small `DIARY_RADIUS` (12), and not by a pilot who is down or while the regime flies the plane. `Newspeak.readDiary()` applies it:
   - it restores this level's removed word, at least at level 1, and refills REMEMBER's bombs if that is the word;
   - in level 1 it pays `DIARY_BONUS_SCORE` (1000) instead;
   - either way it adds `DIARY_SUSPICION` (25), records `diaries`, and pushes the page's index (`level - 1`) to `runStats.pagesRead`.
@@ -472,7 +472,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ![Takeoff (1–4) and landing (5–8)](art/takeoff-landing.png)
 
-- **Decision:** as in *1942*, every level starts with a takeoff from the Party's launch platform (`launch-platform.png`) and ends with a landing on another. The regime launches its pilot, and recovers him to be judged. The player has no control during either; the plane is invulnerable, and nothing spawns.
+- **Decision:** as in *1942*, every level starts with a takeoff from the Party's launch platform (`launch-platform.png`) and ends with a landing on another. The regime launches its pilot, and recovers him to be judged. The player has no control during either; the plane is invulnerable, picks up no word card or diary, and nothing spawns.
 - **Altitude:** `Player.altitude` is 0 on the ground and 1 in flight. The sprite never grows, because pixel art only takes integer scales; the height is the shadow, drawn at `altitude × (6, 10)` with alpha `0.4 / max(1, altitude)`. The platform's runway is concrete, not ink, so the shadow shows as it separates.
 - The layout puts a platform on the airfield at the level start and at `length + LANDING_LEAD` (rule 7 in [technical.md › City layout](technical.md#city-layout)). `launch-platform.json` gives the parking spot (the eye), the lift-off and touchdown lines, and the lamp sockets.
 - **Decision:** the start platform's eye lies at `AIRFIELD_AT` (−800), behind distance 0, and the scroll starts there, so the takeoff is over before the level's own distances begin and its waves, eyes, and pickups keep their positions.
@@ -637,6 +637,12 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
 - Sound is optional. Assets go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
 - `1.0.0` = the full game can be played through both endings ([technical.md › Git](technical.md#git)).
+
+## After `1.0.0`
+
+Low priority, for when the game is complete:
+
+- Retake the HUD mockups in [art-direction.md](art-direction.md#the-hud) from the real game. `hud-thought-police.png` still shows the suspicion meter beside the Thought Police, which step 4 replaced with their name during a battle.
 
 ---
 

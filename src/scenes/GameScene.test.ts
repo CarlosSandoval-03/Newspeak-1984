@@ -622,6 +622,27 @@ describe("GameScene collisions", () => {
       expect(state.stats.diaries).toBe(0);
     });
 
+    it("is never read by the autopilot while the plane lands", () => {
+      diaryAt({ ...PLAYER_SPAWN });
+      scene["flight"]["phase"] = "landing";
+
+      scene.update();
+
+      expect(state.stats.diaries).toBe(0);
+      expect(state.suspicion).toBe(0);
+    });
+
+    it("keeps typing its line while a boss names itself above", () => {
+      diaryAt({ ...PLAYER_SPAWN });
+      scene.update();
+      scene["flight"].scroll = LEVELS[0].length;
+
+      scene.update();
+
+      expect(scene["bossBar"]()?.name).toBe(LEVELS[0].boss);
+      expect(scene["hud"]["diary"]).not.toBeNull();
+    });
+
     it("is laid on its skylight as the city brings it on screen", () => {
       const { diary } = LEVELS[0];
       // Just past its skylight, so it would lie on screen.
@@ -657,6 +678,15 @@ describe("GameScene collisions", () => {
 
       expect(state.wordLevels.FREE).toBe(0);
       expect(scene["pickups"]).toHaveLength(1);
+    });
+
+    it("are never collected by the autopilot while the plane lands", () => {
+      pickupAt({ ...PLAYER_SPAWN });
+      scene["flight"]["phase"] = "landing";
+
+      scene.update();
+
+      expect(state.wordLevels.FREE).toBe(0);
     });
 
     it("fall from an enemy that carried one when it is shot down", () => {
