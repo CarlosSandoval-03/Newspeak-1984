@@ -25,7 +25,13 @@ describe("state", () => {
       realScore: 0,
       suspicion: 0,
       alertLevel: ALERT.normal,
-      stats: { kills: 0, eyesDestroyed: 0, framesSeen: 0, diaries: 0 },
+      stats: {
+        kills: 0,
+        eyesDestroyed: 0,
+        policeDestroyed: 0,
+        framesSeen: 0,
+        diaries: 0,
+      },
     });
     expect([...state.words].sort()).toEqual([
       "ESCAPE",
@@ -66,7 +72,13 @@ describe("state", () => {
     state.realLives = 1;
     state.realScore = 500;
     state.suspicion = 40;
-    state.stats = { kills: 7, eyesDestroyed: 2, framesSeen: 300, diaries: 1 };
+    state.stats = {
+      kills: 7,
+      eyesDestroyed: 2,
+      policeDestroyed: 1,
+      framesSeen: 300,
+      diaries: 1,
+    };
     state.runStats.kills = 30;
     state.runStats.pagesRead = [1];
     state.wordLevels.FREE = 2;
@@ -76,6 +88,7 @@ describe("state", () => {
     expect(state.stats).toEqual({
       kills: 0,
       eyesDestroyed: 0,
+      policeDestroyed: 0,
       framesSeen: 0,
       diaries: 0,
     });

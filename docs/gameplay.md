@@ -23,7 +23,7 @@ Towers and drones sweep vision cones. Being seen raises **suspicion** (faster up
 | 0–33 | Normal | A standard shmup. |
 | 34–66 | Alert | More enemies and bullets. |
 | 67–99 | Pursuit | Autogyros hunt the player. |
-| 100 | Thought Police | A mini-boss; while it's here no waves come. Kill it or outlast it, and suspicion drops to 50. Never once the city stops for the boss; if it is already there, the boss waits for it to go. |
+| 100 | Thought Police | A mini-boss; while it's here no waves come. Kill it or outlast it, and suspicion drops to 50; killing it costs dearly at the Ministry, outlasting it costs nothing. Never once the city stops for the boss; if it is already there, the boss waits for it to go. |
 
 Destroying an eye is allowed but costs +15: you can fight the system, but it notices. Suspicion is also felt without reading the meter: the screen glitches harder and a red vignette closes in.
 
@@ -64,7 +64,7 @@ The HUD shows what the Party wants believed. Each level adds a lie: (1) the tick
 
 ## Ministry of Truth: the rewritten score
 
-After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Only completed runs are recorded; a vaporized pilot leaves no entry. The real score appears only in the rebel ending.
+After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it, and downed Thought Police most of all. Yet the Ministry files those police as enemy aircraft among the kills, and records that no officer was ever lost: the record credits what the verdict punishes. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Only completed runs are recorded; a vaporized pilot leaves no entry. The real score appears only in the rebel ending.
 
 ```mermaid
 flowchart LR

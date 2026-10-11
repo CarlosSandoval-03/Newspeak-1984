@@ -175,6 +175,8 @@ export const en = {
         "Enemy aircraft destroyed: {from}, corrected to {to}. The rest are credited to loyal pilots.",
         "Enemy aircraft destroyed: {from}, corrected to 0. This pilot flew no sorties.",
       ],
+      policeDestroyed:
+        "Thought Police officers lost: {from}, corrected to 0. The aircraft was Eurasian, and is counted as such.",
       eyesDestroyed:
         "Surveillance towers lost: {from}, corrected to 0. No towers were lost.",
       secondsSeen:

@@ -4,6 +4,7 @@ import { ALERT, type GameState, type Stats, VERDICT } from "./types";
 const freshStats = (): Stats => ({
   kills: 0,
   eyesDestroyed: 0,
+  policeDestroyed: 0,
   framesSeen: 0,
   diaries: 0,
 });

@@ -9,11 +9,18 @@ import {
 } from "../config";
 import { resetGame, state } from "../state";
 import { ALERT, type Stats, VERDICT } from "../types";
-import { correctedKills, judgeLevel, obedience, verdictFor } from "./Ministry";
+import {
+  correctedKills,
+  judgeLevel,
+  obedience,
+  reportedKills,
+  verdictFor,
+} from "./Ministry";
 
 const flown = (stats: Partial<Stats>): Stats => ({
   kills: 0,
   eyesDestroyed: 0,
+  policeDestroyed: 0,
   framesSeen: 0,
   diaries: 0,
   ...stats,
@@ -27,6 +34,13 @@ describe("obedience", () => {
     expect(obedience(flown({ eyesDestroyed: 1 }))).toBeLessThan(base);
     expect(obedience(flown({ framesSeen: 60 }))).toBeLessThan(base);
     expect(obedience(flown({ diaries: 1 }))).toBeLessThan(base);
+  });
+
+  it("holds downed police against the pilot more than anything else", () => {
+    const police = obedience(flown({ policeDestroyed: 1 }));
+
+    expect(police).toBeLessThan(obedience(flown({ eyesDestroyed: 1 })));
+    expect(police).toBeLessThan(obedience(flown({ diaries: 1 })));
   });
 
   it("lands a good citizen and a rebel where the regime expects them", () => {
@@ -63,6 +77,12 @@ describe("correctedKills", () => {
     expect(correctedKills(42, VERDICT.underReview)).toBe(21);
     expect(correctedKills(43, VERDICT.underReview)).toBe(21);
     expect(correctedKills(42, VERDICT.suspect)).toBe(0);
+  });
+});
+
+describe("reportedKills", () => {
+  it("files the downed police as enemy aircraft", () => {
+    expect(reportedKills(flown({ kills: 41, policeDestroyed: 1 }))).toBe(42);
   });
 });
 
@@ -112,6 +132,16 @@ describe("judgeLevel", () => {
         alertLevel: alert,
       });
     }
+  });
+
+  it("corrects the downed police along with the kills, while holding them against the pilot", () => {
+    // 1 + 41 × 0.01 − 0.5 = 0.91: under review, so 42 reported kills are halved.
+    state.stats = flown({ kills: 41, policeDestroyed: 1 });
+
+    const report = judgeLevel();
+
+    expect(report.verdict).toBe(VERDICT.underReview);
+    expect(report.officialKills).toBe(21);
   });
 
   it("keeps a copy of the stats, so clearing the level doesn't change the report", () => {

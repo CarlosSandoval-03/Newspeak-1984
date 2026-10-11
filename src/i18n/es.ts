@@ -172,6 +172,8 @@ export const es: Strings = {
         "Aviones enemigos derribados: {from}, corregido a {to}. El resto se atribuye a pilotos leales.",
         "Aviones enemigos derribados: {from}, corregido a 0. Este piloto no realizó ninguna salida.",
       ],
+      policeDestroyed:
+        "Agentes de la Policía del Pensamiento perdidos: {from}, corregido a 0. El avión era eurasiático y se cuenta como tal.",
       eyesDestroyed:
         "Torres de vigilancia perdidas: {from}, corregido a 0. No se perdió ninguna torre.",
       secondsSeen:

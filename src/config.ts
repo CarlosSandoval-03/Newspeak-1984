@@ -72,10 +72,12 @@ export const W_EYE = 0.1;
 // Ten seconds under an eye costs half a point.
 export const W_SEEN = 0.5 / 600;
 export const W_DIARY = 0.3;
+// Shooting down the regime's own police is the worst of all, whatever the record says.
+export const W_POLICE = 0.5;
 // Where the verdicts split: at or above a hero, below a suspect, in between under review.
 export const VERDICT_HERO = 1.2;
 export const VERDICT_SUSPECT = 0.6;
-// A hero's kills are rounded up to this.
+// A hero's kills are rounded up to this; downed police count among them.
 export const HERO_KILLS_ROUNDING = 10;
 // The suspicion the next level starts with, set by the verdict: on alert at worst, never in pursuit.
 export const SUSPICION_REVIEW = 20;

@@ -766,7 +766,7 @@ describe("GameScene collisions", () => {
       expect(escorts()).toHaveLength(2);
     });
 
-    it("leave suspicion at the reset when shot down, and score", () => {
+    it("leave suspicion at the reset when shot down, and score, but never as a kill", () => {
       fullSuspicion();
       scene.update();
       const police = scene["police"]!;
@@ -780,6 +780,7 @@ describe("GameScene collisions", () => {
       expect(scene["police"]).toBeNull();
       expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
       expect(state.realScore).toBe(THOUGHT_POLICE_STATS.score);
+      expect(state.stats).toMatchObject({ kills: 0, policeDestroyed: 1 });
     });
 
     it("leave suspicion at the reset when outlasted too", () => {

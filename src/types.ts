@@ -155,6 +155,8 @@ export type Verdict = (typeof VERDICT)[keyof typeof VERDICT];
 export type Stats = {
   kills: number;
   eyesDestroyed: number;
+  // Never kills: the Ministry files them as enemy aircraft, and holds them against the pilot.
+  policeDestroyed: number;
   framesSeen: number;
   diaries: number;
 };

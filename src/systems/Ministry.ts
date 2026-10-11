@@ -10,6 +10,7 @@ import {
   W_DIARY,
   W_EYE,
   W_KILL,
+  W_POLICE,
   W_SEEN,
 } from "../config";
 import { clamp } from "../core/math";
@@ -36,6 +37,7 @@ const SUSPICION_AFTER: Record<Verdict, number> = {
 export function obedience({
   kills,
   eyesDestroyed,
+  policeDestroyed,
   framesSeen,
   diaries,
 }: Stats): number {
@@ -43,6 +45,7 @@ export function obedience({
     OBEDIENCE_BASE +
       kills * W_KILL -
       eyesDestroyed * W_EYE -
+      policeDestroyed * W_POLICE -
       framesSeen * W_SEEN -
       diaries * W_DIARY,
     OBEDIENCE_MIN,
@@ -64,6 +67,11 @@ export function correctedKills(kills: number, verdict: Verdict): number {
   return 0;
 }
 
+// The regime can't admit losing its police, so it files them as enemy aircraft.
+export function reportedKills({ kills, policeDestroyed }: Stats): number {
+  return kills + policeDestroyed;
+}
+
 // Closes the level's file: the real score is scaled by obedience into the official record, and the
 // verdict is kept for the next briefing and rewrites the suspicion the next level starts with.
 export function judgeLevel(): Report {
@@ -75,7 +83,7 @@ export function judgeLevel(): Report {
     stats: { ...stats },
     realScore,
     officialScore: Math.round(realScore * factor),
-    officialKills: correctedKills(stats.kills, verdict),
+    officialKills: correctedKills(reportedKills(stats), verdict),
     verdict,
   };
 

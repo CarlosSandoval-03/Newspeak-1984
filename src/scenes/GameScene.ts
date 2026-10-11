@@ -475,7 +475,7 @@ export class GameScene implements Scene {
 
   private kill(target: Kill): void {
     state.realScore += target.score;
-    record("kills");
+    record(target instanceof ThoughtPolice ? "policeDestroyed" : "kills");
     this.explosions.push(this.explosionFor(target));
     if (target instanceof Enemy && target.drops)
       this.pickups.push(new Pickup(target.drops, target.pos, this.font));

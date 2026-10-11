@@ -107,7 +107,7 @@ The shape of `state` in `state.ts`. Step 1 creates the first block; each later s
   suspicion: number;          // 0–100; the Ministry rewrites it between levels
   alertLevel: AlertLevel;     // ALERT.normal, alert, pursuit, thoughtPolice
   words: Set<Word>;           // available words: "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER"
-  stats: Stats;               // this level: { kills, eyesDestroyed, framesSeen, diaries }
+  stats: Stats;               // this level: { kills, eyesDestroyed, policeDestroyed, framesSeen, diaries }
 
   // step 3
   bombs: number;

@@ -14,7 +14,7 @@ import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { state } from "../state";
-import type { Report } from "../systems/Ministry";
+import { type Report, reportedKills } from "../systems/Ministry";
 import { VERDICT } from "../types";
 import {
   drawCursor,
@@ -30,19 +30,19 @@ import { DictionaryScene } from "./DictionaryScene";
 import { MenuScene } from "./MenuScene";
 
 // The clerk's room at 2×, cut above the floor; the slot is the burning window behind him.
-const ILLUSTRATION = { y: 68, rows: 120 };
+const ILLUSTRATION = { y: 68, rows: 112 };
 const SLOT = { x: 140, y: 68 + 2 * 56 };
 const MARGIN = 24;
 const HEADER_Y = 32;
 const NUMBER_X = 312;
-const REPORTED_Y = 340;
-const OFFICIAL_Y = 368;
-const CORRECTIONS_Y = 404;
-const CORRECTION_LINES_Y = 428;
+const REPORTED_Y = 324;
+const OFFICIAL_Y = 352;
+const CORRECTIONS_Y = 388;
+const CORRECTION_LINES_Y = 412;
 const CORRECTION_COLUMNS = 45;
 const HEADING_SIZE = 20;
 const PROSE_SIZE = 16;
-const STAMP_CENTER = { x: 360, y: 404 };
+const STAMP_CENTER = { x: 360, y: 388 };
 const STAMP_SIZE = 32;
 const PROMPT_Y = 632;
 const PROMPT_SIZE = 20;
@@ -291,18 +291,21 @@ function correctionLines(report: Report): PageLine[] {
   ];
 }
 
-// Every stat but kills is corrected to 0; the kills line follows the verdict.
+// Every stat but kills is corrected to 0; the kills line follows the verdict, and counts the downed
+// police among the enemy, right above the line that says none were lost.
 function corrections({ stats, officialKills, verdict }: Report): string[] {
   const { corrections } = currentStrings().ministry;
+  const kills = reportedKills(stats);
   const seconds = Math.round((stats.framesSeen * TICK_MS) / 1000);
   const lines: string[] = [];
 
-  if (stats.kills)
+  if (kills)
     lines.push(
-      format(corrections.kills[verdict], {
-        from: stats.kills,
-        to: officialKills,
-      }),
+      format(corrections.kills[verdict], { from: kills, to: officialKills }),
+    );
+  if (stats.policeDestroyed)
+    lines.push(
+      format(corrections.policeDestroyed, { from: stats.policeDestroyed }),
     );
   if (stats.eyesDestroyed)
     lines.push(

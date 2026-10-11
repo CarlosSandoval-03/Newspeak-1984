@@ -19,6 +19,7 @@ const PROMPT_TOP = 612;
 const flown = (stats: Partial<Stats>): Stats => ({
   kills: 0,
   eyesDestroyed: 0,
+  policeDestroyed: 0,
   framesSeen: 0,
   diaries: 0,
   ...stats,
@@ -97,6 +98,21 @@ describe("MinistryScene", () => {
     );
     expect(page).toContain("Diaries recovered: 1, corrected to 0.");
     expect(page).not.toContain("towers");
+    expect(page).not.toContain("Thought Police");
+  });
+
+  it("counts the downed police among the enemy aircraft, right above denying they were lost", () => {
+    const scene = open({
+      stats: flown({ kills: 41, policeDestroyed: 1 }),
+      officialKills: 21,
+    });
+    const page = texts(scene).join(" ");
+
+    expect(page).toContain("destroyed: 42, corrected to 21.");
+    expect(page).toContain("Thought Police officers lost: 1, corrected to 0.");
+    expect(page.indexOf("destroyed: 42")).toBeLessThan(
+      page.indexOf("Thought Police"),
+    );
   });
 
   it("types the record and strikes its score, types the correction, then drops the score, notes it never existed, and stamps", () => {
@@ -168,6 +184,7 @@ describe("MinistryScene", () => {
           stats: flown({
             kills: 999,
             eyesDestroyed: 99,
+            policeDestroyed: 9,
             framesSeen: 99 * 60,
             diaries: 9,
           }),
