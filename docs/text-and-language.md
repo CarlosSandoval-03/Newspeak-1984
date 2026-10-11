@@ -27,7 +27,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Ground slogans | Machine | Painted on plazas, scrolling with the ground. | Fixed. | `slogans.ground` | `LOOK UP` |
 | Blimp banners | Machine | Towed across the screen. | The most visible flips: each pair swaps to its opposite mid-level. | `slogans.banners` | `ALWAYS OUR ALLY` / `NEVER OUR ALLY` |
 | Telescreens | Machine | Background screens. | Static, the eye, or a line. | `slogans.telescreens` | `THE LEADER IS WATCHING` |
-| HUD | Machine | Score, lives, suspicion, alert state, words. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT` |
+| HUD | Machine | Score, lives, suspicion, alert state, words; during a battle, the boss's name in place of the suspicion line. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT`, `FLYING FORTRESS` |
 | Word pickups | Machine | Falling pickups, each on a paper card. | Removed words appear struck out in red, on a card dulled to steel. | `words` | `FREE` struck in red |
 | Menu | Machine | Start screen, as a vertical list. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
@@ -63,7 +63,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Menu title | VT323 | 60 | `#e8e4d8` | UPPER |
 | Menu options | VT323 | 20 | `#e8e4d8`; selected `#b3261e` | UPPER |
 | HUD score | VT323 | 20 | `#e8e4d8` | 6 digits, zero-padded (`004210`) |
-| HUD lives, suspicion label, alert state | VT323 | 20 | `#e8e4d8` | UPPER |
+| HUD lives, suspicion label, alert state, boss name | VT323 | 20 | `#e8e4d8` | UPPER |
 | HUD words | VT323 | 20 | `#e8e4d8`; recharging and removed `#7a7a7a`, removed also struck in red; active `#1a1a1a` on `#e8e4d8` | UPPER |
 | Ticker | VT323 | 20 | `#e8e4d8` on a `#6e1712` (dark red) strip | UPPER |
 | Word pickups | VT323 | 20 | `#1a1a1a` on a `#e8e4d8` card; removed: on a `#7a7a7a` card + red strike-through | UPPER |

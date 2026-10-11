@@ -263,6 +263,10 @@ describe("GameScene collisions", () => {
       expect(scene["flight"].scroll).toBe(length);
       expect(turret.pos.y).toBe(200);
       expect(scene["boss"]?.kind).toBe(LEVELS[0].boss);
+      expect(scene["bossBar"]()).toMatchObject({
+        name: LEVELS[0].boss,
+        regime: false,
+      });
     });
 
     it("lands only once the boss is down and the sky is clear", () => {
@@ -294,6 +298,7 @@ describe("GameScene collisions", () => {
       scene["suspicion"].add(100);
       scene.update();
       expect(scene["police"]).not.toBeNull();
+      expect(scene["bossBar"]()).toMatchObject({ name: "police", regime: true });
 
       scene.update();
       expect(scene["boss"]).toBeNull();

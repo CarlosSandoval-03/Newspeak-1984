@@ -44,7 +44,7 @@ import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
 import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
-import { HUD } from "../ui/HUD";
+import { type BossBar, HUD } from "../ui/HUD";
 import { DictionaryScene } from "./DictionaryScene";
 import { GameOverScene } from "./GameOverScene";
 import { MenuScene } from "./MenuScene";
@@ -553,10 +553,12 @@ export class GameScene implements Scene {
   }
 
   // Whichever giant is on screen; the Thought Police are always the regime's own.
-  private bossBar(): { health: number; regime: boolean } | null {
-    if (this.police) return { health: this.police.health, regime: true };
-    if (this.boss)
-      return { health: this.boss.health, regime: this.boss.def.regime };
+  private bossBar(): BossBar | null {
+    const { police, boss } = this;
+
+    if (police) return { name: "police", health: police.health, regime: true };
+    if (boss)
+      return { name: boss.kind, health: boss.health, regime: boss.def.regime };
     return null;
   }
 }

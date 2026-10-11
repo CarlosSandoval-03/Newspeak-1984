@@ -15,7 +15,7 @@ import {
 } from "../config";
 import type { Propaganda, WordView } from "../systems/Propaganda";
 import { ALERT } from "../types";
-import { HUD } from "./HUD";
+import { type BossBar, HUD } from "./HUD";
 import source from "./HUD.ts?raw";
 
 describe("HUD", () => {
@@ -25,7 +25,7 @@ describe("HUD", () => {
 
   const draw = (
     shown: Partial<Propaganda>,
-    boss: { health: number; regime: boolean } | null = null,
+    boss: BossBar | null = null,
     prepare: (hud: HUD) => void = () => {},
   ) => {
     const text = vi.fn();
@@ -97,16 +97,31 @@ describe("HUD", () => {
   });
 
   it("shows a boss bar only while a boss is on screen, red for the regime's own", () => {
-    const bars = (boss: { health: number; regime: boolean } | null) =>
+    const bars = (boss: BossBar | null) =>
       draw({}, boss)
         .rects.filter((rect) => rect.y === 50 && rect.color !== INK)
         .map(({ color, w }) => ({ color, w }));
 
     expect(bars(null)).toEqual([]);
-    expect(bars({ health: 1, regime: true })).toEqual([{ color: RED, w: 464 }]);
-    expect(bars({ health: 0.5, regime: false })).toEqual([
+    expect(bars({ name: "police", health: 1, regime: true })).toEqual([
+      { color: RED, w: 464 },
+    ]);
+    expect(bars({ name: "fortress", health: 0.5, regime: false })).toEqual([
       { color: PAPER, w: 232 },
     ]);
+  });
+
+  it("names the giant in place of the suspicion line during a battle", () => {
+    const { shown, rects } = draw(
+      { displayedSuspicion: () => 50 },
+      { name: "fortress", health: 1, regime: false },
+    );
+
+    expect(shown).toContain("FLYING FORTRESS");
+    expect(shown).not.toContain("SUSPICION");
+    expect(shown).not.toContain("NORMAL");
+    // The meter's frame is the only steel rect the second line ever draws.
+    expect(rects.some(({ color }) => color === STEEL)).toBe(false);
   });
 
   describe("the words row", () => {

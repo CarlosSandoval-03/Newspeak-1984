@@ -24,6 +24,14 @@ export const es: Strings = {
       pursuit: "PERSECUCIÓN",
       thoughtPolice: "POLICÍA DEL PENSAMIENTO",
     },
+    bosses: {
+      fortress: "FORTALEZA VOLANTE",
+      airship: "ZEPELÍN DE GUERRA",
+      landship: "ACORAZADO TERRESTRE",
+      wing: "ALA VOLANTE",
+      eye: "EL OJO",
+      police: "POLICÍA DEL PENSAMIENTO",
+    },
   },
 
   words: {

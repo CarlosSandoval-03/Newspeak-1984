@@ -16,6 +16,7 @@ import {
 } from "../config";
 import { t } from "../i18n";
 import type { Propaganda, WordView } from "../systems/Propaganda";
+import type { BossKind } from "../types";
 import { Typewriter } from "./effects";
 
 const MARGIN = 8;
@@ -41,6 +42,13 @@ const DIARY_BASELINE = 577;
 const DIARY_SIZE = 16;
 // Indexed by alert level.
 const STATES = ["normal", "alert", "pursuit", "thoughtPolice"] as const;
+
+// Whichever giant holds the sky: its name, its share of hp left, and whether it is the Party's own.
+export interface BossBar {
+  name: BossKind | "police";
+  health: number;
+  regime: boolean;
+}
 
 // Every value comes through Propaganda: the HUD shows what the Party allows, not what is real.
 export class HUD {
@@ -69,28 +77,42 @@ export class HUD {
     else if (--this.diaryHold === 0) this.diary = null;
   }
 
-  // `boss` is the share of hp left of whichever boss is on screen, and whether it is the Party's own.
-  draw(boss: { health: number; regime: boolean } | null = null): void {
+  // The diary band first, under everything; then the score and lives, the second line (the
+  // suspicion, or the boss in a battle), and the words row.
+  draw(boss: BossBar | null = null): void {
+    const { p } = this;
+
+    p.noStroke();
+    if (this.diary) this.drawDiary(this.diary);
+
+    p.textFont(this.fonts.machine);
+    p.textSize(20);
+    this.scoreLine();
+    // A battle is all that matters while it lasts, so its giant takes the suspicion's place.
+    if (boss) this.bossLine(boss);
+    else this.suspicionLine();
+    this.words(this.propaganda.displayedWords());
+  }
+
+  private scoreLine(): void {
     const { p, propaganda } = this;
     const score = String(propaganda.displayedScore()).padStart(
       SCORE_DIGITS,
       "0",
     );
 
-    p.noStroke();
-    if (this.diary) this.drawDiary(this.diary);
-    p.textFont(this.fonts.machine);
-    p.textSize(20);
-
     p.textAlign(p.LEFT, p.BASELINE);
     this.text(`${t("hud.score")} ${score}`, MARGIN, TOP_BASELINE);
-
     p.textAlign(p.RIGHT, p.BASELINE);
     this.text(
       `${t("hud.lives")} ${propaganda.displayedLives()}`,
       RIGHT_EDGE,
       TOP_BASELINE,
     );
+  }
+
+  private suspicionLine(): void {
+    const { p, propaganda } = this;
 
     p.textAlign(p.LEFT, p.BASELINE);
     this.text(t("hud.suspicion"), MARGIN, SECOND_BASELINE);
@@ -100,17 +122,20 @@ export class HUD {
       STATE_X,
       SECOND_BASELINE,
     );
+  }
 
-    // Red belongs to the regime, so a foreign boss's bar is paper.
-    if (boss) {
-      const { x, y, w, h } = BOSS_BAR;
-      p.fill(INK);
-      p.rect(x, y, w, h);
-      p.fill(boss.regime ? RED : PAPER);
-      p.rect(x, y, Math.round(w * boss.health), h);
-    }
+  // The giant's name over its hp bar. Red belongs to the regime, so a foreign boss's bar is paper.
+  private bossLine(boss: BossBar): void {
+    const { p } = this;
+    const { x, y, w, h } = BOSS_BAR;
 
-    this.words(propaganda.displayedWords());
+    p.textAlign(p.LEFT, p.BASELINE);
+    this.text(t(`hud.bosses.${boss.name}`), MARGIN, SECOND_BASELINE);
+
+    p.fill(INK);
+    p.rect(x, y, w, h);
+    p.fill(boss.regime ? RED : PAPER);
+    p.rect(x, y, Math.round(w * boss.health), h);
   }
 
   // The arsenal written as a dictionary entry: everything about a word shows on the word itself,

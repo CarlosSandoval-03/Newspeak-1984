@@ -28,6 +28,15 @@ export const en = {
       pursuit: "PURSUIT",
       thoughtPolice: "THOUGHT POLICE",
     },
+    // Shown in place of the suspicion line while a boss or the Thought Police hold the sky.
+    bosses: {
+      fortress: "FLYING FORTRESS",
+      airship: "WAR ZEPPELIN",
+      landship: "LAND BATTLESHIP",
+      wing: "FLYING WING",
+      eye: "THE EYE",
+      police: "THOUGHT POLICE",
+    },
   },
 
   // Display names of the four words. Code keys stay FREE / ESCAPE / TRUTH / REMEMBER.

@@ -57,9 +57,9 @@ The HUD is the Party's instrument panel: from level 1 some of it lies, so it loo
 | - | ------- | --------------------- | -------------------- |
 | 1 | Score | x 8, baseline 20 | `hud.score` and 6 zero-padded digits. |
 | 2 | Lives | right edge at x 472, baseline 20 | `hud.lives` and the number. |
-| 3 | Suspicion meter | label at x 8, baseline 42; bar at x 88–208, y 32–40 | Steel outline, ink inside, red fill; ink ticks at 34 and 67 mark the alert thresholds. |
-| 4 | Alert state | x 216, baseline 42 | `hud.states`. Reserve 184 px: `POLICÍA DEL PENSAMIENTO` is the longest. |
-| 5 | Boss hp bar | x 8–472, y 50–54 | Only while a boss or the Thought Police are on screen. Paper for foreign bosses, red for the regime's own (the Thought Police and the Eye). |
+| 3 | Suspicion meter | label at x 8, baseline 42; bar at x 88–208, y 32–40 | Steel outline, ink inside, red fill; ink ticks at 34 and 67 mark the alert thresholds. Hidden during a battle, when element 5 takes the line. |
+| 4 | Alert state | x 216, baseline 42 | `hud.states`. Reserve 184 px: `POLICÍA DEL PENSAMIENTO` is the longest. Hidden during a battle, like element 3. |
+| 5 | Boss name and hp bar | name at x 8, baseline 42; bar at x 8–472, y 50–54 | Only while a boss or the Thought Police are on screen, in place of elements 3 and 4: a battle is all that matters while it lasts, and the HUD stays as light as the fight is heavy. The name is `hud.bosses`. The bar is paper for foreign bosses, red for the regime's own (the Thought Police and the Eye). |
 | 6 | Diary line | band at y 560–584, full width | Courier Prime 16 on leather, typed with a block cursor. Once the cursor reaches the right margin the line slides left, like a typewriter carriage, so a line can be longer than the band. Stays a few seconds after it is typed, then goes. |
 | 7 | Words | baseline 604, from x 8, two spaces apart; pips at y 608–610 | The four words and their state (below). |
 | 8 | Ticker | strip at y 616–640 | VT323 on dark red, scrolling left (step 5). |
