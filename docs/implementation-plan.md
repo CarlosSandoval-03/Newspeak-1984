@@ -9,7 +9,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 0 | Scaffold: Vite, TypeScript, p5, tooling; an "under construction" page to test the deploy | `0.1.0`, `0.1.1` | Done |
 | 1 | Core shmup: scenes, input, player, enemies, collisions, scrolling, HUD | `0.2.0` | Done |
 | 2 | Surveillance Eyes and Suspicion | `0.3.0` | Done |
-| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | In progress |
+| 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Done |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0` | Not started |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Not started |
 | — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
@@ -56,19 +56,19 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `core/Collisions.ts`, `Collisions.test.ts` | Done | Circle–circle test |
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
-| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs; step 2 fills in `Eye` and `Boss` |
+| `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs; step 2 fills in `Eye` and `Boss`, step 3 `Pickup` |
 | `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and restarts its waves from the current scroll for the loop |
 | `systems/Propaganda.ts`, `Propaganda.test.ts` | Done | **Pass-through version**: returns the real values and never lies |
-| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs; step 2 fills in `Suspicion` |
+| `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs; step 2 fills in `Suspicion`, step 3 `Newspeak` |
 | `levels/levels.ts`, `levels.test.ts` | Done | Level 1: its terrain recipe and waves; the tests keep the waves sorted and on screen |
 | `levels/layout.ts`, `layout.test.ts` | Done | City generator: streets, blocks, buildings, craters (see **Background** below); the tests run 30 mixed recipes over 8 chunks each |
 | `levels/Background.ts`, `Background.test.ts` | Done | Scrolling background, one `p5.Graphics` per chunk: ground tiles, craters, and procedural rooftops with skylights, fixtures, and banners; lamps blink on top every frame. The tests cover which chunks are on screen and that every cell finds its tile |
 | `ui/HUD.ts`, `HUD.test.ts` | Done | Lives and score, read **through `Propaganda`**; labels from `t()`. A test reads the file's source and fails if it mentions `state` |
-| `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs; step 2 adds the red vignette to `effects` |
+| `ui/Ticker.ts`, `ui/effects.ts` | Done | Stubs; step 2 adds the red vignette to `effects`, step 3 the typewriter |
 | `scenes/MenuScene.ts`, `MenuScene.test.ts` | Done | `menu-city.png` with the title and the option list (see **Menu** below); the tests cover the navigation |
 | `scenes/GameScene.ts`, `GameScene.test.ts` | Done | Runs the player, the spawner, enemies, bullets, explosions, collisions, and the scroll over the background, and loops the waves once cleared; the tests cover the collision rules, the game over delay, and the loop. Draws the HUD last. |
 | `scenes/GameOverScene.ts`, `GameOverScene.test.ts` | Done | The VAPORIZED screen (see **Game over** below) |
-| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Done | Stubs |
+| `scenes/DictionaryScene.ts`, `MinistryScene.ts`, `EndingScene.ts` | Done | Stubs; step 3 fills in `DictionaryScene` |
 
 ### Specification
 
@@ -316,9 +316,11 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** your abilities are words, and the Party takes them away one level at a time.
 
+**Progress:** the run starts with the four words known but dormant, and falling word cards wake and upgrade them: FREE spreads the shot, ESCAPE dashes with a moment of cover, REMEMBER clears the screen with bombs, and TRUTH reveals camouflaged fighters for a while. A word's card falls crossed out once the Party has taken it, and reaching for it costs +10 suspicion. Before every level the Dictionary of Newspeak types its new edition and strikes that level's word while the Officer briefs the pilot; clearing a level's waves leads to the next one, so all five removals can be played on stand-in levels. A diary page lies on a skylight in each level: reading it gives back the last word taken for that level, costs +25 suspicion, and types the erased pilot's line in a leather band. The HUD's words row shows every word's state through `Propaganda`, and `pnpm bench` times the game's heavy scenes. **Step 3 is done** and released as `0.4.0`. Next: step 4.
+
 ### Files
 
-`systems/Newspeak.ts`, `entities/Pickup.ts`, `scenes/DictionaryScene.ts`, the typewriter in `ui/effects.ts`, and updates to `levels/levels.ts`, `entities/Player.ts`, `entities/Enemy.ts` (camouflage), `systems/Propaganda.ts`, `ui/HUD.ts`, `state.ts`, and `config.ts`.
+`systems/Newspeak.ts`, `entities/Pickup.ts`, `entities/Diary.ts`, `scenes/DictionaryScene.ts`, the typewriter in `ui/effects.ts`, and updates to `levels/levels.ts`, `systems/Spawner.ts`, `entities/Player.ts`, `entities/Enemy.ts` (camouflage), `systems/Propaganda.ts`, `ui/HUD.ts`, `scenes/GameScene.ts`, `scenes/MenuScene.ts`, `i18n/index.ts`, `state.ts`, `types.ts`, and `config.ts`.
 
 ### Specification
 
@@ -434,12 +436,12 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ### Done when
 
-- [ ] Each word changes the player as described, and pickups upgrade it.
-- [ ] Level 2 starts without FREE (single shot), and so on through level 5.
-- [ ] Removed-word pickups appear crossed out and add +10 suspicion.
-- [ ] The diary restores the right word for the current level only and adds +25.
-- [ ] The Dictionary scene appears before each level and strikes the right word.
-- [ ] TRUTH reveals camouflaged enemies while active.
+- [x] Each word changes the player as described, and pickups upgrade it.
+- [x] Level 2 starts without FREE (single shot), and so on through level 5.
+- [x] Removed-word pickups appear crossed out and add +10 suspicion.
+- [x] The diary restores the right word for the current level only and adds +25.
+- [x] The Dictionary scene appears before each level and strikes the right word.
+- [x] TRUTH reveals camouflaged enemies while active.
 
 ---
 
