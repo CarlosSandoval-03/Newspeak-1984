@@ -62,6 +62,24 @@ export const DIARY_BONUS_SCORE = 1000;
 // Read mid-fight, so the line types at a quarter of a page's speed, and stays a while once typed.
 export const DIARY_CPF = 0.25;
 export const DIARY_HOLD = 300;
+// The Ministry's obedience factor for a level: kills raise it, everything the regime dislikes lowers
+// it. A good citizen lands around 1.3–1.6, a rebel around 0.3–0.6.
+export const OBEDIENCE_BASE = 1;
+export const OBEDIENCE_MIN = 0.1;
+export const OBEDIENCE_MAX = 2;
+export const W_KILL = 0.01;
+export const W_EYE = 0.1;
+// Ten seconds under an eye costs half a point.
+export const W_SEEN = 0.5 / 600;
+export const W_DIARY = 0.3;
+// Where the verdicts split: at or above a hero, below a suspect, in between under review.
+export const VERDICT_HERO = 1.2;
+export const VERDICT_SUSPECT = 0.6;
+// A hero's kills are rounded up to this.
+export const HERO_KILLS_ROUNDING = 10;
+// The suspicion the next level starts with, set by the verdict: on alert at worst, never in pursuit.
+export const SUSPICION_REVIEW = 20;
+export const SUSPICION_SUSPECT = 40;
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.

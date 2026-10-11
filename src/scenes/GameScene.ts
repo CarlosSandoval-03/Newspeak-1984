@@ -39,6 +39,7 @@ import { streetColumns } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { record, resetLevelState, state } from "../state";
 import { Flight } from "../systems/Flight";
+import { judgeLevel } from "../systems/Ministry";
 import { Newspeak } from "../systems/Newspeak";
 import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
@@ -190,6 +191,7 @@ export class GameScene implements Scene {
 
   // The last level has no next one until the endings exist, so the run goes back to the Menu.
   private leaveLevel(): void {
+    judgeLevel();
     if (state.level < LEVELS.length) {
       state.level++;
       this.manager.change(new DictionaryScene(this.p, this.manager));

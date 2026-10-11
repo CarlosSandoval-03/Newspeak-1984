@@ -34,8 +34,9 @@ export class Propaganda {
     return state.realLives;
   }
 
+  // The Ministry's record so far, plus what this level has earned until it is judged.
   displayedScore(): number {
-    return state.realScore;
+    return state.officialScore + state.realScore - state.levelStartScore;
   }
 
   displayedSuspicion(): number {

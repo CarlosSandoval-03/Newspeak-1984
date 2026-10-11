@@ -298,7 +298,10 @@ describe("GameScene collisions", () => {
       scene["suspicion"].add(100);
       scene.update();
       expect(scene["police"]).not.toBeNull();
-      expect(scene["bossBar"]()).toMatchObject({ name: "police", regime: true });
+      expect(scene["bossBar"]()).toMatchObject({
+        name: "police",
+        regime: true,
+      });
 
       scene.update();
       expect(scene["boss"]).toBeNull();
@@ -362,15 +365,18 @@ describe("GameScene collisions", () => {
       expect(state.realLives).toBe(STARTING_LIVES - 1);
     });
 
-    it("opens the next level's Dictionary once the plane has landed", () => {
+    it("has the Ministry judge the level, then opens the next level's Dictionary once landed", () => {
       const change = vi.spyOn(manager, "change");
       scene["bossDown"] = true;
+      // An unremarkable level: obedience 1, so the record keeps the score as it was.
+      state.realScore = 1000;
 
       while (change.mock.calls.length === 0) scene.update();
 
       expect(scene["flight"].landed).toBe(true);
       expect(scene["flight"].scroll).toBe(parked);
       expect(state.level).toBe(2);
+      expect(state.officialScore).toBe(1000);
       expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
     });
 

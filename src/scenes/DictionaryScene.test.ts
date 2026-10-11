@@ -5,6 +5,7 @@ import { STRIKE_FRAMES } from "../config";
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { resetGame, state } from "../state";
+import { VERDICT } from "../types";
 import { DictionaryScene } from "./DictionaryScene";
 import { GameScene } from "./GameScene";
 
@@ -62,6 +63,15 @@ describe("DictionaryScene", () => {
       "Pilot 0042. Eurasian bombers approach the capital.",
     );
     expect(struck(scene, "now")).toEqual([]);
+  });
+
+  it("briefs in the tone of the Ministry's verdict on the last level", () => {
+    state.verdict = VERDICT.suspect;
+    const scene = open(5);
+
+    expect(texts(scene).join(" ")).toContain(
+      "Pilot 0042. They are expecting you at the Ministry of Love.",
+    );
   });
 
   it("strikes this level's word, with the earlier ones already struck", () => {

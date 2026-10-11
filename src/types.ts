@@ -143,6 +143,15 @@ export const ALERT = {
 
 export type AlertLevel = (typeof ALERT)[keyof typeof ALERT];
 
+// The Ministry's verdict on a level, worst last; it indexes the briefing tones and the kills lines.
+export const VERDICT = {
+  hero: 0,
+  underReview: 1,
+  suspect: 2,
+} as const;
+
+export type Verdict = (typeof VERDICT)[keyof typeof VERDICT];
+
 export type Stats = {
   kills: number;
   eyesDestroyed: number;
@@ -157,6 +166,11 @@ export interface GameState {
   realLives: number;
   // The whole run; the regime never shows it until the rebel ending.
   realScore: number;
+  levelStartScore: number;
+  // The whole run as the Ministry recorded it, level by level: the only score the regime shows.
+  officialScore: number;
+  // On the last level; level 1 is briefed as a hero's.
+  verdict: Verdict;
   suspicion: number;
   alertLevel: AlertLevel;
   // Available right now: what removal left, plus any word a diary gave back for this level.
@@ -168,5 +182,5 @@ export interface GameState {
   bombs: number;
   // This level only.
   stats: Stats;
-  runStats: Stats & { pagesRead: number[] };
+  runStats: Stats & { pagesRead: number[]; officialKills: number };
 }

@@ -1,5 +1,5 @@
 import { STARTING_LIVES } from "./config";
-import { ALERT, type GameState, type Stats } from "./types";
+import { ALERT, type GameState, type Stats, VERDICT } from "./types";
 
 const freshStats = (): Stats => ({
   kills: 0,
@@ -15,6 +15,9 @@ function freshRun(): GameState {
     level: 1,
     realLives: STARTING_LIVES,
     realScore: 0,
+    levelStartScore: 0,
+    officialScore: 0,
+    verdict: VERDICT.hero,
     suspicion: 0,
     alertLevel: ALERT.normal,
     words: new Set(["FREE", "ESCAPE", "TRUTH", "REMEMBER"]),
@@ -24,7 +27,7 @@ function freshRun(): GameState {
     restoredWord: null,
     bombs: 0,
     stats: freshStats(),
-    runStats: { ...freshStats(), pagesRead: [] },
+    runStats: { ...freshStats(), pagesRead: [], officialKills: 0 },
   };
 }
 
@@ -44,6 +47,7 @@ export function record(stat: keyof Stats): void {
 // A diary's word was given back for one level only; removal itself is permanent.
 export function resetLevelState(): void {
   state.stats = freshStats();
+  state.levelStartScore = state.realScore;
   if (state.restoredWord) state.words.delete(state.restoredWord);
   state.restoredWord = null;
   state.bombs = state.words.has("REMEMBER") ? state.wordLevels.REMEMBER : 0;

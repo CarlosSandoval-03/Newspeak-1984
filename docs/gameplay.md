@@ -12,7 +12,7 @@ How *Newspeak 1984* plays: the rules, the controls, the levels, and the enemies.
 | Bomb | REMEMBER: clears normal enemies and bullets, damages bosses; one per level for each upgrade level. |
 | Truth | TRUTH: a timed ability that shows real values and camouflaged enemies. |
 | Bosses | One per level, with attack phases; they visibly break as they lose hp (see [Feedback and damage](#feedback-and-damage)). |
-| Score | Kills add to the real score, which is tracked silently. The HUD shows what Propaganda allows. |
+| Score | Kills add to the real score, which is tracked silently. The HUD shows the Ministry's official record plus what the current level has earned, as Propaganda allows. |
 
 ## Surveillance and suspicion
 

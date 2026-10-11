@@ -82,6 +82,8 @@ describe("state", () => {
     expect(state).toMatchObject({
       realLives: 1,
       realScore: 500,
+      // Where this level's earnings start.
+      levelStartScore: 500,
       suspicion: 40,
       runStats: { kills: 30, pagesRead: [1] },
       wordLevels: { FREE: 2 },

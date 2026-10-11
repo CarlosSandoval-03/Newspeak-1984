@@ -182,7 +182,7 @@ export class DictionaryScene implements Scene {
 // the edition beside the cover, the four words with this level's struck, the notice, and the briefing.
 function page(): Line[] {
   const { dictionary, briefings } = currentStrings();
-  const { level, pilotId } = state;
+  const { level, pilotId, verdict } = state;
   const removed = removedAt(level);
   const name = (word: Word) => t(`words.${word}`);
 
@@ -216,10 +216,10 @@ function page(): Line[] {
       ],
       { ...NOTICE, size: PROSE_SIZE },
     ),
-    // Calm until the Ministry gives the verdict that picks the tone.
+    // The tone follows the Ministry's verdict on the last level.
     ...block(
       wrap(
-        format(briefings[level - 1][0], {
+        format(briefings[level - 1][verdict], {
           id: pilotId,
           word: removed ? name(removed) : "",
         }),

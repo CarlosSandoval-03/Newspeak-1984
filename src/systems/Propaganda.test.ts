@@ -21,14 +21,20 @@ describe("Propaganda", () => {
 
   it("passes the real values through, for now", () => {
     state.realLives = 2;
-    state.realScore = 4210;
     state.suspicion = 42;
     state.alertLevel = ALERT.alert;
 
     expect(propaganda.displayedLives()).toBe(2);
-    expect(propaganda.displayedScore()).toBe(4210);
     expect(propaganda.displayedSuspicion()).toBe(42);
     expect(propaganda.displayedAlert()).toBe(ALERT.alert);
+  });
+
+  it("shows the official record, plus what this level has earned until it is judged", () => {
+    state.officialScore = 3000;
+    state.levelStartScore = 2500;
+    state.realScore = 2500 + 700;
+
+    expect(propaganda.displayedScore()).toBe(3700);
   });
 
   describe("the words row", () => {
