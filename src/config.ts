@@ -92,6 +92,11 @@ export const DASH_FRAMES = 10;
 export const DASH_INVULN_FRAMES = 30;
 // Frames until the next dash, at each upgrade level from 1.
 export const ESCAPE_COOLDOWN_FRAMES = [180, 120, 75];
+// REMEMBER: a bomb takes a quarter of the Thought Police's hp, so it helps against them but never wins alone.
+export const BOMB_BOSS_DAMAGE = 10;
+// The screen flashes paper and fades back, the moment the pilot remembers.
+export const BOMB_FLASH_FRAMES = 24;
+export const BOMB_FLASH_ALPHA = 0.7;
 // FREE's volley at each upgrade level, from dormant (0) up: degrees off straight ahead, one bullet each.
 export const FREE_SPREAD_DEGREES = [
   [0],

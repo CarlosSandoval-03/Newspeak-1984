@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
   ALERT_SPAWN_MULT,
+  BOMB_BOSS_DAMAGE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
@@ -32,6 +33,7 @@ import { GameOverScene } from "./GameOverScene";
 const images = new Proxy({}, { get: (_, name) => name }) as Assets["image"];
 
 describe("GameScene collisions", () => {
+  let keys: EventTarget;
   let manager: SceneManager;
   let scene: GameScene;
 
@@ -76,7 +78,7 @@ describe("GameScene collisions", () => {
     resetGame();
     manager = new SceneManager(
       { image: images, font: {} } as Assets,
-      new Input(new EventTarget()),
+      new Input((keys = new EventTarget())),
     );
     scene = new GameScene({ get: () => ({}) } as unknown as p5, manager);
     manager.change(scene);
@@ -253,6 +255,101 @@ describe("GameScene collisions", () => {
     expect(scene["enemies"]).toHaveLength(
       Math.ceil(first.count * ALERT_SPAWN_MULT),
     );
+  });
+
+  describe("a bomb", () => {
+    // One tick with C pressed, then the press is spent, as the scene manager would do.
+    const bomb = () => {
+      keys.dispatchEvent(Object.assign(new Event("keydown"), { code: "KeyC" }));
+      keys.dispatchEvent(Object.assign(new Event("keyup"), { code: "KeyC" }));
+      scene.update();
+      manager.input.endFrame();
+    };
+
+    beforeEach(() => {
+      state.bombs = 2;
+    });
+
+    it("downs every enemy on screen as a kill, and spends one bomb", () => {
+      enemyAt("bomber", { x: 100, y: 100 }).drops = "TRUTH";
+      enemyAt("escort", { x: 300, y: 200 });
+
+      bomb();
+
+      expect(scene["enemies"]).toHaveLength(0);
+      expect(state.realScore).toBe(
+        ENEMY_STATS.bomber.score + ENEMY_STATS.escort.score,
+      );
+      expect(state.stats.kills).toBe(2);
+      expect(scene["pickups"].map(({ word }) => word)).toEqual(["TRUTH"]);
+      expect(state.bombs).toBe(1);
+    });
+
+    it("spares enemies still above the top edge", () => {
+      enemyAt("straight", { x: 100, y: -ENEMY_STATS.straight.halfSize - 10 });
+
+      bomb();
+
+      expect(scene["enemies"]).toHaveLength(1);
+    });
+
+    it("clears every shot but the pilot's, and leaves the ground standing", () => {
+      bulletAt("enemy", { x: 100, y: 100 });
+      scene["bullets"].push(
+        new Bullet("regime", { x: 200, y: 100 }, { x: 0, y: 0 }),
+      );
+      bulletAt("player", { x: 300, y: 300 });
+      const eye = eyeAbove({ x: 400, y: 100 });
+
+      bomb();
+
+      expect(scene["bullets"].map(({ owner }) => owner)).toEqual(["player"]);
+      expect(scene["eyes"]).toEqual([eye]);
+    });
+
+    it("only wounds the Thought Police", () => {
+      scene["suspicion"].add(100);
+      scene.update();
+      const police = scene["police"]!;
+      police.pos = { x: 240, y: 200 };
+
+      bomb();
+
+      expect(police.alive).toBe(true);
+      expect(police.health).toBeCloseTo(
+        1 - BOMB_BOSS_DAMAGE / THOUGHT_POLICE_STATS.hp,
+      );
+    });
+
+    it("can finish the Thought Police off", () => {
+      scene["suspicion"].add(100);
+      scene.update();
+      const police = scene["police"]!;
+      police.pos = { x: 240, y: 200 };
+      for (let i = BOMB_BOSS_DAMAGE; i < THOUGHT_POLICE_STATS.hp; i++)
+        police.hit();
+
+      bomb();
+
+      expect(scene["police"]).toBeNull();
+      expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
+      expect(state.realScore).toBeGreaterThanOrEqual(
+        THOUGHT_POLICE_STATS.score,
+      );
+    });
+
+    it("does nothing with none left, or once the pilot is down", () => {
+      enemyAt("straight", { x: 100, y: 100 });
+      state.bombs = 0;
+      bomb();
+      expect(scene["enemies"]).toHaveLength(1);
+
+      state.bombs = 1;
+      scene["player"].alive = false;
+      bomb();
+      expect(scene["enemies"]).toHaveLength(1);
+      expect(state.bombs).toBe(1);
+    });
   });
 
   describe("pickups", () => {

@@ -1,10 +1,16 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
+  BOMB_BOSS_DAMAGE,
+  BOMB_FLASH_ALPHA,
+  BOMB_FLASH_FRAMES,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
   GAME_OVER_DELAY,
+  PAPER,
   PLAYER_HALF_SIZE,
   THOUGHT_POLICE_STATS,
   TURRET_STATS,
@@ -56,6 +62,7 @@ export class GameScene implements Scene {
   private pickups: Pickup[] = [];
   private scroll = 0;
   private gameOverIn = 0;
+  private flash = 0;
 
   constructor(p: p5, manager: SceneManager) {
     const { input, assets } = manager;
@@ -109,6 +116,13 @@ export class GameScene implements Scene {
     }
 
     if (this.player.alive) this.player.update();
+    if (this.flash > 0) this.flash--;
+    if (
+      this.player.alive &&
+      state.bombs > 0 &&
+      this.manager.input.wasPressed("bomb")
+    )
+      this.bomb();
     this.spawner.update(
       this.scroll,
       state.alertLevel,
@@ -160,11 +174,43 @@ export class GameScene implements Scene {
     for (const bullet of this.bullets) bullet.draw(p);
     if (this.player.alive) this.player.draw(p);
     for (const explosion of this.explosions) explosion.draw(p);
+    if (this.flash > 0) {
+      const context = p.drawingContext as CanvasRenderingContext2D;
+      context.globalAlpha = (BOMB_FLASH_ALPHA * this.flash) / BOMB_FLASH_FRAMES;
+      p.noStroke();
+      p.fill(PAPER);
+      p.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      context.globalAlpha = 1;
+    }
     this.vignette.draw();
     this.hud.draw(this.police?.health ?? null);
   }
 
   exit(): void {}
+
+  // Clears what is on screen: every enemy aircraft, each one a kill, and every shot but the pilot's;
+  // the Thought Police only take a heavy blow. Enemies still above the top edge come through, and the
+  // ground is out of reach: towers, drones, and guns stand below the blast.
+  private bomb(): void {
+    state.bombs--;
+    this.flash = BOMB_FLASH_FRAMES;
+
+    for (const enemy of this.enemies)
+      if (enemy.alive && !enemy.isOffscreen(ENEMY_STATS[enemy.kind].halfSize)) {
+        enemy.alive = false;
+        this.kill(enemy);
+      }
+    for (const bullet of this.bullets)
+      if (bullet.owner !== "player") bullet.alive = false;
+
+    const { police } = this;
+    if (
+      police &&
+      !police.isOffscreen(THOUGHT_POLICE_STATS.halfSize) &&
+      police.hit(BOMB_BOSS_DAMAGE)
+    )
+      this.kill(police);
+  }
 
   // Suspicion stays at the top while they hold the sky, so they come once until they're gone.
   private summonPolice(): void {

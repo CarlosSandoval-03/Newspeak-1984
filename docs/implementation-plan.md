@@ -344,6 +344,13 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Decision:** ESCAPE's dash is a burst at `DASH_SPEED` (9) for `DASH_FRAMES` (10), about 90 px, along the held direction, normalized so diagonals go no farther. With no direction held it goes forward, the one way always away from the bottom edge. The pilot is invulnerable for `DASH_INVULN_FRAMES` (30, 0.5 s) from its start, longer than the burst, so the landing is covered too. The cooldown is `ESCAPE_COOLDOWN_FRAMES` (180, 120, 75 frames at levels 1–3), read at each dash. The pilot keeps firing during it. A dash never blinks like a respawn: three fading afterimages trail it, so it reads as speed, not as a hit.
 
+**Decision:** REMEMBER's bomb (`C`, while the pilot flies and `state.bombs` is above 0) clears what is on screen:
+- Every enemy aircraft with any part on screen goes down as a kill: it scores, counts, explodes, and lets fall the word it carried. Escorts and autogyros go too. Enemies still above the top edge come through.
+- Every shot that isn't the pilot's disappears, the regime's red ones too.
+- The Thought Police take `BOMB_BOSS_DAMAGE` (10, a quarter of their hp), so a bomb helps against them but never wins alone. Level bosses take the same blow in step 4.
+- The ground is out of reach: towers, drones, and AA guns stand below the blast. Otherwise a bomb would also blind every eye on screen, and REMEMBER would raise suspicion.
+- The screen flashes paper (`BOMB_FLASH_ALPHA` 0.7) and fades back over `BOMB_FLASH_FRAMES` (24), drawn over the explosions and under the vignette and the HUD.
+
 **Camouflaged enemies** (new `camo` flag on `Enemy`): drawn at very low alpha. They become fully visible while TRUTH is active. They appear from level 2 on.
 
 **Removal** (`Newspeak.applyLevel(level)`)
