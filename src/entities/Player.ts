@@ -3,6 +3,10 @@ import type { Assets } from "../assets";
 import {
   BLINK_FRAMES,
   CANVAS_WIDTH,
+  DASH_FRAMES,
+  DASH_INVULN_FRAMES,
+  DASH_SPEED,
+  ESCAPE_COOLDOWN_FRAMES,
   FREE_SPREAD_DEGREES,
   PLAYER_BULLET_SPEED,
   PLAYER_FIRE_COOLDOWN,
@@ -15,8 +19,13 @@ import {
 } from "../config";
 import type { Input } from "../core/Input";
 import { state } from "../state";
+import type { Vec } from "../types";
 import { Bullet } from "./Bullet";
 import { Entity } from "./Entity";
+
+// Fading copies left behind along a dash, so it reads as speed rather than a jump.
+const DASH_GHOSTS = 3;
+const GHOST_ALPHA = 0.35;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -29,6 +38,11 @@ export class Player extends Entity {
   private cooldown = 0;
   private bank = 0;
   private invulnFrames = 0;
+  private dashFrames = 0;
+  private dashGuard = 0;
+  private dashCooldown = 0;
+  private dashDir: Vec = { x: 0, y: -1 };
+  private trail: Vec[] = [];
 
   constructor(
     input: Input,
@@ -42,12 +56,15 @@ export class Player extends Entity {
   }
 
   get invulnerable(): boolean {
-    return this.invulnFrames > 0;
+    return this.invulnFrames > 0 || this.dashGuard > 0;
   }
 
   respawn(): void {
     this.pos = { ...PLAYER_SPAWN };
     this.invulnFrames = RESPAWN_INVULN_FRAMES;
+    this.dashFrames = 0;
+    this.dashGuard = 0;
+    this.trail = [];
   }
 
   update(): void {
@@ -55,9 +72,22 @@ export class Player extends Entity {
     const dx = Number(input.isDown("right")) - Number(input.isDown("left"));
     const dy = Number(input.isDown("down")) - Number(input.isDown("up"));
 
-    // Without this, diagonals would be about 41% faster.
-    const speed = dx && dy ? PLAYER_SPEED / Math.SQRT2 : PLAYER_SPEED;
-    this.vel = { x: dx * speed, y: dy * speed };
+    if (this.dashCooldown > 0) this.dashCooldown--;
+    if (input.wasPressed("dash")) this.dash(dx, dy);
+
+    if (this.dashFrames > 0) {
+      this.dashFrames--;
+      this.trail = [{ ...this.pos }, ...this.trail].slice(0, DASH_GHOSTS);
+      this.vel = {
+        x: this.dashDir.x * DASH_SPEED,
+        y: this.dashDir.y * DASH_SPEED,
+      };
+    } else {
+      this.trail = [];
+      // Without this, diagonals would be about 41% faster.
+      const speed = dx && dy ? PLAYER_SPEED / Math.SQRT2 : PLAYER_SPEED;
+      this.vel = { x: dx * speed, y: dy * speed };
+    }
     this.bank = dx;
     super.update();
 
@@ -73,11 +103,27 @@ export class Player extends Entity {
     );
 
     if (this.invulnFrames > 0) this.invulnFrames--;
+    if (this.dashGuard > 0) this.dashGuard--;
     if (this.cooldown > 0) this.cooldown--;
     if (input.isDown("shoot") && this.cooldown === 0) {
       this.volley();
       this.cooldown = PLAYER_FIRE_COOLDOWN;
     }
+  }
+
+  // Only an awake ESCAPE dashes, and its level, read at each dash, sets how soon the next one is ready.
+  // With no direction held it goes forward, the one way that is always away from the bottom edge.
+  private dash(dx: number, dy: number): void {
+    const level = state.words.has("ESCAPE") ? state.wordLevels.ESCAPE : 0;
+    if (level === 0 || this.dashCooldown > 0) return;
+
+    const length = Math.hypot(dx, dy);
+    this.dashDir = length
+      ? { x: dx / length, y: dy / length }
+      : { x: 0, y: -1 };
+    this.dashFrames = DASH_FRAMES;
+    this.dashGuard = DASH_INVULN_FRAMES;
+    this.dashCooldown = ESCAPE_COOLDOWN_FRAMES[level - 1];
   }
 
   // Read at every shot, so losing or upgrading FREE changes the very next volley.
@@ -97,8 +143,12 @@ export class Player extends Entity {
     }
   }
 
+  // Only a respawn blinks; a dash shows its cover with the trail instead.
   draw(p: p5): void {
-    if (this.invulnerable && Math.floor(this.invulnFrames / BLINK_FRAMES) % 2)
+    if (
+      this.invulnFrames > 0 &&
+      Math.floor(this.invulnFrames / BLINK_FRAMES) % 2
+    )
       return;
 
     const name =
@@ -107,6 +157,14 @@ export class Player extends Entity {
         : this.bank > 0
           ? "player-bank-right"
           : "player";
+    const context = p.drawingContext as CanvasRenderingContext2D;
+
+    p.imageMode(p.CENTER);
+    this.trail.forEach((ghost, i) => {
+      context.globalAlpha = GHOST_ALPHA * (1 - i / DASH_GHOSTS);
+      p.image(this.images[name], Math.round(ghost.x), Math.round(ghost.y));
+    });
+    context.globalAlpha = 1;
 
     this.drawAircraft(p, this.images[name], this.images[`${name}-shadow`]);
   }

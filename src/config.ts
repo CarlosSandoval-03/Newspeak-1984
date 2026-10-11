@@ -86,6 +86,12 @@ export const PLAYER_SPEED = 3;
 export const PLAYER_FIRE_COOLDOWN = 6;
 export const PLAYER_SPAWN = { x: CANVAS_WIDTH / 2, y: 540 };
 export const PLAYER_BULLET_SPEED = 8;
+// ESCAPE: a burst along the stick, covered for a while after it ends so the landing is safe too.
+export const DASH_SPEED = 9;
+export const DASH_FRAMES = 10;
+export const DASH_INVULN_FRAMES = 30;
+// Frames until the next dash, at each upgrade level from 1.
+export const ESCAPE_COOLDOWN_FRAMES = [180, 120, 75];
 // FREE's volley at each upgrade level, from dormant (0) up: degrees off straight ahead, one bullet each.
 export const FREE_SPREAD_DEGREES = [
   [0],

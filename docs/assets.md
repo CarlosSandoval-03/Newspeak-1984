@@ -125,7 +125,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | Asset | Required | Optional | Step |
 | ----- | -------- | -------- | ---- |
 | Every aircraft | `-shadow` variant drawn first. | — | 1 |
-| Player | Blink while invulnerable (skip frames). | Dash afterimages: 2–3 copies at decreasing alpha. | 1, 3 |
+| Player | Blink while invulnerable after a respawn (skip frames). **Dash afterimages:** the 3 last positions of the dash, the ship's sprite at 35% alpha and fading, drawn before it; a dash never blinks. | — | 1, 3 |
 | `menu-city.png` | Title on the dark lower third; options below the illustration ([art-direction.md › The Menu](art-direction.md#the-menu)). | Two translucent searchlight triangles sweeping. | 1 |
 | `vaporized.png` | Red "VAPORIZED" stamp (rotated red outline + VT323 word) after a short delay. | One-frame screen shake as it lands. | 1 |
 | `enemy-aa-gun.png` | **Twin barrels**: two parallel 3 px `#3a3a3a` lines with a `#1a1a1a` outline, ~18 px, rotated toward the player each frame; shots leave from the tips. | 2-frame `#e8e4d8` muzzle flash. | 2 |

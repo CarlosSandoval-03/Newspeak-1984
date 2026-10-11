@@ -342,6 +342,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Decision:** FREE's volleys are a single straight shot while dormant or removed, then 3 bullets at ±10°, then 3 at ±20°, then 5 bullets 10° apart (`FREE_SPREAD_DEGREES`), all at full speed and from the nose. The player reads the word at every shot, so losing or upgrading it changes the very next volley. The tracer stays upright at any angle, as in *1942*: a rotated 5×9 shape would blur.
 
+**Decision:** ESCAPE's dash is a burst at `DASH_SPEED` (9) for `DASH_FRAMES` (10), about 90 px, along the held direction, normalized so diagonals go no farther. With no direction held it goes forward, the one way always away from the bottom edge. The pilot is invulnerable for `DASH_INVULN_FRAMES` (30, 0.5 s) from its start, longer than the burst, so the landing is covered too. The cooldown is `ESCAPE_COOLDOWN_FRAMES` (180, 120, 75 frames at levels 1–3), read at each dash. The pilot keeps firing during it. A dash never blinks like a respawn: three fading afterimages trail it, so it reads as speed, not as a hit.
+
 **Camouflaged enemies** (new `camo` flag on `Enemy`): drawn at very low alpha. They become fully visible while TRUTH is active. They appear from level 2 on.
 
 **Removal** (`Newspeak.applyLevel(level)`)
