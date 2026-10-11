@@ -15,7 +15,11 @@ describe("LevelBoss", () => {
   let target: Vec;
 
   const make = (kind: BossKind, x = 240) =>
-    new LevelBoss(kind, x, () => target, images, (bullet) => fired.push(bullet));
+    new LevelBoss(kind, x, {
+      images,
+      fire: (bullet) => fired.push(bullet),
+      target: () => target,
+    });
   // Until it is in place, the tick it fires its first volley on included.
   const arrive = (boss: LevelBoss) => {
     while (fired.length === 0) boss.update();

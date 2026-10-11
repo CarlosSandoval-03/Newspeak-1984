@@ -18,6 +18,7 @@ import {
   RESPAWN_INVULN_FRAMES,
 } from "../config";
 import type { Input } from "../core/Input";
+import { clamp, radians } from "../core/math";
 import { state } from "../state";
 import type { Vec } from "../types";
 import { Bullet } from "./Bullet";
@@ -26,9 +27,6 @@ import { Entity } from "./Entity";
 // Fading copies left behind along a dash, so it reads as speed rather than a jump.
 const DASH_GHOSTS = 3;
 const GHOST_ALPHA = 0.35;
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 export class Player extends Entity {
   private readonly input: Input;
@@ -80,40 +78,9 @@ export class Player extends Entity {
     if (this.dashCooldown > 0) this.dashCooldown--;
     if (input.wasPressed("dash")) this.dash(dx, dy);
 
-    if (this.dashFrames > 0) {
-      this.dashFrames--;
-      this.trail = [{ ...this.pos }, ...this.trail].slice(0, DASH_GHOSTS);
-      this.vel = {
-        x: this.dashDir.x * DASH_SPEED,
-        y: this.dashDir.y * DASH_SPEED,
-      };
-    } else {
-      this.trail = [];
-      // Without this, diagonals would be about 41% faster.
-      const speed = dx && dy ? PLAYER_SPEED / Math.SQRT2 : PLAYER_SPEED;
-      this.vel = { x: dx * speed, y: dy * speed };
-    }
-    this.bank = dx;
-    super.update();
-
-    this.pos.x = clamp(
-      this.pos.x,
-      PLAYER_HALF_SIZE,
-      CANVAS_WIDTH - PLAYER_HALF_SIZE,
-    );
-    this.pos.y = clamp(
-      this.pos.y,
-      PLAYER_HALF_SIZE,
-      PLAYFIELD_BOTTOM - PLAYER_HALF_SIZE,
-    );
-
-    if (this.invulnFrames > 0) this.invulnFrames--;
-    if (this.dashGuard > 0) this.dashGuard--;
-    if (this.cooldown > 0) this.cooldown--;
-    if (input.isDown("shoot") && this.cooldown === 0) {
-      this.volley();
-      this.cooldown = PLAYER_FIRE_COOLDOWN;
-    }
+    this.fly(dx, dy);
+    this.tickTimers();
+    if (input.isDown("shoot")) this.shoot();
   }
 
   // The regime flies the plane: toward `target`, slowing as it nears it, banking into turns, never firing.
@@ -132,6 +99,52 @@ export class Player extends Entity {
     // Still counted down, or a blink caught mid-way would hide the plane for good.
     if (this.invulnFrames > 0) this.invulnFrames--;
     super.update();
+  }
+
+  // Along the dash while one lasts, otherwise where the stick points; always inside the playfield.
+  private fly(dx: number, dy: number): void {
+    if (this.dashFrames > 0) {
+      this.dashFrames--;
+      this.trail = [{ ...this.pos }, ...this.trail].slice(0, DASH_GHOSTS);
+      this.vel = {
+        x: this.dashDir.x * DASH_SPEED,
+        y: this.dashDir.y * DASH_SPEED,
+      };
+    } else {
+      this.trail = [];
+      // Without this, diagonals would be about 41% faster.
+      const speed = dx && dy ? PLAYER_SPEED / Math.SQRT2 : PLAYER_SPEED;
+      this.vel = { x: dx * speed, y: dy * speed };
+    }
+    this.bank = dx;
+    super.update();
+    this.keepInPlayfield();
+  }
+
+  private keepInPlayfield(): void {
+    this.pos.x = clamp(
+      this.pos.x,
+      PLAYER_HALF_SIZE,
+      CANVAS_WIDTH - PLAYER_HALF_SIZE,
+    );
+    this.pos.y = clamp(
+      this.pos.y,
+      PLAYER_HALF_SIZE,
+      PLAYFIELD_BOTTOM - PLAYER_HALF_SIZE,
+    );
+  }
+
+  private tickTimers(): void {
+    if (this.invulnFrames > 0) this.invulnFrames--;
+    if (this.dashGuard > 0) this.dashGuard--;
+    if (this.cooldown > 0) this.cooldown--;
+  }
+
+  private shoot(): void {
+    if (this.cooldown > 0) return;
+
+    this.volley();
+    this.cooldown = PLAYER_FIRE_COOLDOWN;
   }
 
   // Only an awake ESCAPE dashes, and its level, read at each dash, sets how soon the next one is ready.
@@ -155,8 +168,9 @@ export class Player extends Entity {
     const spread =
       FREE_SPREAD_DEGREES[state.words.has("FREE") ? state.wordLevels.FREE : 0];
 
+    // Measured off straight up, so the middle shot flies exactly vertical.
     for (const degrees of spread) {
-      const angle = (degrees * Math.PI) / 180;
+      const angle = radians(degrees);
       this.fire(
         new Bullet("player", nose, {
           x: Math.sin(angle) * PLAYER_BULLET_SPEED,

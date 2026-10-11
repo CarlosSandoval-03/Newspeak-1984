@@ -69,13 +69,11 @@ describe("GameScene collisions", () => {
 
   // Bracket access reaches the scene's private lists, to set up exact situations.
   const enemyAt = (kind: EnemyKind, pos: Vec) => {
-    const enemy = new Enemy(
-      kind,
-      pos,
-      () => pos,
+    const enemy = new Enemy(kind, pos, {
       images,
-      () => {},
-    );
+      fire: () => {},
+      target: () => pos,
+    });
     scene["enemies"].push(enemy);
     return enemy;
   };
@@ -272,9 +270,7 @@ describe("GameScene collisions", () => {
     it("stops the city at the level's length and brings in the level's boss", () => {
       const turret = new Turret(
         { x: 300, y: 200 },
-        () => PLAYER_SPAWN,
-        images,
-        () => {},
+        { images, fire: () => {}, target: () => PLAYER_SPAWN },
       );
       scene["turrets"].push(turret);
 
@@ -407,7 +403,7 @@ describe("GameScene collisions", () => {
       for (let i = 0; i < 300; i++) {
         scene.update();
         // As any gun would, through the scene's own hand.
-        scene["fire"](new Bullet("enemy", { x: 0, y: 0 }, { x: 0, y: 0 }));
+        scene["arena"].fire(new Bullet("enemy", { x: 0, y: 0 }, { x: 0, y: 0 }));
       }
 
       expect(eye.detecting).toBe(false);
@@ -705,12 +701,11 @@ describe("GameScene collisions", () => {
 
   describe("turrets", () => {
     const turretAt = (pos: Vec) => {
-      const turret = new Turret(
-        pos,
-        () => pos,
+      const turret = new Turret(pos, {
         images,
-        () => {},
-      );
+        fire: () => {},
+        target: () => pos,
+      });
       scene["turrets"].push(turret);
       return turret;
     };

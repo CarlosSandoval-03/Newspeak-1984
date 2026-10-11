@@ -35,13 +35,11 @@ describe("Enemy", () => {
     pos: Vec = { x: 240, y: 100 },
     target: Vec = { x: 240, y: 500 },
   ) =>
-    new Enemy(
-      kind,
-      pos,
-      () => target,
+    new Enemy(kind, pos, {
       images,
-      (b) => fired.push(b),
-    );
+      fire: (b) => fired.push(b),
+      target: () => target,
+    });
 
   const ticks = (enemy: Enemy, n: number) => {
     for (let i = 0; i < n; i++) enemy.update();
@@ -308,9 +306,11 @@ describe("Enemy", () => {
       new Enemy(
         "escort",
         leader.pos,
-        () => ({ x: 240, y: 540 }),
-        images,
-        (b) => fired.push(b),
+        {
+          images,
+          fire: (b) => fired.push(b),
+          target: () => ({ x: 240, y: 540 }),
+        },
         { leader, side },
       );
 

@@ -74,7 +74,7 @@ export const SCENARIOS: Record<string, Scenario> = {
             aperture: 90,
           },
           { x: 0, y: 0 },
-          scene["images"],
+          scene["arena"].images,
         ),
       );
     },
@@ -99,9 +99,7 @@ export const SCENARIOS: Record<string, Scenario> = {
           new Enemy(
             enemies.length % 3 === 0 ? "bomber" : "straight",
             { x: 40 + Math.random() * (CANVAS_WIDTH - 80), y: -24 },
-            () => scene["player"].pos,
-            scene["images"],
-            scene["fire"],
+            scene["arena"],
           ),
         );
     },

@@ -9,7 +9,6 @@ import {
   DRONE_SPEED,
   EYE_APERTURE_DEGREES,
   EYE_STATS,
-  HIT_FLASH_FRAMES,
   INK,
   PAPER,
   RED,
@@ -18,8 +17,9 @@ import {
   SHADOW_OFFSET,
   STEEL,
 } from "../config";
+import { radians, wrapAngle } from "../core/math";
 import type { EyeDef, EyeType, Vec } from "../types";
-import { Entity } from "./Entity";
+import { Destructible } from "./Destructible";
 
 const DRONE_BODY = 16;
 const DRONE_LENS = 6;
@@ -28,16 +28,12 @@ const ROTOR_REACH = 11;
 const ROTOR_LENGTH = 10;
 const ROTOR_SPIN = 0.5;
 
-const radians = (degrees: number) => (degrees * Math.PI) / 180;
-
-export class Eye extends Entity {
+export class Eye extends Destructible {
   readonly type: EyeType;
   readonly range: number;
   // Set from outside each tick, since only the scene knows whether the player can be seen at all.
   detecting = false;
-  private hp: number;
   private age = 0;
-  private flash = 0;
   private readonly facing: number;
   private readonly sweepAmp: number;
   private readonly sweepSpeed: number;
@@ -50,11 +46,10 @@ export class Eye extends Entity {
 
   constructor(def: EyeDef, pos: Vec, images: Assets["image"]) {
     const stats = EYE_STATS[def.type];
-    super(pos, stats.radius);
+    super(pos, stats.radius, stats.hp);
 
     this.type = def.type;
     this.range = def.range;
-    this.hp = stats.hp;
     this.facing = radians(def.facing);
     this.sweepAmp = radians(def.sweepAmp);
     this.sweepSpeed = def.sweepSpeed;
@@ -78,41 +73,15 @@ export class Eye extends Entity {
     const dy = point.y - this.pos.y;
     if (dx * dx + dy * dy >= this.range * this.range) return false;
 
-    // Wrapped into (-π, π], so a cone pointing left still sees across the ±180° seam.
-    const d = Math.atan2(dy, dx) - this.angle;
-    return Math.abs(Math.atan2(Math.sin(d), Math.cos(d))) < this.aperture / 2;
-  }
-
-  // True only for the hit that destroyed it, so two bullets on one tick count it once.
-  hit(damage = 1): boolean {
-    if (!this.alive) return false;
-
-    this.hp -= damage;
-    if (this.hp <= 0) {
-      this.alive = false;
-      return true;
-    }
-
-    this.flash = HIT_FLASH_FRAMES;
-    return false;
+    // Wrapped, so a cone pointing left still sees across the ±180° seam.
+    const off = wrapAngle(Math.atan2(dy, dx) - this.angle);
+    return Math.abs(off) < this.aperture / 2;
   }
 
   update(): void {
     this.age++;
     super.update();
-
-    const t = this.age / DRONE_PATROL_PERIOD;
-    // A triangle wave flies the patrol at an even speed, turning sharply at each end.
-    if (this.path === "patrol")
-      this.pos.x =
-        this.startX +
-        DRONE_PATROL_REACH *
-          (2 / Math.PI) *
-          Math.asin(Math.sin(2 * Math.PI * t));
-    if (this.path === "sine")
-      this.pos.x = this.startX + DRONE_PATROL_REACH * Math.sin(2 * Math.PI * t);
-
-    if (this.flash > 0) this.flash--;
+    if (this.path) this.patrol(this.path);
 
     if (this.pos.y - EYE_STATS[this.type].halfSize > CANVAS_HEIGHT)
       this.alive = false;
@@ -122,6 +91,14 @@ export class Eye extends Entity {
     this.drawCone(p);
     if (this.type === "tower") this.drawTower(p);
     else this.drawDrone(p);
+  }
+
+  // A triangle wave flies the patrol at an even speed, turning sharply at each end.
+  private patrol(path: "patrol" | "sine"): void {
+    const wave = Math.sin((2 * Math.PI * this.age) / DRONE_PATROL_PERIOD);
+    const shape = path === "patrol" ? (2 / Math.PI) * Math.asin(wave) : wave;
+
+    this.pos.x = this.startX + DRONE_PATROL_REACH * shape;
   }
 
   // Under the eye itself, from the lens at its center.

@@ -1,5 +1,4 @@
 import type p5 from "p5";
-import type { Assets } from "../assets";
 import {
   AIRFIELD_AT,
   BOMB_BOSS_DAMAGE,
@@ -33,6 +32,7 @@ import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { LevelBoss } from "../entities/Boss";
 import type { Bullet } from "../entities/Bullet";
+import type { Arena } from "../entities/Entity";
 import { Enemy } from "../entities/Enemy";
 import { Explosion } from "../entities/Explosion";
 import { Diary } from "../entities/Diary";
@@ -68,8 +68,7 @@ export class GameScene implements Scene {
   private readonly suspicion = new Suspicion();
   private readonly newspeak = new Newspeak(this.suspicion);
   private readonly vignette: Vignette;
-  private readonly images: Assets["image"];
-  private readonly fire: (bullet: Bullet) => void;
+  private readonly arena: Arena;
   private readonly font: p5.Font;
   private enemies: Enemy[] = [];
   private eyes: Eye[] = [];
@@ -104,8 +103,11 @@ export class GameScene implements Scene {
     this.p = p;
     this.manager = manager;
     this.level = level;
-    this.images = assets.image;
-    this.fire = fire;
+    this.arena = {
+      images: assets.image,
+      fire,
+      target: () => this.player.pos,
+    };
     this.font = assets.font.machine;
     this.hud = new HUD(
       p,
@@ -123,22 +125,13 @@ export class GameScene implements Scene {
     this.player.altitude = 0;
     this.spawner = new Spawner(level, {
       enemy: (kind, pos, { drops, camo }) => {
-        const enemy = new Enemy(
-          kind,
-          pos,
-          () => this.player.pos,
-          assets.image,
-          fire,
-        );
+        const enemy = new Enemy(kind, pos, this.arena);
         enemy.drops = drops;
         enemy.camo = camo;
         this.enemies.push(enemy);
       },
       eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),
-      turret: (pos) =>
-        this.turrets.push(
-          new Turret(pos, () => this.player.pos, assets.image, fire),
-        ),
+      turret: (pos) => this.turrets.push(new Turret(pos, this.arena)),
       pickup: (word, pos) =>
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
       diary: (pos) => (this.diary = new Diary(pos, assets.image)),
@@ -378,34 +371,17 @@ export class GameScene implements Scene {
           )
       : middle;
 
-    this.boss = new LevelBoss(
-      kind,
-      x,
-      () => this.player.pos,
-      this.images,
-      this.fire,
-    );
+    this.boss = new LevelBoss(kind, x, this.arena);
   }
 
   // Suspicion stays at the top while they hold the sky, so they come once until they're gone.
   private summonPolice(): void {
-    const police = new ThoughtPolice(
-      () => this.player.pos,
-      this.images,
-      this.fire,
-    );
+    const police = new ThoughtPolice(this.arena);
 
     this.police = police;
     for (const side of [-1, 1] as const)
       this.enemies.push(
-        new Enemy(
-          "escort",
-          police.pos,
-          () => this.player.pos,
-          this.images,
-          this.fire,
-          { leader: police, side },
-        ),
+        new Enemy("escort", police.pos, this.arena, { leader: police, side }),
       );
   }
 

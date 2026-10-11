@@ -21,12 +21,11 @@ describe("Turret", () => {
   let fired: Bullet[];
 
   const make = (target: Vec = { x: 240, y: 500 }, pos = { x: 240, y: 100 }) =>
-    new Turret(
-      pos,
-      () => target,
+    new Turret(pos, {
       images,
-      (b) => fired.push(b),
-    );
+      fire: (b) => fired.push(b),
+      target: () => target,
+    });
 
   const ticks = (turret: Turret, n: number) => {
     for (let i = 0; i < n; i++) turret.update();

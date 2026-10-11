@@ -1,5 +1,4 @@
 import type p5 from "p5";
-import type { Assets } from "../assets";
 import {
   CANVAS_WIDTH,
   ENEMY_BULLET_SPEED,
@@ -14,33 +13,24 @@ import {
   THOUGHT_POLICE_TIMEOUT,
   THOUGHT_POLICE_TRIPLE_DEGREES,
 } from "../config";
-import type { Vec } from "../types";
+import { angleTo, fan, radians, velocity } from "../core/math";
 import { Boss } from "./Boss";
 import { Bullet } from "./Bullet";
-
-const radians = (degrees: number) => (degrees * Math.PI) / 180;
+import type { Arena } from "./Entity";
 
 // Comes down to hover, holds the sky until killed or until THOUGHT_POLICE_TIMEOUT runs out, then withdraws.
 export class ThoughtPolice extends Boss {
   private phase: "entering" | "holding" | "withdrawing" = "entering";
   private holdAge = 0;
   private shots = 0;
-  private readonly target: () => Vec;
-  private readonly images: Assets["image"];
-  private readonly fire: (bullet: Bullet) => void;
+  private readonly arena: Arena;
 
-  constructor(
-    target: () => Vec,
-    images: Assets["image"],
-    fire: (bullet: Bullet) => void,
-  ) {
+  constructor(arena: Arena) {
     const { halfSize, radius, hp, score } = THOUGHT_POLICE_STATS;
     super({ x: CANVAS_WIDTH / 2, y: -halfSize }, radius, hp, score);
 
     this.vel = { x: 0, y: THOUGHT_POLICE_SPEED };
-    this.target = target;
-    this.images = images;
-    this.fire = fire;
+    this.arena = arena;
   }
 
   // While true its escort keeps formation and suspicion stays frozen.
@@ -50,26 +40,46 @@ export class ThoughtPolice extends Boss {
 
   update(): void {
     super.update();
-
-    if (this.phase === "entering" && this.pos.y >= THOUGHT_POLICE_HOVER_Y) {
-      this.phase = "holding";
-      this.vel = { x: 0, y: 0 };
-    }
-
     if (this.phase === "withdrawing") {
-      if (this.pos.y < -THOUGHT_POLICE_STATS.halfSize) this.alive = false;
+      this.leaveWhenGone();
       return;
     }
 
     // Counted from when they appear, the way in included: that is the wait the player sits through.
     if (this.age >= THOUGHT_POLICE_TIMEOUT) {
-      this.phase = "withdrawing";
-      this.vel = { x: 0, y: -THOUGHT_POLICE_SPEED };
+      this.withdraw();
       return;
     }
+    if (this.phase === "entering") this.settleAtHover();
+    if (this.phase === "holding") this.hold();
+  }
 
-    if (this.phase !== "holding") return;
+  draw(p: p5): void {
+    const { images } = this.arena;
+    const sprite = this.flash > 0 ? "thought-police-flash" : "thought-police";
 
+    this.drawAircraft(p, images[sprite], images["thought-police-shadow"]);
+  }
+
+  private settleAtHover(): void {
+    if (this.pos.y < THOUGHT_POLICE_HOVER_Y) return;
+
+    this.phase = "holding";
+    this.vel = { x: 0, y: 0 };
+  }
+
+  private withdraw(): void {
+    this.phase = "withdrawing";
+    this.vel = { x: 0, y: -THOUGHT_POLICE_SPEED };
+  }
+
+  private leaveWhenGone(): void {
+    if (this.pos.y < -THOUGHT_POLICE_STATS.halfSize) this.alive = false;
+  }
+
+  // Sways, alternating a tight aimed triple, hard to stand still against, with a wide fan, hard to
+  // stand wide against.
+  private hold(): void {
     this.holdAge++;
     this.pos.x =
       CANVAS_WIDTH / 2 +
@@ -77,7 +87,6 @@ export class ThoughtPolice extends Boss {
         Math.sin((2 * Math.PI * this.holdAge) / THOUGHT_POLICE_SWAY_PERIOD);
 
     if (this.holdAge % THOUGHT_POLICE_FIRE_INTERVAL !== 0) return;
-    // Alternates a tight aimed triple, hard to stand still against, with a wide fan, hard to stand wide against.
     if (this.shots++ % 2 === 0)
       this.spread(3, radians(THOUGHT_POLICE_TRIPLE_DEGREES) * 2);
     else
@@ -87,31 +96,13 @@ export class ThoughtPolice extends Boss {
       );
   }
 
-  draw(p: p5): void {
-    const sprite = this.flash > 0 ? "thought-police-flash" : "thought-police";
-
-    this.drawAircraft(
-      p,
-      this.images[sprite],
-      this.images["thought-police-shadow"],
-    );
-  }
-
   // `count` bullets over `width` radians, centered on the player.
   private spread(count: number, width: number): void {
-    const target = this.target();
-    const aim = Math.atan2(target.y - this.pos.y, target.x - this.pos.x);
-    const first = aim - width / 2;
-    const step = width / (count - 1);
+    const aim = angleTo(this.pos, this.arena.target());
 
-    for (let i = 0; i < count; i++) {
-      const angle = first + i * step;
-      this.fire(
-        new Bullet("regime", this.pos, {
-          x: Math.cos(angle) * ENEMY_BULLET_SPEED,
-          y: Math.sin(angle) * ENEMY_BULLET_SPEED,
-        }),
+    for (const angle of fan(aim, count, width))
+      this.arena.fire(
+        new Bullet("regime", this.pos, velocity(angle, ENEMY_BULLET_SPEED)),
       );
-    }
   }
 }

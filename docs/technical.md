@@ -45,8 +45,8 @@ newspeak-1984/
     ├── state.ts          # global game state + resetLevelState()
     ├── types.ts          # shared types
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
-    ├── core/             # Scene, SceneManager, Input, Collisions, display (theme-agnostic)
-    ├── entities/         # Entity, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, ThoughtPolice, Pickup, Diary
+    ├── core/             # Scene, SceneManager, Input, Collisions, math, display (theme-agnostic)
+    ├── entities/         # Entity, Destructible, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, ThoughtPolice, Pickup, Diary
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter)
@@ -65,7 +65,8 @@ newspeak-1984/
 
 - **`main.ts` is minimal:** `setup` and `draw` only create and call the `SceneManager`.
 - **Scenes** implement `enter()`, `update()`, `draw()`, `exit()`. `SceneManager.change(next)` calls `exit()` then `enter()`.
-- **Entities** extend `Entity` (`pos`, `vel`, `radius`, `alive`, `update()`, `draw(p)`).
+- **Entities** extend `Entity` (`pos`, `vel`, `radius`, `alive`, `update()`, `draw(p)`). What the pilot can shoot down extends `Destructible`, which owns hp, `health`, `hit()`, and the hit flash. Hostiles take the scene's `Arena` (their sprites, the scene's `fire`, and the pilot to aim at) as one argument.
+- **Shared math** (angles, velocities, fans of bullets, clamping, easing) lives in `core/math.ts`, never copied into an entity.
 - **The p5 instance is passed explicitly**, never stored globally.
 - **`core/` is theme-agnostic:** scenes, input, circles, canvas scaling; nothing about 1984.
 - **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `displayedWords()`, `apparentColor()`, `isLying()`), a pass-through until the lies exist.

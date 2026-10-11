@@ -28,11 +28,11 @@ describe("ThoughtPolice", () => {
 
   beforeEach(() => {
     fired = [];
-    police = new ThoughtPolice(
-      () => ({ x: 240, y: 540 }),
+    police = new ThoughtPolice({
       images,
-      (bullet) => fired.push(bullet),
-    );
+      fire: (bullet) => fired.push(bullet),
+      target: () => ({ x: 240, y: 540 }),
+    });
   });
 
   it("comes down from above the screen to hover, then sways", () => {

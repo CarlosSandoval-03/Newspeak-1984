@@ -1,4 +1,5 @@
 import type p5 from "p5";
+import type { Assets } from "../assets";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -6,6 +7,14 @@ import {
   SHADOW_OFFSET,
 } from "../config";
 import type { Vec } from "../types";
+import type { Bullet } from "./Bullet";
+
+// What a hostile needs from the scene: its sprites, a hand to fire through, and the pilot to aim at.
+export interface Arena {
+  readonly images: Assets["image"];
+  readonly fire: (bullet: Bullet) => void;
+  readonly target: () => Vec;
+}
 
 export abstract class Entity {
   pos: Vec;
