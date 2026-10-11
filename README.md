@@ -20,16 +20,29 @@ You fly for the Party. The longer you fly, the more you see, and the more you se
 - [TypeScript](https://www.typescriptlang.org/) (strict mode)
 - [Vite](https://vite.dev/)
 - [p5.js](https://p5js.org/) in instance mode
-- [Vitest](https://vitest.dev/) for tests, GitHub Actions for CI and deploys to GitHub Pages
+- [Vitest](https://vitest.dev/) for tests, GitHub Actions for CI, deploys to GitHub Pages, and release zips
 
 ## Getting started
 
-### Requirements
+### Play a release
+
+Every version is published on the [Releases](https://github.com/CarlosSandoval-03/Newspeak-1984/releases) page as `newspeak-1984-vX.Y.Z.zip`, with only what the game needs to run. Unzip it and serve the folder with any static web server, for example with Python:
+
+```sh
+cd newspeak-1984-vX.Y.Z
+python3 -m http.server
+```
+
+Open http://localhost:8000 in your browser. Opening `index.html` directly does not work: browsers refuse to load the game's scripts and fonts from `file://`.
+
+### Run from source
+
+#### Requirements
 
 - Node.js 22.12+
 - pnpm
 
-### Run locally
+#### Steps
 
 ```sh
 git clone https://github.com/CarlosSandoval-03/Newspeak-1984.git
@@ -40,7 +53,7 @@ pnpm dev
 
 Open http://localhost:5173 in your browser.
 
-### Scripts
+#### Scripts
 
 | Command          | Description                               |
 | ---------------- | ----------------------------------------- |
