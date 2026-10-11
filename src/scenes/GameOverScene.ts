@@ -23,6 +23,8 @@ const STAMP_CENTER = { x: CANVAS_WIDTH / 2, y: 190 };
 const STAMP_ANGLE = -0.14;
 const STAMP_PADDING = 12;
 const STAMP_HEIGHT = 56;
+const STAMP_SIZE = 40;
+const TEXT_SIZE = 20;
 const LINE_Y = 400;
 const PRESS_ENTER_Y = 460;
 // Shares of the switch-off: the picture collapses, then the line shrinks, then the dot fades.
@@ -64,80 +66,100 @@ export class GameOverScene implements Scene {
     this.age++;
   }
 
+  // The telescreen switches off; then the squadron photo fades in, the stamp lands on it, and the
+  // pilot's erasure is typed out under it.
   draw(): void {
     const { p } = this;
-    const { image, font } = this.manager.assets;
-    const center = CANVAS_WIDTH / 2;
 
     p.background(INK);
     p.imageMode(p.CORNER);
     if (this.age < SIGNAL_OFF_FRAMES) {
-      this.drawSignalOff();
+      this.drawSignalOff(this.age / SIGNAL_OFF_FRAMES);
       return;
     }
 
-    const context = p.drawingContext as CanvasRenderingContext2D;
-    context.globalAlpha = Math.min(
-      1,
-      (this.age - SIGNAL_OFF_FRAMES) / PHOTO_FADE_FRAMES,
-    );
-    p.image(image.vaporized, 0, 0, CANVAS_WIDTH, PHOTO_HEIGHT);
-    context.globalAlpha = 1;
-
-    p.textFont(font.machine);
+    this.drawPhoto();
+    p.textFont(this.manager.assets.font.machine);
     if (this.age >= STAMP_AT) this.drawStamp();
-    if (!this.textShown) return;
-
-    p.noStroke();
-    p.textSize(20);
-    p.textAlign(p.CENTER, p.BASELINE);
-
-    p.fill(PAPER);
-    p.text(t("gameOver.line", { id: state.pilotId }), center, LINE_Y);
-    p.fill(STEEL);
-    p.text(t("gameOver.pressEnter"), center, PRESS_ENTER_Y);
+    if (this.textShown) this.drawText();
   }
 
   exit(): void {}
 
-  // Like an old tube losing its sweep: the picture flattens into a burning line, then a dot.
-  private drawSignalOff(): void {
+  // Like an old tube losing its sweep: the picture flattens into a burning line, then a dot that
+  // lingers and fades, the last trace of the broadcast.
+  private drawSignalOff(progress: number): void {
     const { p } = this;
-    const progress = this.age / SIGNAL_OFF_FRAMES;
-    const middle = CANVAS_HEIGHT / 2;
-    const context = p.drawingContext as CanvasRenderingContext2D;
 
     p.noStroke();
     p.fill(PAPER);
+    if (progress < COLLAPSE_END) this.drawCollapse(progress / COLLAPSE_END);
+    else if (progress < SHRINK_END)
+      this.drawLine((progress - COLLAPSE_END) / (SHRINK_END - COLLAPSE_END));
+    else this.drawDot((progress - SHRINK_END) / (1 - SHRINK_END));
+  }
 
-    if (progress < COLLAPSE_END) {
-      const collapse = progress / COLLAPSE_END;
-      const height = Math.max(2, CANVAS_HEIGHT * (1 - collapse) ** 2);
-      const top = middle - height / 2;
+  // The last frame squeezed toward the middle line, burning white as it goes.
+  private drawCollapse(collapse: number): void {
+    const { p } = this;
+    const context = p.drawingContext as CanvasRenderingContext2D;
+    const height = Math.max(2, CANVAS_HEIGHT * (1 - collapse) ** 2);
+    const top = CANVAS_HEIGHT / 2 - height / 2;
 
-      p.image(this.lastFrame, 0, top, CANVAS_WIDTH, height);
-      context.globalAlpha = collapse;
-      p.rect(0, top, CANVAS_WIDTH, height);
-      context.globalAlpha = 1;
-      return;
-    }
+    p.image(this.lastFrame, 0, top, CANVAS_WIDTH, height);
+    context.globalAlpha = collapse;
+    p.rect(0, top, CANVAS_WIDTH, height);
+    context.globalAlpha = 1;
+  }
 
-    if (progress < SHRINK_END) {
-      const shrink = (progress - COLLAPSE_END) / (SHRINK_END - COLLAPSE_END);
-      const width = Math.max(DOT_SIZE, CANVAS_WIDTH * (1 - shrink) ** 2);
-      p.rect(CANVAS_WIDTH / 2 - width / 2, middle - 1, width, 2);
-      return;
-    }
+  private drawLine(shrink: number): void {
+    const width = Math.max(DOT_SIZE, CANVAS_WIDTH * (1 - shrink) ** 2);
+    this.p.rect(CANVAS_WIDTH / 2 - width / 2, CANVAS_HEIGHT / 2 - 1, width, 2);
+  }
 
-    // The dot lingers and fades, the last trace of the broadcast.
-    context.globalAlpha = 1 - (progress - SHRINK_END) / (1 - SHRINK_END);
+  private drawDot(fade: number): void {
+    const { p } = this;
+    const context = p.drawingContext as CanvasRenderingContext2D;
+
+    context.globalAlpha = 1 - fade;
     p.rect(
       CANVAS_WIDTH / 2 - DOT_SIZE / 2,
-      middle - DOT_SIZE / 2,
+      CANVAS_HEIGHT / 2 - DOT_SIZE / 2,
       DOT_SIZE,
       DOT_SIZE,
     );
     context.globalAlpha = 1;
+  }
+
+  private drawPhoto(): void {
+    const { p } = this;
+    const context = p.drawingContext as CanvasRenderingContext2D;
+
+    context.globalAlpha = Math.min(
+      1,
+      (this.age - SIGNAL_OFF_FRAMES) / PHOTO_FADE_FRAMES,
+    );
+    p.image(
+      this.manager.assets.image.vaporized,
+      0,
+      0,
+      CANVAS_WIDTH,
+      PHOTO_HEIGHT,
+    );
+    context.globalAlpha = 1;
+  }
+
+  private drawText(): void {
+    const { p } = this;
+    const center = CANVAS_WIDTH / 2;
+
+    p.noStroke();
+    p.textSize(TEXT_SIZE);
+    p.textAlign(p.CENTER, p.BASELINE);
+    p.fill(PAPER);
+    p.text(t("gameOver.line", { id: state.pilotId }), center, LINE_Y);
+    p.fill(STEEL);
+    p.text(t("gameOver.pressEnter"), center, PRESS_ENTER_Y);
   }
 
   private drawStamp(): void {
@@ -147,7 +169,7 @@ export class GameOverScene implements Scene {
     p.push();
     p.translate(STAMP_CENTER.x, STAMP_CENTER.y);
     p.rotate(STAMP_ANGLE);
-    p.textSize(40);
+    p.textSize(STAMP_SIZE);
     p.textAlign(p.CENTER, p.CENTER);
 
     p.noFill();

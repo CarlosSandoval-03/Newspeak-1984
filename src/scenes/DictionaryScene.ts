@@ -29,6 +29,7 @@ const NOTICE = { x: 24, y: 336 };
 const PORTRAIT = { x: 24, y: 368 };
 const BRIEFING = { x: 168, y: 384, columns: 29 };
 const PROMPT_Y = 600;
+const PROMPT_SIZE = 20;
 const HEADING_SIZE = 20;
 const PROSE_SIZE = 16;
 const LINE_HEIGHT = 1.2;
@@ -92,13 +93,32 @@ export class DictionaryScene implements Scene {
       this.strikeAge = Math.min(STRIKE_FRAMES, this.strikeAge + 1);
   }
 
+  // The cover and the Officer, the page typed so far with its cursor, and the prompt once settled.
   draw(): void {
     const { p } = this;
-    const { image, font } = this.manager.assets;
+    const { font } = this.manager.assets;
+
+    p.background(INK);
+    this.illustrations();
+
+    p.noStroke();
+    p.textFont(font.paperwork);
+    p.textAlign(p.LEFT, p.BASELINE);
+    this.lines.forEach((line, i) => this.line(line, this.typewriter.shown(i)));
+    if (!this.typewriter.done && this.typewriter.cursorVisible) this.cursor();
+
+    if (this.settled) this.prompt();
+  }
+
+  exit(): void {}
+
+  // At 2×, the cover beside the heading and the Officer beside his briefing.
+  private illustrations(): void {
+    const { p } = this;
+    const { image } = this.manager.assets;
     const cover = image["dictionary-cover"];
     const portrait = image["officer-portrait"];
 
-    p.background(INK);
     p.imageMode(p.CORNER);
     p.image(cover, COVER.x, COVER.y, cover.width * 2, cover.height * 2);
     p.image(
@@ -108,24 +128,17 @@ export class DictionaryScene implements Scene {
       portrait.width * 2,
       portrait.height * 2,
     );
-
-    p.noStroke();
-    p.textFont(font.paperwork);
-    p.textAlign(p.LEFT, p.BASELINE);
-    this.lines.forEach((line, i) => this.line(line, this.typewriter.shown(i)));
-
-    if (!this.typewriter.done && this.typewriter.cursorVisible) this.cursor();
-
-    if (this.settled) {
-      p.textFont(font.machine);
-      p.textSize(20);
-      p.textAlign(p.CENTER, p.BASELINE);
-      p.fill(PAPER);
-      p.text(t("dictionary.takeOff"), CANVAS_WIDTH / 2, PROMPT_Y);
-    }
   }
 
-  exit(): void {}
+  private prompt(): void {
+    const { p } = this;
+
+    p.textFont(this.manager.assets.font.machine);
+    p.textSize(PROMPT_SIZE);
+    p.textAlign(p.CENTER, p.BASELINE);
+    p.fill(PAPER);
+    p.text(t("dictionary.takeOff"), CANVAS_WIDTH / 2, PROMPT_Y);
+  }
 
   private line(line: Line, shown: string): void {
     const { p } = this;
@@ -165,69 +178,70 @@ export class DictionaryScene implements Scene {
   }
 }
 
-// The page for the level about to start, top to bottom, in the order it is typed.
+// The page for the level about to start, top to bottom, in the order it is typed: the heading and
+// the edition beside the cover, the four words with this level's struck, the notice, and the briefing.
 function page(): Line[] {
   const { dictionary, briefings } = currentStrings();
-  const level = state.level;
+  const { level, pilotId } = state;
   const removed = removedAt(level);
   const name = (word: Word) => t(`words.${word}`);
-  const lines: Line[] = [];
-  const add = (
-    texts: string[],
-    x: number,
-    y: number,
-    size: number,
-    strike: Line["strike"] = null,
-  ) =>
-    texts.forEach((text, i) =>
-      lines.push({
-        text,
-        x,
-        y: Math.round(y + i * size * LINE_HEIGHT),
-        size,
-        strike,
-      }),
-    );
 
-  add(
-    wrap(dictionary.heading, HEADING_COLUMNS),
-    COLUMN_X,
-    HEADING_Y,
-    HEADING_SIZE,
-  );
-  add(
-    wrap(
-      format(dictionary.edition, { ordinal: dictionary.ordinals[level - 1] }),
-      HEADING_COLUMNS,
+  return [
+    ...block(wrap(dictionary.heading, HEADING_COLUMNS), {
+      x: COLUMN_X,
+      y: HEADING_Y,
+      size: HEADING_SIZE,
+    }),
+    ...block(
+      wrap(
+        format(dictionary.edition, { ordinal: dictionary.ordinals[level - 1] }),
+        HEADING_COLUMNS,
+      ),
+      { x: COLUMN_X, y: EDITION_Y, size: HEADING_SIZE },
     ),
-    COLUMN_X,
-    EDITION_Y,
-    HEADING_SIZE,
-  );
-  WORD_REMOVAL_ORDER.forEach((word, i) => {
-    const strike = word === removed ? "now" : i < level - 2 ? "earlier" : null;
-    add([name(word)], COLUMN_X, WORDS_Y + i * WORDS_STEP, HEADING_SIZE, strike);
-  });
-  add(
-    [
-      removed
-        ? format(dictionary.removed, { word: name(removed) })
-        : dictionary.noneRemoved,
-    ],
-    NOTICE.x,
-    NOTICE.y,
-    PROSE_SIZE,
-  );
-  // Calm until step 4's Ministry gives the verdict that picks the tone.
-  const [calm] = briefings[level - 1];
-  add(
-    wrap(
-      format(calm, { id: state.pilotId, word: removed ? name(removed) : "" }),
-      BRIEFING.columns,
+    // Struck "now" as the page is typed, "earlier" if a past edition took it.
+    ...WORD_REMOVAL_ORDER.flatMap((word, i) =>
+      block([name(word)], {
+        x: COLUMN_X,
+        y: WORDS_Y + i * WORDS_STEP,
+        size: HEADING_SIZE,
+        strike: word === removed ? "now" : i < level - 2 ? "earlier" : null,
+      }),
     ),
-    BRIEFING.x,
-    BRIEFING.y,
-    PROSE_SIZE,
-  );
-  return lines;
+    ...block(
+      [
+        removed
+          ? format(dictionary.removed, { word: name(removed) })
+          : dictionary.noneRemoved,
+      ],
+      { ...NOTICE, size: PROSE_SIZE },
+    ),
+    // Calm until the Ministry gives the verdict that picks the tone.
+    ...block(
+      wrap(
+        format(briefings[level - 1][0], {
+          id: pilotId,
+          word: removed ? name(removed) : "",
+        }),
+        BRIEFING.columns,
+      ),
+      { x: BRIEFING.x, y: BRIEFING.y, size: PROSE_SIZE },
+    ),
+  ];
+}
+
+// Lines stacked down from (x, y), each as tall as its size and the line height.
+function block(
+  texts: string[],
+  { x, y, size, strike = null }: Omit<Line, "text" | "strike"> & {
+    strike?: Line["strike"];
+  },
+): Line[] {
+  return texts.map((text, i) => ({
+    text,
+    x,
+    y: Math.round(y + i * size * LINE_HEIGHT),
+    size,
+    strike,
+  }));
 }

@@ -40,6 +40,7 @@ const BOX_HEIGHT = 18;
 const DIARY_BAND = { y: 560, h: 24 };
 const DIARY_BASELINE = 577;
 const DIARY_SIZE = 16;
+const TEXT_SIZE = 20;
 // Indexed by alert level.
 const STATES = ["normal", "alert", "pursuit", "thoughtPolice"] as const;
 
@@ -86,7 +87,7 @@ export class HUD {
     if (this.diary) this.drawDiary(this.diary);
 
     p.textFont(this.fonts.machine);
-    p.textSize(20);
+    p.textSize(TEXT_SIZE);
     this.scoreLine();
     // A battle is all that matters while it lasts, so its giant takes the suspicion's place.
     if (boss) this.bossLine(boss);

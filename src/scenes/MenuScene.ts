@@ -14,6 +14,8 @@ const TITLE_Y = 312;
 const OPTIONS_Y = 400;
 const OPTION_GAP = 30;
 const CONTROLS_Y = 620;
+const TITLE_SIZE = 60;
+const TEXT_SIZE = 20;
 
 export class MenuScene implements Scene {
   private readonly p: p5;
@@ -53,6 +55,7 @@ export class MenuScene implements Scene {
     }
   }
 
+  // The city at the top, the title on its dark lower third, then the options and the controls.
   draw(): void {
     const { p } = this;
     const { image, font } = this.manager.assets;
@@ -65,27 +68,31 @@ export class MenuScene implements Scene {
     p.noStroke();
     p.textFont(font.machine);
     p.textAlign(p.CENTER, p.BASELINE);
-
     p.fill(PAPER);
-    p.textSize(60);
+    p.textSize(TITLE_SIZE);
     p.text(t("menu.title"), center, TITLE_Y);
 
-    // Drawn every frame, so a language switch shows at once.
-    const labels = {
-      start: t("menu.start"),
-      language: t("menu.language", { language: t("meta.languageName") }),
-    };
-    p.textSize(20);
-    OPTIONS.forEach((option, i) => {
-      p.fill(i === this.selected ? RED : PAPER);
-      p.text(labels[option], center, OPTIONS_Y + i * OPTION_GAP);
-    });
-
+    p.textSize(TEXT_SIZE);
+    this.drawOptions(center);
     p.fill(STEEL);
     p.text(t("menu.controls"), center, CONTROLS_Y);
   }
 
   exit(): void {}
+
+  // Labels are read every frame, so a language switch shows at once.
+  private drawOptions(center: number): void {
+    const { p } = this;
+    const labels = {
+      start: t("menu.start"),
+      language: t("menu.language", { language: t("meta.languageName") }),
+    };
+
+    OPTIONS.forEach((option, i) => {
+      p.fill(i === this.selected ? RED : PAPER);
+      p.text(labels[option], center, OPTIONS_Y + i * OPTION_GAP);
+    });
+  }
 
   private cycleLanguage(step: number): void {
     const index = LANGUAGES.indexOf(currentLanguage());
