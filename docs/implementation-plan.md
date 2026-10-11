@@ -57,7 +57,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 | `entities/Entity.ts`, `Entity.test.ts` | Done | Abstract base class; `drawAircraft()` draws any aircraft over its shadow |
 | `entities/Player.ts`, `Bullet.ts`, `Enemy.ts`, `Explosion.ts` | Done | Real implementations, with tests; the player and enemies hand their bullets to the scene through a callback, and `Enemy.hit()` reports the killing hit once |
 | `entities/Eye.ts`, `Boss.ts`, `Pickup.ts` | Done | Stubs; step 2 fills in `Eye` and `Boss`, step 3 `Pickup` |
-| `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and restarts its waves from the current scroll for the loop |
+| `systems/Spawner.ts`, `Spawner.test.ts` | Done | Reads waves from level data; spawns each wave once, just above the top edge, and restarts its waves from the current scroll for the loop (step 4 removed the loop and the restart) |
 | `systems/Propaganda.ts`, `Propaganda.test.ts` | Done | **Pass-through version**: returns the real values and never lies |
 | `systems/Suspicion.ts`, `Newspeak.ts`, `Ministry.ts` | Done | Stubs; step 2 fills in `Suspicion`, step 3 `Newspeak` |
 | `levels/levels.ts`, `levels.test.ts` | Done | Level 1: its terrain recipe and waves; the tests keep the waves sorted and on screen |

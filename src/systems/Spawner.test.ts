@@ -97,26 +97,6 @@ describe("Spawner", () => {
     ]);
   });
 
-  it("is done after the last wave and eye, and starts over from where it restarts", () => {
-    const ground = anchorNear(level, "street", 600).y;
-    const last = ground - EYE_STATS.tower.halfSize;
-
-    spawner.update(last - 1, ALERT.normal);
-    expect(spawner.done).toBe(false);
-
-    spawner.update(last, ALERT.normal);
-    expect(spawner.done).toBe(true);
-
-    spawner.restart(10_000);
-    spawned = [];
-    spawner.update(10_099, ALERT.normal);
-    expect(spawner.done).toBe(false);
-    expect(spawned).toHaveLength(0);
-
-    spawner.update(10_100, ALERT.normal);
-    expect(spawned).toHaveLength(3);
-  });
-
   it("flies a drone in above the top edge when the scroll reaches it", () => {
     spawner.update(149, ALERT.normal);
     expect(watching).toHaveLength(0);
@@ -150,18 +130,6 @@ describe("Spawner", () => {
     spawner.update(anchor.y + 200, ALERT.normal);
 
     expect(watching[1].pos).toEqual({ x: anchor.x, y: 200 });
-  });
-
-  it("finds a tower's anchor again on every pass", () => {
-    spawner.restart(5000);
-    const anchor = anchorNear(level, "street", 5600);
-
-    spawner.update(anchor.y, ALERT.normal);
-
-    expect(watching.find(({ def }) => def.type === "tower")?.pos).toEqual({
-      x: anchor.x,
-      y: 0,
-    });
   });
 
   it("sends reinforcements from alert up, a row behind the wave", () => {
@@ -239,15 +207,17 @@ describe("Spawner", () => {
     });
   });
 
-  it("gives a wave's word to its last enemy only, reinforcements included", () => {
+  it("gives a wave's word to its last enemy only", () => {
     spawner.update(200, ALERT.normal);
+
     expect(
       spawned.filter(({ kind }) => kind === "bomber").map(({ drops }) => drops),
     ).toEqual(["FREE"]);
+  });
 
-    spawner.restart(1000);
-    spawned = [];
-    spawner.update(1200, ALERT.alert);
+  it("gives it to the last reinforcement once the regime is on alert", () => {
+    spawner.update(200, ALERT.alert);
+
     expect(
       spawned.filter(({ kind }) => kind === "bomber").map(({ drops }) => drops),
     ).toEqual([null, "FREE"]);
@@ -283,10 +253,6 @@ describe("Spawner", () => {
     expect(pickups).toEqual([
       { word: "REMEMBER", pos: { x: 180, y: -PICKUP_RADIUS } },
     ]);
-
-    spawner.restart(1000);
-    spawner.update(1250, ALERT.normal);
-    expect(pickups).toHaveLength(2);
   });
 
   it("lays the diary on the skylight nearest its place, entering with the ground", () => {
