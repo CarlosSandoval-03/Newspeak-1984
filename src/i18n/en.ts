@@ -165,6 +165,7 @@ export const en = {
     header: "MINISTRY OF TRUTH",
     department: "RECORDS DEPARTMENT",
     reportedScore: "SCORE AS REPORTED",
+    erased: "NEVER EXISTED",
     officialScore: "OFFICIAL SCORE",
     correctionsTitle: "CORRECTIONS",
     corrections: {

@@ -49,7 +49,8 @@ const PROMPT_SIZE = 20;
 
 // The Records Department closes the level's file in front of the pilot: the real score is struck
 // out, the official one is typed in with the corrections that justify it, and only then does the
-// real one go down the memory hole, before the verdict's stamp lands.
+// real one go down the memory hole, leaving a note that it never existed, before the verdict's
+// stamp lands.
 export class MinistryScene implements Scene {
   private readonly p: p5;
   private readonly manager: SceneManager;
@@ -58,8 +59,11 @@ export class MinistryScene implements Scene {
   private readonly record: PageLine[];
   // The official score and the corrections.
   private readonly correction: PageLine[];
+  // Typed where the real score was, once it is gone.
+  private readonly erasure: PageLine[];
   private readonly recordTyping: Typewriter;
   private readonly correctionTyping: Typewriter;
+  private readonly erasureTyping: Typewriter;
   private strikeAge = 0;
   private slideAge = 0;
   private stampAge = 0;
@@ -74,6 +78,12 @@ export class MinistryScene implements Scene {
     this.correctionTyping = new Typewriter(
       this.correction.map(({ text }) => text),
     );
+    this.erasure = stack([t("ministry.erased")], {
+      x: NUMBER_X,
+      y: REPORTED_Y,
+      size: HEADING_SIZE,
+    });
+    this.erasureTyping = new Typewriter([this.erasure[0].text]);
   }
 
   private get settled(): boolean {
@@ -84,7 +94,7 @@ export class MinistryScene implements Scene {
 
   // Enter first settles the page, then leaves, so a press never skips what wasn't seen. Otherwise
   // one thing happens at a time: the record is typed and its score struck, the correction is typed,
-  // then the struck score is sent down the hole and the file stamped.
+  // the struck score is sent down the hole and its erasure typed, then the file is stamped.
   update(): void {
     if (this.manager.input.wasPressed("confirm")) {
       if (this.settled) {
@@ -98,6 +108,7 @@ export class MinistryScene implements Scene {
     else if (this.strikeAge < STRIKE_FRAMES) this.strikeAge++;
     else if (!this.correctionTyping.done) this.correctionTyping.update();
     else if (this.slideAge < SLIDE_FRAMES) this.slideAge++;
+    else if (!this.erasureTyping.done) this.erasureTyping.update();
     else if (this.stampAge < STAMP_DELAY) this.stampAge++;
   }
 
@@ -118,6 +129,7 @@ export class MinistryScene implements Scene {
       this.drawLine(line, this.recordTyping.shown(i));
     });
     this.drawReportedScore();
+    this.drawLine(this.erasure[0], this.erasureTyping.shown(0));
     this.correction.forEach((line, i) => {
       this.drawLine(line, this.correctionTyping.shown(i));
     });
@@ -140,6 +152,7 @@ export class MinistryScene implements Scene {
   private settle(): void {
     this.recordTyping.finish();
     this.correctionTyping.finish();
+    this.erasureTyping.finish();
     this.strikeAge = STRIKE_FRAMES;
     this.slideAge = SLIDE_FRAMES;
     this.stampAge = STAMP_DELAY;
@@ -202,18 +215,23 @@ export class MinistryScene implements Scene {
     context.globalAlpha = 1;
   }
 
-  // On whichever page is being typed; none while the score is struck.
-  private drawTypingCursor(): void {
-    const { p } = this;
+  // The page the typewriter is on; none while the score is struck or slides, or once all is typed.
+  private get typing(): { lines: PageLine[]; typewriter: Typewriter } | null {
+    if (!this.recordTyping.done)
+      return { lines: this.record, typewriter: this.recordTyping };
+    if (this.strikeAge < STRIKE_FRAMES) return null;
+    if (!this.correctionTyping.done)
+      return { lines: this.correction, typewriter: this.correctionTyping };
+    if (this.slideAge < SLIDE_FRAMES) return null;
+    if (!this.erasureTyping.done)
+      return { lines: this.erasure, typewriter: this.erasureTyping };
+    return null;
+  }
 
-    if (!this.recordTyping.done) {
-      if (this.recordTyping.cursorVisible)
-        drawCursor(p, this.record, this.recordTyping);
-      return;
-    }
-    if (this.strikeAge < STRIKE_FRAMES || this.correctionTyping.done) return;
-    if (this.correctionTyping.cursorVisible)
-      drawCursor(p, this.correction, this.correctionTyping);
+  private drawTypingCursor(): void {
+    const { typing } = this;
+    if (typing?.typewriter.cursorVisible)
+      drawCursor(this.p, typing.lines, typing.typewriter);
   }
 
   private drawPrompt(): void {

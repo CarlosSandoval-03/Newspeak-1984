@@ -99,7 +99,7 @@ describe("MinistryScene", () => {
     expect(page).not.toContain("towers");
   });
 
-  it("types the record and strikes its score, types the correction, then drops the score and stamps", () => {
+  it("types the record and strikes its score, types the correction, then drops the score, notes it never existed, and stamps", () => {
     const scene = open();
 
     while (!scene["recordTyping"].done) tick(scene);
@@ -114,6 +114,10 @@ describe("MinistryScene", () => {
     expect(scene["slideAge"]).toBe(0);
 
     for (let i = 0; i < SLIDE_FRAMES; i++) tick(scene);
+    expect(scene["erasureTyping"].shown(0)).toBe("");
+
+    while (!scene["erasureTyping"].done) tick(scene);
+    expect(scene["erasure"][0].text).toBe("NEVER EXISTED");
     expect(scene["settled"]).toBe(false);
     for (let i = 0; i < STAMP_DELAY; i++) tick(scene);
     expect(scene["settled"]).toBe(true);

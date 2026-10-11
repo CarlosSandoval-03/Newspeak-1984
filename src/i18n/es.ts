@@ -163,6 +163,7 @@ export const es: Strings = {
     header: "MINISTERIO DE LA VERDAD",
     department: "DEPARTAMENTO DE REGISTROS",
     reportedScore: "PUNTUACIÓN DECLARADA",
+    erased: "NUNCA EXISTIÓ",
     officialScore: "PUNTUACIÓN OFICIAL",
     correctionsTitle: "CORRECCIONES",
     corrections: {
