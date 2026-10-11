@@ -236,6 +236,18 @@ describe("Player", () => {
       );
     });
 
+    it("tells the words row when the next dash is ready", () => {
+      expect(player.dashReady).toBe(true);
+      tap("KeyX");
+      ticks(1);
+      expect(player.dashReady).toBe(false);
+
+      ticks(ESCAPE_COOLDOWN_FRAMES[0] - 1);
+      expect(player.dashReady).toBe(false);
+      ticks(1);
+      expect(player.dashReady).toBe(true);
+    });
+
     it("never blinks: the trail shows the dash instead", () => {
       const image = vi.fn();
       const p = {

@@ -19,6 +19,7 @@ export function removedAt(level: number): Word | null {
 export class Newspeak {
   private readonly suspicion: Suspicion;
   private truthFrames = 0;
+  private truthDuration = 0;
   private truthCooldown = 0;
 
   constructor(suspicion: Suspicion) {
@@ -27,6 +28,15 @@ export class Newspeak {
 
   get truthActive(): boolean {
     return this.truthFrames > 0;
+  }
+
+  // The share of this truth still to come, from 1 down to 0; 0 while none is active.
+  get truthLeft(): number {
+    return this.truthActive ? this.truthFrames / this.truthDuration : 0;
+  }
+
+  get truthReady(): boolean {
+    return !this.truthActive && this.truthCooldown === 0;
   }
 
   // The cooldown starts once the truth fades, so a longer TRUTH never shortens the wait.
@@ -41,7 +51,8 @@ export class Newspeak {
     const level = state.words.has("TRUTH") ? state.wordLevels.TRUTH : 0;
     if (level === 0 || this.truthActive || this.truthCooldown > 0) return;
 
-    this.truthFrames = TRUTH_DURATION_FRAMES[level - 1];
+    this.truthDuration = TRUTH_DURATION_FRAMES[level - 1];
+    this.truthFrames = this.truthDuration;
   }
 
   // Takes every word due by this level, not just this level's, so a run can start from any level.

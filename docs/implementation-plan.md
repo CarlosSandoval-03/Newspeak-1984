@@ -403,6 +403,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 **HUD**
 
 - Add the words row ([art-direction.md › The HUD](art-direction.md#the-hud)): upgrade pips, recharge, REMEMBER's bombs as its pips, TRUTH's active state, restored and removed words. It reads through `Propaganda` pass-through methods like every other HUD value.
+- `Propaganda.displayedWords()` returns one `WordView` per word, in the removal order, so the row empties from the left. Its status is `dormant`, `ready`, `recharging`, `active`, or `removed`, with its pips (the level, or REMEMBER's bombs left), REMEMBER's spent bombs, whether a diary restored it, and TRUTH's share of time left. The timed words' clocks don't live in the game state, so `Propaganda` gets them from the scene as `WordClocks`: `Player.dashReady`, and `Newspeak.truthReady` and `truthLeft`. A removed word shows no pips, whatever level it keeps.
+- Pips are 3 px squares, 5 px apart, with the text's 1 px ink shadow. Active TRUTH's bar replaces its pips and spans its paper box. The leather for a restored word is `LEATHER` in `config.ts`. The two-space gap is measured as two characters, since p5 measures a run of spaces as nothing and VT323 is monospaced.
 
 **state.ts**
 

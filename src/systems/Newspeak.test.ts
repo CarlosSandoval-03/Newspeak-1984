@@ -139,6 +139,25 @@ describe("Newspeak", () => {
       expect(newspeak.truthActive).toBe(true);
     });
 
+    it("tells the words row how much is left, and when it is ready", () => {
+      state.wordLevels.TRUTH = 1;
+      const duration = TRUTH_DURATION_FRAMES[0];
+      expect(newspeak.truthReady).toBe(true);
+      expect(newspeak.truthLeft).toBe(0);
+
+      newspeak.revealTruth();
+      expect(newspeak.truthLeft).toBe(1);
+      ticks(duration / 2);
+      expect(newspeak.truthLeft).toBeCloseTo(0.5);
+      expect(newspeak.truthReady).toBe(false);
+
+      ticks(duration / 2);
+      expect(newspeak.truthLeft).toBe(0);
+      expect(newspeak.truthReady).toBe(false);
+      ticks(TRUTH_COOLDOWN_FRAMES);
+      expect(newspeak.truthReady).toBe(true);
+    });
+
     it("can't be stretched by asking again while it lasts", () => {
       state.wordLevels.TRUTH = 1;
       newspeak.revealTruth();

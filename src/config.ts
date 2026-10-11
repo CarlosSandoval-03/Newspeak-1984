@@ -12,6 +12,9 @@ export const RED_DARK = "#6e1712";
 export const RED = "#b3261e";
 export const RED_LIGHT = "#e0503a";
 
+// Material tones are for the ground and the diary; leather marks the one human voice.
+export const LEATHER = "#6e4a38";
+
 // KeyboardEvent.code, so the bindings stay put on AZERTY or Dvorak layouts.
 export const KEYS = {
   up: ["ArrowUp", "KeyW"],

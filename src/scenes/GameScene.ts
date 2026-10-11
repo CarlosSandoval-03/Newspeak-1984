@@ -74,7 +74,16 @@ export class GameScene implements Scene {
     this.images = assets.image;
     this.fire = fire;
     this.font = assets.font.machine;
-    this.hud = new HUD(p, assets.font.machine, new Propaganda());
+    this.hud = new HUD(
+      p,
+      assets.font.machine,
+      // Read at draw time, by when the pilot exists.
+      new Propaganda({
+        dashReady: () => this.player.dashReady,
+        truthReady: () => this.newspeak.truthReady,
+        truthLeft: () => this.newspeak.truthLeft,
+      }),
+    );
     this.vignette = new Vignette(p);
     this.background = new Background(p, level.terrain, assets);
     this.player = new Player(input, assets.image, fire);

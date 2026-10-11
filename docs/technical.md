@@ -68,7 +68,7 @@ newspeak-1984/
 - **Entities** extend `Entity` (`pos`, `vel`, `radius`, `alive`, `update()`, `draw(p)`).
 - **The p5 instance is passed explicitly**, never stored globally.
 - **`core/` is theme-agnostic:** scenes, input, circles, canvas scaling; nothing about 1984.
-- **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `apparentColor()`, `isLying()`), a pass-through until the lies exist.
+- **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `displayedWords()`, `apparentColor()`, `isLying()`), a pass-through until the lies exist.
 - **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and the terrain recipe. The code turns the recipe into a city ([City layout](#city-layout)).
 - **The scrolling background is drawn into `p5.Graphics`** (see [Background](#background)).
 

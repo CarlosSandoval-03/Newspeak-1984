@@ -55,6 +55,10 @@ export class Player extends Entity {
     this.fire = fire;
   }
 
+  get dashReady(): boolean {
+    return this.dashCooldown === 0;
+  }
+
   get invulnerable(): boolean {
     return this.invulnFrames > 0 || this.dashGuard > 0;
   }
