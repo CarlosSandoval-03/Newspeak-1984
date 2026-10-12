@@ -9,7 +9,7 @@ case "$header" in
 esac
 
 types='feat|fix|refactor|perf|style|docs|test|build|chore'
-scopes='core|entities|systems|levels|ui|scenes|config|state|deps|release'
+scopes='core|entities|systems|levels|ui|scenes|debug|config|state|deps|release'
 
 fail() {
   cat >&2 <<EOF

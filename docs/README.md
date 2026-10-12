@@ -39,6 +39,7 @@ A vertical shmup in the tradition of Capcom's *1942*, set in Orwell's *Nineteen 
 | [assets.md](assets.md) | Which files exist: every sprite, illustration, and font, by scene and by level; what code must draw on top; how they were made. |
 | [technical.md](technical.md) | How it's built: stack, architecture, conventions, rendering, performance, tooling. |
 | [implementation-plan.md](implementation-plan.md) | What to build now: each step, when it's done, and the decisions still open. |
+| [debug.md](debug.md) | How to test without replaying the run: start flows from the URL, the debug panel and its commands (dev server only). |
 | [art/](art/) | Visual references: boss lineup, messages seen from the sky, HUD mockups. |
 
 **Reading order:** this overview → narrative → gameplay → technical → the current step of the plan. The rest as needed.

@@ -704,3 +704,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 39 | Downed Thought Police are never kills: they weigh heaviest against obedience, yet the Ministry files them as enemy aircraft | 4 | Confirmed |
 | 40 | The endings are typed a page at a time; the rebel's shows the record table and each diary page read on pages of their own | 4 | Confirmed |
 | 41 | The rebel's departure flies itself, with no control, as the takeoff and landing do | 4 | Confirmed |
+| 42 | Debug tools (start flows from the URL, a panel with commands) exist only on the dev server; the build drops them | — | Confirmed |

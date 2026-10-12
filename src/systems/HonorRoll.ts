@@ -40,6 +40,10 @@ export function enterHonorRoll(entry: HonorRollEntry): void {
   write(ranked([...readHonorRoll(), entry]));
 }
 
+export function clearHonorRoll(): void {
+  write([]);
+}
+
 // At every Ministry visit; saved ranked, so the next visit finds the archive already reordered.
 export function tamperHonorRoll(random = Math.random): Tampering {
   const before = readHonorRoll();

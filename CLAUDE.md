@@ -14,6 +14,7 @@ A vertical shmup inspired by *1942*, set in Orwell's *1984*. This file holds onl
 | Asset files, what code draws on top, how they were made | [docs/assets.md](docs/assets.md) |
 | Stack, structure, architecture, global state, rendering, git | [docs/technical.md](docs/technical.md) |
 | Current step, specs, acceptance criteria, open decisions | [docs/implementation-plan.md](docs/implementation-plan.md) |
+| Debug tools: start flows from the URL, the debug panel | [docs/debug.md](docs/debug.md) |
 
 ## Communication
 - Talk to me in Spanish.

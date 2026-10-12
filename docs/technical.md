@@ -50,7 +50,8 @@ newspeak-1984/
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, HonorRoll, Spawner, Flight
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps), honorRollTable
-    └── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
+    ├── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
+    └── debug/            # dev server only: start flows from the URL, the debug panel and its keys
 ```
 
 ## Code conventions
@@ -301,11 +302,15 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | `pnpm build` | Typecheck and build to `dist/`. |
 | `pnpm preview` | Serve the build. |
 
+### Debug tools
+
+On the dev server (`pnpm dev`) only, `main.ts` loads `src/debug/` behind `import.meta.env.DEV`: the build replaces the check with `false` and drops the module, so neither the GitHub Pages build nor the release zip contains it. The tools open any point of the game from the URL and add a panel that shows and changes the hidden state; they reach the scenes through their private fields, so the game has no debug hooks. Everything about them is in [debug.md](debug.md).
+
 ### Git
 
 - **[Conventional Commits](https://www.conventionalcommits.org/):** `<type>(<scope>): <summary>`, imperative, lowercase, no trailing period.
   - Types: `feat fix refactor perf style docs test build chore`.
-  - Scope is optional: the `src/` folders (`core`, `entities`, `systems`, `levels`, `ui`, `scenes`) plus `config`, `state`, `deps`, `release`.
+  - Scope is optional: the `src/` folders (`core`, `entities`, `systems`, `levels`, `ui`, `scenes`, `debug`) plus `config`, `state`, `deps`, `release`.
   - Header of 72 characters or fewer, and a blank line before the body.
   - Breaking changes: `!` after the type/scope and a `BREAKING CHANGE:` footer.
 - **One logical change per commit;** the game must typecheck and run at every commit.
