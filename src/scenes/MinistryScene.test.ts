@@ -141,13 +141,18 @@ describe("MinistryScene", () => {
     expect(scene["settled"]).toBe(true);
   });
 
-  it("settles the page on the first Enter and opens the next Dictionary on the second", () => {
+  it("settles each page before turning it: the record, then the honor roll, then the next Dictionary", () => {
     const change = vi.spyOn(manager, "change");
     const scene = open();
     change.mockClear();
 
     enter(scene);
     expect(scene["settled"]).toBe(true);
+    enter(scene);
+    expect(scene["page"]).toBe("honorRoll");
+    expect(scene["honorRoll"].done).toBe(false);
+    enter(scene);
+    expect(scene["honorRoll"].done).toBe(true);
     expect(change).not.toHaveBeenCalled();
 
     enter(scene);
@@ -167,7 +172,7 @@ describe("MinistryScene", () => {
     state.officialScore = 31000;
     const scene = open();
 
-    enter(scene);
+    for (let i = 0; i < 3; i++) enter(scene);
     expect(readHonorRoll()).toEqual([]);
     enter(scene);
 

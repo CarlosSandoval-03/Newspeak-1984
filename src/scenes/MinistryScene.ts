@@ -15,6 +15,7 @@ import { currentStrings, format, t } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { state } from "../state";
 import { enterHonorRoll, tamperHonorRoll } from "../systems/HonorRoll";
+import { TamperedHonorRoll } from "../ui/honorRollTable";
 import { type Report, reportedKills } from "../systems/Ministry";
 import { VERDICT } from "../types";
 import {
@@ -45,6 +46,9 @@ const HEADING_SIZE = 20;
 const PROSE_SIZE = 16;
 const STAMP_CENTER = { x: 360, y: 388 };
 const STAMP_SIZE = 32;
+const HONOR_ROLL_Y = 332;
+// The department's name and title, above the real score.
+const HEADER_LINES = 2;
 const PROMPT_Y = 632;
 const PROMPT_SIZE = 20;
 
@@ -65,6 +69,9 @@ export class MinistryScene implements Scene {
   private readonly recordTyping: Typewriter;
   private readonly correctionTyping: Typewriter;
   private readonly erasureTyping: Typewriter;
+  // The second page, turned to once the first is stamped.
+  private readonly honorRoll: TamperedHonorRoll;
+  private page: "record" | "honorRoll" = "record";
   private strikeAge = 0;
   private slideAge = 0;
   private stampAge = 0;
@@ -85,24 +92,43 @@ export class MinistryScene implements Scene {
       size: HEADING_SIZE,
     });
     this.erasureTyping = new Typewriter([this.erasure[0].text]);
+    // The archive is tampered with at every visit; the second page shows how.
+    this.honorRoll = new TamperedHonorRoll(tamperHonorRoll());
   }
 
   private get settled(): boolean {
     return this.stampAge >= STAMP_DELAY;
   }
 
-  // The archive is tampered with at every visit, whether or not the pilot ever gets to see it.
-  enter(): void {
-    tamperHonorRoll();
+  enter(): void {}
+
+  // On either page, Enter first settles it, then turns it, so a press never skips what wasn't seen.
+  update(): void {
+    const confirmed = this.manager.input.wasPressed("confirm");
+
+    if (this.page === "record") this.updateRecord(confirmed);
+    else this.updateHonorRoll(confirmed);
   }
 
-  // Enter first settles the page, then leaves, so a press never skips what wasn't seen. Otherwise
-  // one thing happens at a time: the record is typed and its score struck, the correction is typed,
+  // The clerk's room, then the page the pilot is on.
+  draw(): void {
+    const { p } = this;
+
+    p.background(INK);
+    this.drawIllustration();
+    p.noStroke();
+    if (this.page === "record") this.drawRecord();
+    else this.drawHonorRoll();
+  }
+
+  exit(): void {}
+
+  // One thing happens at a time: the record is typed and its score struck, the correction is typed,
   // the struck score is sent down the hole and its erasure typed, then the file is stamped.
-  update(): void {
-    if (this.manager.input.wasPressed("confirm")) {
+  private updateRecord(confirmed: boolean): void {
+    if (confirmed) {
       if (this.settled) {
-        this.leave();
+        this.page = "honorRoll";
         return;
       }
       this.settle();
@@ -116,17 +142,24 @@ export class MinistryScene implements Scene {
     else if (this.stampAge < STAMP_DELAY) this.stampAge++;
   }
 
-  // The clerk's room, the record with its score on the way down the hole, the correction under it
-  // with the typewriter's cursor, and once settled the stamp and the prompt.
-  draw(): void {
+  private updateHonorRoll(confirmed: boolean): void {
+    if (confirmed) {
+      if (this.honorRoll.done) {
+        this.leave();
+        return;
+      }
+      this.honorRoll.finish();
+    }
+    this.honorRoll.update();
+  }
+
+  // The record with its score on the way down the hole, the correction under it with the
+  // typewriter's cursor, and once settled the stamp and the prompt.
+  private drawRecord(): void {
     const { p } = this;
     const { font } = this.manager.assets;
 
-    p.background(INK);
-    this.drawIllustration();
-
     // The pages, in the paperwork's typewriter face.
-    p.noStroke();
     p.textFont(font.paperwork);
     p.textAlign(p.LEFT, p.BASELINE);
     this.record.slice(0, -1).forEach((line, i) => {
@@ -145,7 +178,22 @@ export class MinistryScene implements Scene {
     this.drawPrompt();
   }
 
-  exit(): void {}
+  // The department's header as typed on the first page, then the archive in the machine's face,
+  // and the prompt once the tampering is over.
+  private drawHonorRoll(): void {
+    const { p } = this;
+    const { font } = this.manager.assets;
+    const header = this.record.slice(0, HEADER_LINES);
+
+    p.textFont(font.paperwork);
+    p.textAlign(p.LEFT, p.BASELINE);
+    header.forEach((line) => this.drawLine(line, line.text));
+
+    p.textFont(font.machine);
+    p.textSize(HEADING_SIZE);
+    this.honorRoll.draw(p, CANVAS_WIDTH / 2, HONOR_ROLL_Y);
+    if (this.honorRoll.done) this.drawPrompt();
+  }
 
   private get stampKey() {
     return this.report.verdict === VERDICT.hero
