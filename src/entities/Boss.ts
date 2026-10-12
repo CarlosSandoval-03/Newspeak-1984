@@ -69,7 +69,7 @@ export class LevelBoss extends Boss {
 
   update(): void {
     super.update();
-    if (this.pos.y < this.home.y) return;
+    if (this.entering) return;
 
     this.sway();
     const { interval, volleys } = this.phase();
@@ -120,6 +120,11 @@ export class LevelBoss extends Boss {
     drawPixelDisc(p, pupil, PUPIL_RADIUS);
     p.fill(PAPER);
     p.rect(pupil.x + GLINT.x, pupil.y + GLINT.y, 1, 1);
+  }
+
+  // Only until it first reaches its place: a ground boss later sways above it, along its street.
+  private get entering(): boolean {
+    return this.inPlace === 0 && this.pos.y < this.home.y;
   }
 
   private sway(): void {

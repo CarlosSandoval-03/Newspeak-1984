@@ -70,6 +70,28 @@ describe("LevelBoss", () => {
     expect(ys.size).toBeGreaterThan(10);
   });
 
+  it("keeps swaying and firing through every sway, above its place as well as below", () => {
+    for (const kind of ["landship", "fortress"] as const) {
+      const boss = make(kind);
+      const { sway, hoverY, phases } = BOSS_STATS[kind];
+      arrive(boss);
+
+      // The second sway, so the first half of the run can't hide a stall.
+      for (let i = 0; i < sway.period; i++) boss.update();
+      fired = [];
+      const ys = new Set<number>();
+      for (let i = 0; i < sway.period; i++) {
+        boss.update();
+        ys.add(Math.sign(Math.round(boss.pos.y - hoverY)));
+      }
+
+      expect(fired.length).toBeGreaterThanOrEqual(
+        Math.floor(sway.period / phases[0].interval),
+      );
+      if (BOSS_STATS[kind].ground) expect(ys).toEqual(new Set([-1, 0, 1]));
+    }
+  });
+
   it("fires its phase's volleys in turn, one every interval", () => {
     const boss = make("fortress");
     const [{ interval, volleys }] = BOSS_STATS.fortress.phases;
