@@ -6,6 +6,7 @@ import {
   CHUNK_HEIGHT,
   CRATER_SIZE,
   LANDING_LEAD,
+  LANDMARK_SIZE,
   MIN_BLOCK_CELLS,
   PLATFORM_SIZE,
 } from "../config";
@@ -16,6 +17,7 @@ import {
   type City,
   COLUMNS,
   type ChunkLayout,
+  landmarkPlaza,
   PARAPET,
   type Rect,
   ROWS,
@@ -35,6 +37,9 @@ const plazas = (share: number): City => ({
   terrain: { seed: 5, blocks: { plaza: share, rubble: 0 } },
   length: LENGTH,
 });
+
+const touches = (a: Rect, b: Rect) =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 const everyChunk = (check: (layout: ChunkLayout, recipe: City) => void) => {
   for (const recipe of recipes)
@@ -267,9 +272,6 @@ describe("anchors", () => {
   });
 
   it("lays a platform at the start and past the length, each on open ground", () => {
-    const touches = (a: Rect, b: Rect) =>
-      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-
     for (const recipe of [...recipes, plazas(1)])
       for (const [eye, landing] of [
         [AIRFIELD_AT, false],
@@ -282,9 +284,9 @@ describe("anchors", () => {
         expect(airfields).toHaveLength(1);
         expect(airfield.landing).toBe(landing);
         expect(airfield.x + airfield.w / 2).toBe(CANVAS_WIDTH / 2);
-        expect(
-          (index + 1) * CHUNK_HEIGHT - (airfield.y + airfield.h / 2),
-        ).toBe(eye);
+        expect((index + 1) * CHUNK_HEIGHT - (airfield.y + airfield.h / 2)).toBe(
+          eye,
+        );
         expect({ w: airfield.w, h: airfield.h }).toEqual(PLATFORM_SIZE);
         expect(buildings.some((building) => touches(building, airfield))).toBe(
           false,
@@ -296,6 +298,49 @@ describe("anchors", () => {
         ).toBe(false);
       }
     everyChunk(({ airfields }) => expect(airfields).toEqual([]));
+  });
+
+  it("lays the ministry centered at its distance, on an open plaza nothing stands on", () => {
+    const at = CHUNK_HEIGHT * 2.5;
+    for (const ministry of ["truth", "plenty", "peace", "love"] as const) {
+      const city: City = {
+        ...recipes[0],
+        terrain: { ...recipes[0].terrain, landmark: { at, ministry } },
+      };
+      const index = Math.floor(at / CHUNK_HEIGHT);
+      const { landmarks, buildings, anchors } = chunkLayout(city, index);
+      const [landmark] = landmarks;
+      const plaza = landmarkPlaza(landmark);
+
+      expect(landmarks).toHaveLength(1);
+      expect(landmark.ministry).toBe(ministry);
+      expect(landmark.x + landmark.w / 2).toBe(CANVAS_WIDTH / 2);
+      expect((index + 1) * CHUNK_HEIGHT - (landmark.y + landmark.h / 2)).toBe(
+        at,
+      );
+      expect(landmark.w).toBe(LANDMARK_SIZE);
+      expect(buildings.some((building) => touches(building, plaza))).toBe(
+        false,
+      );
+      expect(
+        anchors.some((anchor) => touches({ ...anchor, w: 0, h: 0 }, plaza)),
+      ).toBe(false);
+      expect(chunkLayout(city, index + 2).landmarks).toEqual([]);
+    }
+    everyChunk(({ landmarks }) => expect(landmarks).toEqual([]));
+  });
+
+  it("lays a ministry across a chunk edge in both chunks it reaches", () => {
+    const city: City = {
+      ...recipes[0],
+      terrain: {
+        ...recipes[0].terrain,
+        landmark: { at: CHUNK_HEIGHT * 2, ministry: "love" },
+      },
+    };
+
+    expect(chunkLayout(city, 1).landmarks).toHaveLength(1);
+    expect(chunkLayout(city, 2).landmarks).toHaveLength(1);
   });
 
   it("gives every roof and skylight an anchor", () => {

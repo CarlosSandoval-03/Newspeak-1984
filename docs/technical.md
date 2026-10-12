@@ -189,7 +189,7 @@ interface TerrainDef {
   blocks: { plaza: number; rubble: number };   // share of city blocks; the rest stay open asphalt
   river?: { at: number; bridges: number };     // a band of water at this scroll distance
   railway?: { from: number; to: number };
-  landmark?: { at: number };                   // the level's ministry
+  landmark?: { at: number; ministry: Ministry }; // the level's ministry: truth, plenty, peace, or love
 }
 ```
 
@@ -200,12 +200,12 @@ The level is cut into chunks of 480 × `CHUNK_HEIGHT` px (15 columns of 32 px ce
 3. **Craters** on random asphalt cells whose eight neighbors are asphalt too. `crater.png` is 48 px, wider than a cell, and made to blend into asphalt, so it never spills onto a curb or a roof; craters also skip a chunk's top and bottom rows, where its edge would cut them, and no two are neighbors, so they never pile up.
 4. **River:** a band of water across the full width at `at`, with a street row on each side. `bridges` of the vertical streets continue over it on `bridge.png`.
 5. **Railway:** one vertical street widens into a two-cell corridor from `from` to `to`, with `railway.png` tiled along it.
-6. **Landmark:** a plaza block sized for the 128 px ministry, centered at `at`.
+6. **Landmark:** the level's ministry (`ministry-*-topdown.png`, `LANDMARK_SIZE` 128 px), centered across the screen at `at`, on a plaza `LANDMARK_MARGIN` wider on every side. The blocks under that plaza are open plaza with no building, no anchor lies on it, and the background bakes a bare concrete square edged in ink under the sprite, so no street runs beneath the ministry. It may straddle a chunk edge; each chunk it reaches draws its part.
 7. **Airfield:** at the level start (its eye at `AIRFIELD_AT`) and at `length + LANDING_LEAD`, `launch-platform.png` lies centered at x 240. The blocks under it become open plaza with no building, and no anchor lies on it, so nothing stands on the runway. The rebel's last level has no landing airfield.
 
 Streets keep asphalt between any two other terrains, which is what the Wang tilesets need: a cell can mix asphalt with only *one* of plaza, rubble, or water. To keep it so, a block sets only its **inner** corners: its edge cells hold its curb, and a one-cell street stays pure asphalt. A block at the screen's side runs off it, with no curb there. Each chunk's top row is a street and its bottom corners are asphalt, so chunks join on asphalt whatever their neighbors hold. A chunk is 1024 px (32 rows), and a level's vertical streets are drawn once from `mulberry32(seed)`.
 
-A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind. A `street` anchor is the center of a street cell without a crater, a `plaza` anchor the center of an open plaza block (one without a building), a `rooftop` anchor the center of a roof, and a `skylight` anchor the center of a skylight. The river, railway, landmark, and airfield add `bridge`, `railway`, `landmark`, and `platform` when they are built.
+A chunk's layout holds the terrain on tile corners, the buildings (rect, skylight, banner), the craters, and the **anchors**: points where ground elements can stand, by kind. A `street` anchor is the center of a street cell without a crater, a `plaza` anchor the center of an open plaza block (one without a building), a `rooftop` anchor the center of a roof, and a `skylight` anchor the center of a skylight. The river and the railway add `bridge` and `railway` anchors when they are built; the airfield and the landmark add none, since nothing stands on them.
 
 **Ground placement.** Level data places ground elements by intent: `{ at, on: 'bridge' }` stands on the anchor of that kind nearest to `at`. `anchorNear(city, kind, at, x)` (`city` is the level's terrain and length) returns the anchor nearest to the point (`x`, `at`), in level space (`y` is scroll distance), generating and caching the chunks it needs. `x` defaults to the middle of the screen; level data sets it to pick a side, since a vertical street has a cell at nearly any distance and would otherwise always win. The search widens one chunk at a time and gives up after four chunks either side: open plazas can be that far apart, and anything further means the level asks for ground its recipe lacks, so it throws. Air elements (waves, drones, the blimp, air bosses) keep plain coordinates. A ground element enters as its sprite's top edge reaches the screen and stays pinned to its anchor, moving down with the ground at the scroll's speed of the moment, so it stops with the city at the level's end and speeds up with it for the landing.
 

@@ -1,10 +1,20 @@
+import { CANVAS_HEIGHT } from "../config";
 import type { LevelDef } from "../types";
+
+// The stand-in city every level shares until the real ones are written.
+const CITY = { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } };
+// Just past the last wave, so the sky is soon clear for the landing.
+const LENGTH = 3000;
+// A level ends at its ministry, in the middle of the screen once the city stops for the boss.
+const MINISTRY_AT_THE_END = LENGTH - CANVAS_HEIGHT / 2;
 
 // Waves enter about 5 s apart at 1 px a frame; they must be sorted by `at`.
 const LEVEL_1: LevelDef = {
-  terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
-  // Just past the last wave, so the sky is soon clear for the landing.
-  length: 3000,
+  terrain: {
+    ...CITY,
+    landmark: { at: MINISTRY_AT_THE_END, ministry: "truth" },
+  },
+  length: LENGTH,
   waves: [
     { at: 60, kind: "straight", count: 3, x: 120, spacing: 120 },
     { at: 360, kind: "sine", count: 4, x: 90, spacing: 100 },
@@ -105,18 +115,34 @@ const LEVEL_1: LevelDef = {
 const CAMOUFLAGED = new Set([660, 1560, 2280]);
 const LEVEL_2: LevelDef = {
   ...LEVEL_1,
+  terrain: {
+    ...CITY,
+    landmark: { at: MINISTRY_AT_THE_END, ministry: "plenty" },
+  },
   waves: LEVEL_1.waves.map((wave) =>
     CAMOUFLAGED.has(wave.at) ? { ...wave, camo: true } : wave,
   ),
   boss: "airship",
 };
 
-// Levels 3 to 5 replay the stand-in with their own bosses, so every removal and every boss can be
-// played until the real levels are written.
+// Levels 3 to 5 replay the stand-in with their own bosses and ministries, so every removal and
+// every boss can be played until the real levels are written. The land battleship rides the middle
+// street at the end, so the Ministry of Peace stands halfway; the ruined prole district has none.
 export const LEVELS: LevelDef[] = [
   LEVEL_1,
   LEVEL_2,
-  { ...LEVEL_2, boss: "landship" },
-  { ...LEVEL_2, boss: "wing" },
-  { ...LEVEL_2, boss: "eye" },
+  {
+    ...LEVEL_2,
+    terrain: { ...CITY, landmark: { at: 1500, ministry: "peace" } },
+    boss: "landship",
+  },
+  { ...LEVEL_2, terrain: CITY, boss: "wing" },
+  {
+    ...LEVEL_2,
+    terrain: {
+      ...CITY,
+      landmark: { at: MINISTRY_AT_THE_END, ministry: "love" },
+    },
+    boss: "eye",
+  },
 ];

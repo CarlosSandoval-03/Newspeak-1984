@@ -56,14 +56,18 @@ export interface PickupDef {
   word: Word;
 }
 
-// The recipe describes intent, not tiles; later steps add the river, railway, and landmark.
+export type Ministry = "truth" | "plenty" | "peace" | "love";
+
+// The recipe describes intent, not tiles; later steps add the river and the railway.
 export interface TerrainDef {
   seed: number;
   // Shares of the city blocks; the rest stay open asphalt.
   blocks: { plaza: number; rubble: number };
+  // The level's ministry, centered across the screen at this scroll distance.
+  landmark?: { at: number; ministry: Ministry };
 }
 
-// Where a ground element can stand; later steps add bridge, railway, and landmark.
+// Where a ground element can stand; later steps add bridge and railway.
 export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight";
 
 export type EyeType = "tower" | "drone";

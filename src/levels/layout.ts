@@ -9,12 +9,14 @@ import {
   FIXTURE_DENSITY,
   LAMP_CHANCE,
   LANDING_LEAD,
+  LANDMARK_MARGIN,
+  LANDMARK_SIZE,
   MAX_BLOCK_CELLS,
   MIN_BLOCK_CELLS,
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
 } from "../config";
-import type { AnchorKind, LevelDef, TerrainDef, Vec } from "../types";
+import type { AnchorKind, LevelDef, Ministry, TerrainDef, Vec } from "../types";
 
 // What the city needs from a level: its recipe, and where it ends, for the landing platform.
 export type City = Pick<LevelDef, "terrain" | "length">;
@@ -45,6 +47,11 @@ export interface Airfield extends Rect {
   landing: boolean;
 }
 
+// The sprite's square; the plaza around it reaches LANDMARK_MARGIN further on every side.
+export interface Landmark extends Rect {
+  ministry: Ministry;
+}
+
 export interface Anchor extends Vec {
   kind: AnchorKind;
 }
@@ -56,8 +63,9 @@ export interface ChunkLayout {
   buildings: Building[];
   craters: Vec[];
   anchors: Anchor[];
-  // Launch platforms, which may run past the chunk's edges.
+  // Launch platforms and the level's ministry, which may run past the chunk's edges.
   airfields: Airfield[];
+  landmarks: Landmark[];
 }
 
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
@@ -116,12 +124,16 @@ function spans(streetCells: number[], first: number, length: number) {
 }
 
 // A chunk of the city, built in rule order from its own seed: the streets, the blocks between them
-// (open plaza under any airfield), the craters on open asphalt, and the anchors ground elements stand
-// on. The order of the random draws is part of the map: changing it changes every city.
+// (open plaza under any airfield or ministry), the craters on open asphalt, and the anchors ground
+// elements stand on. The order of the random draws is part of the map: changing it changes every
+// city.
 export function chunkLayout(city: City, index: number): ChunkLayout {
   const { terrain } = city;
   const rng = random(terrain.seed + index);
   const airfields = chunkAirfields(city, index);
+  const landmarks = chunkLandmarks(terrain, index);
+  // Ground nothing may build on or stand on.
+  const cleared = [...airfields, ...landmarks.map(landmarkPlaza)];
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
@@ -134,7 +146,7 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     rng,
     terrain,
     streetCells,
-    airfields,
+    cleared,
   );
   const found = craters(rng, corners);
 
@@ -142,11 +154,12 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     corners,
     buildings,
     craters: found,
-    // Nothing stands on the runway.
+    // Nothing stands on a runway or a ministry.
     anchors: anchors(streetCells, plazas, buildings, found).filter(
-      (anchor) => !airfields.some((rect) => inside(anchor, rect)),
+      (anchor) => !cleared.some((rect) => inside(anchor, rect)),
     ),
     airfields,
+    landmarks,
   };
 }
 
@@ -158,6 +171,32 @@ function chunkAirfields(city: City, index: number): Airfield[] {
   ].filter((rect) => rect.y < CHUNK_HEIGHT && rect.y + rect.h > 0);
 }
 
+// The level's ministry, if it reaches into this chunk.
+function chunkLandmarks(terrain: TerrainDef, index: number): Landmark[] {
+  if (!terrain.landmark) return [];
+
+  const { at, ministry } = terrain.landmark;
+  const center = (index + 1) * CHUNK_HEIGHT - at;
+  const landmark = {
+    x: (CANVAS_WIDTH - LANDMARK_SIZE) / 2,
+    y: center - LANDMARK_SIZE / 2,
+    w: LANDMARK_SIZE,
+    h: LANDMARK_SIZE,
+    ministry,
+  };
+  const plaza = landmarkPlaza(landmark);
+  return plaza.y < CHUNK_HEIGHT && plaza.y + plaza.h > 0 ? [landmark] : [];
+}
+
+export function landmarkPlaza({ x, y, w, h }: Rect): Rect {
+  return {
+    x: x - LANDMARK_MARGIN,
+    y: y - LANDMARK_MARGIN,
+    w: w + 2 * LANDMARK_MARGIN,
+    h: h + 2 * LANDMARK_MARGIN,
+  };
+}
+
 // Cells [left, right) × [top, bottom).
 interface Block {
   left: number;
@@ -167,12 +206,13 @@ interface Block {
 }
 
 // Each block between the streets becomes plaza, rubble, or open asphalt by the recipe's shares, and
-// most plazas get a building; the rest stay open, for ground elements to stand on.
+// most plazas get a building; the rest stay open, for ground elements to stand on. A block under
+// cleared ground is an open plaza, so no roof rises through a runway or a ministry.
 function blocks(
   rng: () => number,
   terrain: TerrainDef,
   streetCells: { rows: number[]; columns: number[] },
-  airfields: Airfield[],
+  cleared: Rect[],
 ) {
   const corners: Terrain[][] = Array.from({ length: ROWS + 1 }, () =>
     Array<Terrain>(COLUMNS + 1).fill("asphalt"),
@@ -184,17 +224,14 @@ function blocks(
     for (const [left, right] of spans(streetCells.columns, 0, COLUMNS)) {
       const block = { left, top, right, bottom };
       const roll = rng();
-      // The blocks under a platform are an open plaza, so no roof rises through the runway.
-      const cleared = airfields.some((rect) =>
-        overlaps(blockRect(block), rect),
-      );
-      const kind = cleared ? "plaza" : blockKind(roll, terrain.blocks);
+      const open = cleared.some((rect) => overlaps(blockRect(block), rect));
+      const kind = open ? "plaza" : blockKind(roll, terrain.blocks);
       if (kind === "asphalt") continue;
 
       paintBlock(corners, block, kind);
       if (kind !== "plaza") continue;
 
-      if (!cleared && rng() < BUILDING_CHANCE)
+      if (!open && rng() < BUILDING_CHANCE)
         buildings.push(building(rng, inset(block)));
       else plazas.push(blockCenter(block));
     }
@@ -380,8 +417,7 @@ function roofSkylight(rng: () => number, block: Block): Rect {
       (left + between(rng, 1, right - left - 1)) * CELL_SIZE -
       SKYLIGHT_SIZE / 2,
     y:
-      (top + between(rng, 1, bottom - top - 1)) * CELL_SIZE -
-      SKYLIGHT_SIZE / 2,
+      (top + between(rng, 1, bottom - top - 1)) * CELL_SIZE - SKYLIGHT_SIZE / 2,
     w: SKYLIGHT_SIZE,
     h: SKYLIGHT_SIZE,
   };

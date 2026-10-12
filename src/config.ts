@@ -128,6 +128,9 @@ export const SCROLL_SPEED = 1;
 export const AIRFIELD_AT = -800;
 // launch-platform.png's size, which the layout keeps clear of buildings and anchors.
 export const PLATFORM_SIZE = { w: 112, h: 256 };
+// A ministry's sprite, and the open plaza around it on every side.
+export const LANDMARK_SIZE = 128;
+export const LANDMARK_MARGIN = 8;
 // The runway rolls under the parked plane, speeding up to SCROLL_SPEED; past the lift-off line it climbs.
 export const TAKEOFF_RAMP_FRAMES = 90;
 export const LIFTOFF_FRAMES = 90;

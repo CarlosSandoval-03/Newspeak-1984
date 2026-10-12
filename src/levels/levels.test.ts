@@ -12,6 +12,18 @@ import { LEVELS } from "./levels";
 describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
   "level %i",
   (number, level) => {
+    it("stands on its own ministry, but the ruined prole district has none", () => {
+      const ministries = [
+        "truth",
+        "plenty",
+        "peace",
+        undefined,
+        "love",
+      ] as const;
+
+      expect(level.terrain.landmark?.ministry).toBe(ministries[number - 1]);
+    });
+
     it("lists its waves in scroll order", () => {
       const at = level.waves.map((wave) => wave.at);
 
@@ -42,9 +54,7 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
     });
 
     it("has a skylight for its diary to lie on", () => {
-      expect(() =>
-        anchorNear(level, "skylight", level.diary.at),
-      ).not.toThrow();
+      expect(() => anchorNear(level, "skylight", level.diary.at)).not.toThrow();
     });
 
     it("keeps every pickup on screen", () => {

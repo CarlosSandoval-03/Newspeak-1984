@@ -23,6 +23,7 @@ import {
   type City,
   COLUMNS,
   type Fixture,
+  landmarkPlaza,
   PARAPET,
   type Rect,
   ROWS,
@@ -33,6 +34,7 @@ import {
 type Lamp = NonNullable<Building["lamp"]>;
 const LAMP_SIZE = 2;
 const SKYLIGHT_PANE = 6;
+const PLAZA_CURB = 2;
 
 type TilesetName = "ground-tileset" | "rubble-tileset";
 
@@ -187,7 +189,8 @@ export class Background {
     return chunk;
   }
 
-  // Layer by layer, from the ground up: the tiles, the craters, the rooftops, and the launch platforms.
+  // Layer by layer, from the ground up: the tiles, the craters, the rooftops, the launch platforms,
+  // and the ministry on its plaza.
   private paint(graphics: p5.Graphics, layout: ChunkLayout): void {
     const { image } = this.assets;
 
@@ -203,6 +206,14 @@ export class Background {
     graphics.imageMode(graphics.CORNER);
     for (const { x, y } of layout.airfields)
       graphics.image(image["launch-platform"], x, y);
+    for (const landmark of layout.landmarks) {
+      ministryPlaza(graphics, landmarkPlaza(landmark));
+      graphics.image(
+        image[`ministry-${landmark.ministry}-topdown`],
+        landmark.x,
+        landmark.y,
+      );
+    }
   }
 
   // Each cell gets the tile whose corners match its own, from the sheet of its non-asphalt terrain.
@@ -307,4 +318,13 @@ function banner(g: p5.Graphics, { x, y, w, h }: Rect): void {
   g.rect(x + w - 1, y, 1, h);
   for (let at = BANNER_FOLD; at < h; at += BANNER_FOLD)
     g.rect(x, y + at - 1, w, 1);
+}
+
+// Bare concrete under the ministry, edged in ink like a curb, so no street runs beneath it.
+function ministryPlaza(g: p5.Graphics, { x, y, w, h }: Rect): void {
+  g.stroke(INK);
+  g.strokeWeight(PLAZA_CURB);
+  g.fill(CONCRETE);
+  g.rect(x, y, w, h);
+  g.noStroke();
 }
