@@ -13,8 +13,7 @@ import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { state } from "../state";
-import { tamperHonorRoll } from "../systems/HonorRoll";
-import { TamperedHonorRoll } from "../ui/honorRollTable";
+import { tamperHonorRoll, withRun } from "../systems/HonorRoll";
 import { type Report, reportedKills } from "../systems/Ministry";
 import { VERDICT } from "../types";
 import {
@@ -27,6 +26,7 @@ import {
   Typewriter,
   wrap,
 } from "../ui/effects";
+import { TamperedHonorRoll } from "../ui/honorRollTable";
 import { DictionaryScene } from "./DictionaryScene";
 import { EndingScene } from "./EndingScene";
 
@@ -91,8 +91,14 @@ export class MinistryScene implements Scene {
       size: HEADING_SIZE,
     });
     this.erasureTyping = new Typewriter([this.erasure[0].text]);
-    // The archive is tampered with at every visit; the second page shows how.
-    this.honorRoll = new TamperedHonorRoll(tamperHonorRoll());
+    // The archive is tampered with at every visit, and the second page shows how, with the run
+    // being flown among it, unrecorded until it ends.
+    const run = {
+      pilotId: state.pilotId,
+      score: state.officialScore,
+      unperson: false,
+    };
+    this.honorRoll = new TamperedHonorRoll(withRun(tamperHonorRoll(), run));
   }
 
   private get settled(): boolean {
@@ -127,7 +133,7 @@ export class MinistryScene implements Scene {
   private updateRecord(confirmed: boolean): void {
     if (confirmed) {
       if (this.settled) {
-        this.turnPage();
+        this.page = "honorRoll";
         return;
       }
       this.settle();
@@ -139,12 +145,6 @@ export class MinistryScene implements Scene {
     else if (this.slideAge < SLIDE_FRAMES) this.slideAge++;
     else if (!this.erasureTyping.done) this.erasureTyping.update();
     else if (this.stampAge < STAMP_DELAY) this.stampAge++;
-  }
-
-  // The honor roll only when the Ministry changed something in it; otherwise straight on.
-  private turnPage(): void {
-    if (this.honorRoll.tampered) this.page = "honorRoll";
-    else this.leave();
   }
 
   private updateHonorRoll(confirmed: boolean): void {

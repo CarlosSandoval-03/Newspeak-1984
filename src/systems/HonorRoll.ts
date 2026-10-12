@@ -34,9 +34,9 @@ export function readHonorRoll(): HonorRollEntry[] {
   return saved === null ? [] : parse(saved);
 }
 
-// Every run is entered once it is over: a finished one under its pilot, a vaporized one as an
-// unperson whose number the Party keeps.
-export function enterHonorRoll(entry: HonorRollEntry): void {
+// Once, when the run ends: under its pilot if finished, as an unperson whose number the Party keeps
+// if lost. A run abandoned mid-way never reaches the archive.
+export function recordRun(entry: HonorRollEntry): void {
   write(ranked([...readHonorRoll(), entry]));
 }
 
@@ -68,6 +68,22 @@ export function tampered(
       SCORE_ALTER_MIN + random() * (SCORE_ALTER_MAX - SCORE_ALTER_MIN);
     return { ...entry, score: Math.round(entry.score * factor) };
   });
+}
+
+// The run being flown, shown among the archive at its place but never stored until it ends. It
+// sits on the same row before and after, so only the past runs are seen to change.
+export function withRun(
+  { before, after }: Tampering,
+  run: HonorRollEntry,
+): Tampering {
+  const place = before.filter(({ score }) => score >= run.score).length;
+  const insert = (entries: HonorRollEntry[]) =>
+    [...entries.slice(0, place), run, ...entries.slice(place)].slice(
+      0,
+      HONOR_ROLL_SIZE,
+    );
+
+  return { before: insert(before), after: insert(after) };
 }
 
 function ranked(entries: readonly HonorRollEntry[]): HonorRollEntry[] {

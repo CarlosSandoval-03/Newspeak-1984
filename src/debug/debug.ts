@@ -16,7 +16,7 @@ import { LEVELS } from "../levels/levels";
 import { earnedEnding } from "../scenes/EndingScene";
 import { GameScene } from "../scenes/GameScene";
 import { record, state } from "../state";
-import { clearHonorRoll, enterHonorRoll } from "../systems/HonorRoll";
+import { clearHonorRoll, recordRun } from "../systems/HonorRoll";
 import { obedience, standingScore, verdictFor } from "../systems/Ministry";
 import { ALERT } from "../types";
 import { chooseEnding, parseFlow, startFlow, unlockWords } from "./flows";
@@ -190,7 +190,7 @@ function raiseWords(): void {
 // `seed` fills the archive with sample runs, `clear` empties it.
 function seedHonorRoll(action: string | null): void {
   if (action === "clear") clearHonorRoll();
-  if (action === "seed") SAMPLE_ROLL.forEach(enterHonorRoll);
+  if (action === "seed") SAMPLE_ROLL.forEach(recordRun);
 }
 
 // What the game hides, as plain lines: where the run stands, what the Ministry would make of the

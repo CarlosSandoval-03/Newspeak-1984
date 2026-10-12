@@ -50,7 +50,7 @@ describe("EndingScene", () => {
     vi.unstubAllGlobals();
   });
 
-  it("enters the finished run on the honor roll", () => {
+  it("enters the finished run on the honor roll under its pilot, with its total", () => {
     const scene = open();
 
     expect(readHonorRoll()).toEqual([

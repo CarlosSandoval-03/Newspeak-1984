@@ -195,7 +195,11 @@ export const en = {
     title: "HONOR ROLL",
     pilot: "PILOT {id}",
     unperson: "[UNPERSON]",
-    empty: "NO RECORDS.",
+    // Every run ends up here, finished or vaporized; until one has, the regime says so.
+    empty: [
+      "NO PILOT HAS ENDED SERVICE YET.",
+      "EVERY PILOT IS ENTERED HERE, IN THE END.",
+    ],
   },
 
   // The erased pilot's diary: one page per level, in order.

@@ -192,7 +192,10 @@ export const es: Strings = {
     title: "CUADRO DE HONOR",
     pilot: "PILOTO {id}",
     unperson: "[NO-PERSONA]",
-    empty: "SIN REGISTROS.",
+    empty: [
+      "NINGÚN PILOTO HA TERMINADO SU SERVICIO.",
+      "TODO PILOTO QUEDA REGISTRADO AQUÍ, AL FINAL.",
+    ],
   },
 
   diary: {

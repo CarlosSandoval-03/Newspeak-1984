@@ -14,7 +14,7 @@ import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { t } from "../i18n";
 import { state } from "../state";
-import { enterHonorRoll } from "../systems/HonorRoll";
+import { recordRun } from "../systems/HonorRoll";
 import { standingScore } from "../systems/Ministry";
 import { drawStamp } from "../ui/effects";
 import { MenuScene } from "./MenuScene";
@@ -46,7 +46,7 @@ export class GameOverScene implements Scene {
     this.p = p;
     this.manager = manager;
     this.lastFrame = lastFrame;
-    enterHonorRoll({
+    recordRun({
       pilotId: state.pilotId,
       score: standingScore(),
       unperson: true,

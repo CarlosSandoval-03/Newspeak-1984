@@ -13,7 +13,7 @@ import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
 import { state } from "../state";
 import {
-  enterHonorRoll,
+  recordRun,
   type HonorRollEntry,
   readHonorRoll,
 } from "../systems/HonorRoll";
@@ -82,7 +82,7 @@ export class EndingScene implements Scene {
   constructor(p: p5, manager: SceneManager, ending: Ending) {
     this.p = p;
     this.manager = manager;
-    enterHonorRoll({
+    recordRun({
       pilotId: state.pilotId,
       score: state.officialScore,
       unperson: false,

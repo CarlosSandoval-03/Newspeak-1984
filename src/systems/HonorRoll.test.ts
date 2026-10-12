@@ -7,11 +7,12 @@ import {
   SCORE_ERASE_CHANCE,
 } from "../config";
 import {
-  enterHonorRoll,
+  recordRun,
   type HonorRollEntry,
   readHonorRoll,
   tampered,
   tamperHonorRoll,
+  withRun,
 } from "./HonorRoll";
 
 const KEY = "newspeak1984.scores";
@@ -47,7 +48,7 @@ describe("the honor roll in storage", () => {
 
   it("keeps only the best runs, highest first, as data", () => {
     for (let i = 0; i <= HONOR_ROLL_SIZE; i++)
-      enterHonorRoll(pilot(String(i).padStart(4, "0"), i * 100));
+      recordRun(pilot(String(i).padStart(4, "0"), i * 100));
 
     const roll = readHonorRoll();
     expect(roll).toHaveLength(HONOR_ROLL_SIZE);
@@ -68,8 +69,8 @@ describe("the honor roll in storage", () => {
   });
 
   it("is tampered with as it stood, row for row, and saved reordered", () => {
-    enterHonorRoll(pilot("0001", 2000));
-    enterHonorRoll(pilot("0002", 1000));
+    recordRun(pilot("0001", 2000));
+    recordRun(pilot("0002", 1000));
 
     // The first is erased; the second is altered to the top of its range.
     const { before, after } = tamperHonorRoll(draws(0, 1, 0, 1));
@@ -94,7 +95,7 @@ describe("the honor roll without storage", () => {
     };
     vi.stubGlobal("localStorage", { getItem: blocked, setItem: blocked });
 
-    expect(() => enterHonorRoll(pilot("1984", 4210))).not.toThrow();
+    expect(() => recordRun(pilot("1984", 4210))).not.toThrow();
     expect(readHonorRoll()).toContainEqual(pilot("1984", 4210));
   });
 });
@@ -120,5 +121,30 @@ describe("tampered", () => {
   it("leaves an unperson as it is", () => {
     const unperson = { pilotId: "0003", score: 0, unperson: true };
     expect(tampered([unperson], draws(0, 0, 0))).toEqual([unperson]);
+  });
+});
+
+describe("withRun", () => {
+  const archive = {
+    before: [pilot("0001", 3000), pilot("0002", 1000)],
+    after: [pilot("0001", 4500), { pilotId: "0002", score: 0, unperson: true }],
+  };
+
+  it("shows the run being flown at its place, on the same row before and after", () => {
+    const run = pilot("6079", 2000);
+
+    expect(withRun(archive, run)).toEqual({
+      before: [archive.before[0], run, archive.before[1]],
+      after: [archive.after[0], run, archive.after[1]],
+    });
+  });
+
+  it("leaves the run off a full table it doesn't place on", () => {
+    const full = Array.from({ length: HONOR_ROLL_SIZE }, (_, i) =>
+      pilot(String(i), 1000),
+    );
+    const { before } = withRun({ before: full, after: full }, pilot("6079", 0));
+
+    expect(before).toEqual(full);
   });
 });

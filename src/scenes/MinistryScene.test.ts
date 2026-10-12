@@ -7,6 +7,7 @@ import { SceneManager } from "../core/SceneManager";
 import { LANGUAGES, setLanguage } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
+import { readHonorRoll } from "../systems/HonorRoll";
 import type { Report } from "../systems/Ministry";
 import { type Stats, VERDICT } from "../types";
 import { DictionaryScene } from "./DictionaryScene";
@@ -170,7 +171,7 @@ describe("MinistryScene", () => {
     expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
   });
 
-  it("goes straight on from the record when the Ministry changed nothing in the honor roll", () => {
+  it("turns to the honor roll even when the Ministry changed nothing in it", () => {
     // Every draw leaves the entry alone.
     vi.stubGlobal("localStorage", {
       getItem: () =>
@@ -178,27 +179,28 @@ describe("MinistryScene", () => {
       setItem: () => {},
     });
     vi.spyOn(Math, "random").mockReturnValue(0.99);
-    const change = vi.spyOn(manager, "change");
     const scene = open();
-    change.mockClear();
 
     enter(scene);
     enter(scene);
 
-    expect(scene["page"]).toBe("record");
-    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+    expect(scene["page"]).toBe("honorRoll");
+    expect(scene["honorRoll"]["lines"]).toContain(" 1. PILOT 0042     000900");
   });
 
-  it("goes straight on from the record when the honor roll is empty", () => {
+  it("shows the run alone when the archive is still empty", () => {
     vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {} });
-    const change = vi.spyOn(manager, "change");
+    state.pilotId = "6079";
     const scene = open();
-    change.mockClear();
 
     enter(scene);
     enter(scene);
 
-    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+    expect(scene["page"]).toBe("honorRoll");
+    expect(scene["honorRoll"]["lines"]).toEqual([
+      "HONOR ROLL",
+      " 1. PILOT 6079     000000",
+    ]);
   });
 
   it("opens the obedient ending after the last level", () => {
@@ -211,6 +213,30 @@ describe("MinistryScene", () => {
 
     expect(state.level).toBe(LEVELS.length);
     expect(change).toHaveBeenLastCalledWith(expect.any(EndingScene));
+  });
+
+  it("shows the run among the tampered archive without recording it", () => {
+    const saved = new Map([
+      [
+        "newspeak1984.scores",
+        JSON.stringify([{ pilotId: "0042", score: 900, unperson: false }]),
+      ],
+    ]);
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => saved.get(key) ?? null,
+      setItem: (key: string, value: string) => saved.set(key, value),
+    });
+    // Every draw erases.
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    state.pilotId = "6079";
+    state.officialScore = 4000;
+
+    const scene = open();
+
+    expect(readHonorRoll()).toEqual([
+      { pilotId: "0042", score: 0, unperson: true },
+    ]);
+    expect(scene["honorRoll"]["lines"]).toContain(" 1. PILOT 6079     004000");
   });
 
   it("tampers with the honor roll at every visit", () => {

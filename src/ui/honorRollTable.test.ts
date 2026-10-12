@@ -97,20 +97,21 @@ describe("TamperedHonorRoll", () => {
     expect(lines(roll)[3]).toBe(" 3. [UNPERSON]     000000");
   });
 
-  it("notes an empty archive, and is done once it is typed", () => {
+  it("says no one is in an empty archive yet, and is done once that is typed", () => {
     const roll = new TamperedHonorRoll({ before: [], after: [] });
     while (!roll.done) roll.update();
 
-    expect(lines(roll)).toEqual(["HONOR ROLL", "NO RECORDS."]);
+    expect(lines(roll)).toEqual([
+      "HONOR ROLL",
+      "NO PILOT HAS ENDED SERVICE YET.",
+      "EVERY PILOT IS ENTERED HERE, IN THE END.",
+    ]);
   });
 
-  it("says whether the Ministry touched any row", () => {
-    const untouched = { before: [kept], after: [kept] };
+  it("is done once typed when the Ministry touched nothing", () => {
+    const roll = new TamperedHonorRoll({ before: [kept], after: [kept] });
+    while (!roll["typing"].done) roll.update();
 
-    expect(new TamperedHonorRoll(tampering).tampered).toBe(true);
-    expect(new TamperedHonorRoll(untouched).tampered).toBe(false);
-    expect(new TamperedHonorRoll({ before: [], after: [] }).tampered).toBe(
-      false,
-    );
+    expect(roll.done).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import type p5 from "p5";
 import { PAPER, STRIKE_FRAMES } from "../config";
-import { t } from "../i18n";
+import { currentStrings, t } from "../i18n";
 import type { HonorRollEntry, Tampering } from "../systems/HonorRoll";
 import { drawStrike, scoreDigits, Typewriter } from "./effects";
 
@@ -20,8 +20,8 @@ export function honorRollRows(entries: readonly HonorRollEntry[]): string[] {
   });
 }
 
-// The title, then the rows centered under it, or a note that the archive is empty; in the current
-// font and size.
+// The title, then the rows centered under it, or the regime's note that no one is in it yet; in
+// the current font and size.
 export function drawHonorRoll(
   p: p5,
   entries: readonly HonorRollEntry[],
@@ -29,13 +29,12 @@ export function drawHonorRoll(
   top: number,
 ): void {
   const rows = honorRollRows(entries);
+  const lines = rows.length > 0 ? rows : currentStrings().honorRoll.empty;
 
   p.textAlign(p.CENTER, p.BASELINE);
   p.fill(PAPER);
   p.text(t("honorRoll.title"), center, top);
-  if (rows.length === 0)
-    p.text(t("honorRoll.empty"), center, top + ROW_STEP * 2);
-  rows.forEach((row, i) => p.text(row, center, top + ROW_STEP * (i + 2)));
+  lines.forEach((line, i) => p.text(line, center, top + ROW_STEP * (i + 2)));
 }
 
 // The archive as it stood, typed out, then changed in front of the pilot one row at a time: each
@@ -57,18 +56,13 @@ export class TamperedHonorRoll {
 
     this.lines = [
       t("honorRoll.title"),
-      ...(rows.length > 0 ? rows : [t("honorRoll.empty")]),
+      ...(rows.length > 0 ? rows : currentStrings().honorRoll.empty),
     ];
     this.after = ["", ...honorRollRows(after)];
     this.changed = rows.flatMap((row, i) =>
       row === this.after[i + 1] ? [] : [i + 1],
     );
     this.typing = new Typewriter(this.lines);
-  }
-
-  // Whether the Ministry touched any row; an untouched or empty archive has nothing to show.
-  get tampered(): boolean {
-    return this.changed.length > 0;
   }
 
   get done(): boolean {

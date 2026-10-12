@@ -15,7 +15,7 @@ Tools for testing the game without playing the whole run every time. With them y
 | A level's boss | `?start=boss:3` (the land battleship), then `3` to shoot it down. |
 | The landing and the Ministry | `?start=landing:2`. |
 | Each Ministry verdict | `?start=ministry:hero`, `ministry:review`, `ministry:suspect`. |
-| The honor roll being tampered with | `?start=ministry:review&honorroll=seed`. Each entry has only a small chance of changing, so if nothing did, the page is skipped: reload to roll again. |
+| The honor roll being tampered with | `?start=ministry:review&honorroll=seed`. Each entry has only a small chance of changing, so if nothing did, the table just stands: reload to roll again. |
 | The rebel's departure and ending | `?start=departure`, or `?start=ending:rebel` for the ending alone. |
 | The obedient ending | `?start=ending:obedient`. |
 | The whole last level toward a chosen ending | `?start=boss:5&ending=rebel` (or `obedient`), or `0` in the panel at any time before the Eye goes down. |
