@@ -100,6 +100,8 @@ export const en = {
     },
     // Shown once when the alliance flips. Earlier lines with {enemy} re-render with the new enemy.
     flip: "OCEANIA FIGHTS {enemy}. THE RECORD CONFIRMS IT ALWAYS HAS.",
+    // When the pilot shoots down the Thought Police: the regime's own aircraft, filed as the enemy's.
+    raiderDowned: "{enemy} RAIDER DOWNED OVER SECTOR {n}",
     common: [
       "{enemy} FLEET DESTROYED OFF THE COAST",
       "PRODUCTION UP 12% THIS QUARTER",

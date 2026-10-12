@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { ALLIANCE_FLIP_AT } from "../config";
 import { resetGame, state } from "../state";
 import { ALERT, type Word } from "../types";
 import { Propaganda, type WordClocks } from "./Propaganda";
@@ -35,6 +36,47 @@ describe("Propaganda", () => {
     state.realScore = 2500 + 700;
 
     expect(propaganda.displayedScore()).toBe(3700);
+  });
+
+  describe("the war", () => {
+    let truth: number;
+    const atLevel = (level: number) =>
+      new Propaganda({ ...clocks, truthLeft: () => truth }, level);
+
+    beforeEach(() => {
+      truth = 0;
+    });
+
+    it("changes sides once a level, halfway through it", () => {
+      const first = atLevel(1);
+      expect(first.enemy).toBe("eurasia");
+      first.update(ALLIANCE_FLIP_AT - 0.01);
+      expect(first.enemy).toBe("eurasia");
+      first.update(ALLIANCE_FLIP_AT);
+      expect(first.enemy).toBe("eastasia");
+
+      expect(atLevel(2).enemy).toBe("eastasia");
+      expect(atLevel(3).enemy).toBe("eurasia");
+    });
+
+    it("names the enemy of the moment in every line, and TRUTH the one it was written with", () => {
+      const war = atLevel(1);
+      war.update(1);
+
+      expect(war.displayedEnemy("eurasia")).toBe("eastasia");
+      truth = 0.5;
+      expect(war.displayedEnemy("eurasia")).toBe("eurasia");
+    });
+
+    it("lies on the ticker once the war has changed sides, unless TRUTH is active", () => {
+      const war = atLevel(1);
+      expect(war.isLying("ticker")).toBe(false);
+
+      war.update(1);
+      expect(war.isLying("ticker")).toBe(true);
+      truth = 0.5;
+      expect(war.isLying("ticker")).toBe(false);
+    });
   });
 
   describe("the words row", () => {

@@ -574,7 +574,9 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the HUD lies, and the screen itself shows the strain of being watched.
 
-**Progress:** not started. Already on `main` for `0.6.0`, from playing step 4:
+**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. The debug panel shows what is lying.
+
+Already on `main` for `0.6.0`, from playing step 4:
 - The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with the HUD's last score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
 - The ending's condition lives once, in `earnedEnding()`.
 - The debug tools ([debug.md](debug.md)): on the dev server with `?debug=true`, start any flow from the URL, steer the run (lives, boss, suspicion, words, diary pages, ending), see the hidden state in a panel, all in a storage sandbox that never touches the real honor roll.
@@ -605,6 +607,8 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 | 2 | The score shown is inflated by a factor in `[SCORE_INFLATION_MIN, SCORE_INFLATION_MAX]`. |
 | 3 | An extra life is shown intermittently: `displayedLives = realLives + 1` for a few seconds at random intervals. |
 | 4 | Some enemies are drawn in the "allied" color but still shoot. |
+
+- **Decision:** the war starts on Eurasia in level 1 and changes sides once a level, halfway through, so each level opens on the enemy the last one ended with. Each ticker line keeps the enemy it was written with, which is what TRUTH shows; without it, every line names the current enemy. The ticker's tell is one blank frame when the record rewrites itself. Its width is computed from the machine face's fixed advance (0.4 of its size), so the tape's logic needs no p5.
 
 **The downed police.** From level 1, when the Thought Police are shot down, the ticker announces an enemy raider downed over the sector (`{ENEMY} RAIDER DOWNED OVER SECTOR {n}`, with the enemy of the moment): the player has just watched the regime's own red aircraft fall, and reads the lie live. It is the same rewrite the Ministry files after the level.
 
@@ -711,3 +715,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 40 | The endings are typed a page at a time; the rebel's shows the record table and each diary page read on pages of their own | 4 | Confirmed |
 | 41 | The rebel's departure flies itself, with no control, as the takeoff and landing do | 4 | Confirmed |
 | 42 | Debug tools (start flows from the URL, a panel with commands) exist only on the dev server with `?debug=true`, in a storage sandbox of their own; the build drops them | — | Confirmed |
+| 43 | The war changes sides once a level, halfway through; ticker lines keep the enemy they were written with, which only TRUTH shows | 5 | Confirmed |

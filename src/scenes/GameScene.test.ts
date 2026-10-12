@@ -444,6 +444,17 @@ describe("GameScene collisions", () => {
     });
   });
 
+  it("changes the war's sides halfway through the level", () => {
+    const { length } = LEVELS[0];
+    scene["flight"].scroll = length / 2 - 1;
+    scene.update();
+    expect(scene["propaganda"].enemy).toBe("eurasia");
+
+    scene["flight"].scroll = length / 2;
+    scene.update();
+    expect(scene["propaganda"].enemy).toBe("eastasia");
+  });
+
   it("raises suspicion while an eye sees the player, and only then", () => {
     const eye = eyeAbove({ x: PLAYER_SPAWN.x, y: PLAYER_SPAWN.y - 100 });
 
@@ -826,6 +837,15 @@ describe("GameScene collisions", () => {
       expect(state.suspicion).toBe(THOUGHT_POLICE_RESET);
       expect(state.realScore).toBe(THOUGHT_POLICE_STATS.score);
       expect(state.stats).toMatchObject({ kills: 0, policeDestroyed: 1 });
+      // And the ticker files them as an enemy raider.
+      const ticker = scene["ticker"];
+      const news = [
+        ...ticker["urgent"],
+        ...ticker["items"].map(({ news }) => news),
+      ];
+      expect(news.map(({ template }) => template)).toContain(
+        currentStrings().ticker.raiderDowned,
+      );
     });
 
     it("leave suspicion at the reset when outlasted too", () => {

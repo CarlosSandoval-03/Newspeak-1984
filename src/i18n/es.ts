@@ -98,6 +98,7 @@ export const es: Strings = {
       eastasia: "ESTASIA",
     },
     flip: "OCEANÍA COMBATE A {enemy}. EL REGISTRO CONFIRMA QUE SIEMPRE FUE ASÍ.",
+    raiderDowned: "INCURSOR DE {enemy} DERRIBADO SOBRE EL SECTOR {n}",
     common: [
       "FLOTA DE {enemy} DESTRUIDA FRENTE A LA COSTA",
       "LA PRODUCCIÓN SUBE UN 12% ESTE TRIMESTRE",

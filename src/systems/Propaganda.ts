@@ -1,6 +1,6 @@
-import { WORD_REMOVAL_ORDER } from "../config";
+import { ALLIANCE_FLIP_AT, WORD_REMOVAL_ORDER } from "../config";
 import { state } from "../state";
-import type { AlertLevel, Word } from "../types";
+import type { AlertLevel, Enemy, Word } from "../types";
 import { standingScore } from "./Ministry";
 
 // The clocks of the timed words, which live on the pilot and in Newspeak, not in the game state.
@@ -23,12 +23,47 @@ export interface WordView {
   timeLeft: number;
 }
 
-// Tells the truth for now. The HUD already asks here, so the lies can arrive without touching it.
+// The values the regime has lied about so far; the rest are still told straight.
+export type LieField = "ticker";
+
+const ENEMIES: readonly Enemy[] = ["eurasia", "eastasia"];
+
+// What the HUD and the ticker are allowed to show. The lies escalate level by level, and while
+// TRUTH is active every value is the real one.
 export class Propaganda {
   private readonly clocks: WordClocks;
+  private readonly level: number;
+  private flipped = false;
 
-  constructor(clocks: WordClocks) {
+  constructor(clocks: WordClocks, level = state.level) {
     this.clocks = clocks;
+    this.level = level;
+  }
+
+  // The enemy Oceania is at war with now, which it has always been. The war has changed sides once
+  // a level so far, and once more halfway through this one.
+  get enemy(): Enemy {
+    const flips = this.level - 1 + (this.flipped ? 1 : 0);
+    return ENEMIES[flips % ENEMIES.length];
+  }
+
+  private get telling(): boolean {
+    return this.clocks.truthLeft() > 0;
+  }
+
+  // `progress` is the share of the level flown.
+  update(progress: number): void {
+    if (progress >= ALLIANCE_FLIP_AT) this.flipped = true;
+  }
+
+  // Every line names the enemy of the moment; TRUTH shows the one it was written with.
+  displayedEnemy(written: Enemy): Enemy {
+    return this.telling ? written : this.enemy;
+  }
+
+  // Whether what is on screen for `field` is false right now.
+  isLying(field: LieField): boolean {
+    return field === "ticker" && this.flipped && !this.telling;
   }
 
   displayedLives(): number {
@@ -67,7 +102,7 @@ export class Propaganda {
         pips: state.bombs,
         spent: Math.max(0, level - state.bombs),
       };
-    if (word === "TRUTH" && this.clocks.truthLeft() > 0)
+    if (word === "TRUTH" && this.telling)
       return { ...base, status: "active", timeLeft: this.clocks.truthLeft() };
 
     const ready =

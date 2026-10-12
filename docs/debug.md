@@ -69,7 +69,8 @@ Tools for testing the game without playing the whole run every time. With them y
 - the obedience and the verdict the Ministry would give the level so far, and the last verdict given;
 - the real, official, and standing scores, the standing score being what the HUD shows;
 - each word's level, a dash once the Party has taken it, and the bombs;
-- in a level, the flight phase, the scroll against the level's length, and the boss's or the Thought Police's health.
+- in a level, the flight phase, the scroll against the level's length, and the boss's or the Thought Police's health;
+- in a level, which of Propaganda's fields are lying right now (`isLying()`), and the enemy of the moment.
 
 While the panel shows, the number keys run commands. They don't clash with the game's controls. `2`, `3`, `4`, `6`, and `7` act on a level and do nothing outside one; the rest work in any scene.
 

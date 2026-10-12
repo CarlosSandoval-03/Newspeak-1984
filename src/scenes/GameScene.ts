@@ -47,6 +47,7 @@ import { Suspicion } from "../systems/Suspicion";
 import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
+import { Ticker } from "../ui/Ticker";
 import { GameOverScene } from "./GameOverScene";
 import { EndingScene, earnedEnding } from "./EndingScene";
 import { MinistryScene } from "./MinistryScene";
@@ -60,7 +61,9 @@ export class GameScene implements Scene {
   private readonly player: Player;
   private readonly flight: Flight;
   private readonly spawner: Spawner;
+  private readonly propaganda: Propaganda;
   private readonly hud: HUD;
+  private readonly ticker: Ticker;
   private readonly background: Background;
   private readonly suspicion = new Suspicion();
   private readonly newspeak = new Newspeak(this.suspicion);
@@ -94,7 +97,9 @@ export class GameScene implements Scene {
     this.level = level;
     this.arena = { images: assets.image, fire, target: () => this.player.pos };
     this.font = assets.font.machine;
-    this.hud = this.createHud(assets);
+    this.propaganda = this.createPropaganda();
+    this.hud = new HUD(p, assets.font, this.propaganda);
+    this.ticker = new Ticker(this.propaganda, state.level);
     this.vignette = new Vignette(p);
     this.background = new Background(p, level, assets);
     this.player = new Player(input, assets.image, fire);
@@ -140,33 +145,35 @@ export class GameScene implements Scene {
     this.updateRegime();
     if (this.readyToLeave()) this.startLeaving();
 
+    // The regime's news: the war changes sides halfway through, and the ticker rolls on.
+    this.propaganda.update(this.flight.scroll / this.level.length);
+    this.ticker.update();
+
     this.flight.advance();
   }
 
-  // The ground and what stands on it, then the sky over it, then the screen-wide effects and the HUD.
+  // The ground and what stands on it, then the sky over it, then the screen-wide effects, the HUD,
+  // and the ticker along the bottom.
   draw(): void {
     this.drawGround();
     this.drawSky();
     this.drawBombFlash();
     this.vignette.draw();
     this.hud.draw(this.bossBar());
+    this.ticker.draw(this.p, this.font);
   }
 
   exit(): void {
     this.bossDamage.remove();
   }
 
-  // Propaganda reads the word clocks at draw time, by when the pilot exists.
-  private createHud(assets: Assets): HUD {
-    return new HUD(
-      this.p,
-      assets.font,
-      new Propaganda({
-        dashReady: () => this.player.dashReady,
-        truthReady: () => this.newspeak.truthReady,
-        truthLeft: () => this.newspeak.truthLeft,
-      }),
-    );
+  // It reads the word clocks only once the level runs, by when the pilot exists.
+  private createPropaganda(): Propaganda {
+    return new Propaganda({
+      dashReady: () => this.player.dashReady,
+      truthReady: () => this.newspeak.truthReady,
+      truthLeft: () => this.newspeak.truthLeft,
+    });
   }
 
   private createSpawner(assets: Assets): Spawner {
@@ -487,9 +494,15 @@ export class GameScene implements Scene {
     }
   }
 
+  // The regime's own police are never a kill, and the ticker files them as an enemy raider.
   private kill(target: Kill): void {
     state.realScore += target.score;
-    record(target instanceof ThoughtPolice ? "policeDestroyed" : "kills");
+    if (target instanceof ThoughtPolice) {
+      record("policeDestroyed");
+      this.ticker.announce(currentStrings().ticker.raiderDowned, {
+        n: state.level,
+      });
+    } else record("kills");
     this.explosions.push(this.explosionFor(target));
     if (target instanceof Enemy && target.drops)
       this.pickups.push(new Pickup(target.drops, target.pos, this.font));

@@ -62,6 +62,12 @@ export const DIARY_BONUS_SCORE = 1000;
 // Read mid-fight, so the line types at a quarter of a page's speed, and stays a while once typed.
 export const DIARY_CPF = 0.25;
 export const DIARY_HOLD = 300;
+// Propaganda: halfway through every level the war changes sides, and the record changes with it.
+export const ALLIANCE_FLIP_AT = 0.5;
+// A lie's tell: how long the rewritten text vanishes when it changes.
+export const TELL_FLICKER_FRAMES = 1;
+export const TICKER_SPEED = 1;
+
 // The Ministry's obedience factor for a level: kills raise it, everything the regime dislikes lowers
 // it. A good citizen lands around 1.3–1.6, a rebel around 0.3–0.6.
 export const OBEDIENCE_BASE = 1;

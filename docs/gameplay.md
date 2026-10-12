@@ -60,7 +60,7 @@ flowchart LR
 
 ## Doublethink: the lying HUD
 
-The HUD shows what the Party wants believed. Each level adds a lie: (1) the ticker's alliance flips and rewrites the past, (2) the score is inflated, (3) a fake extra life appears now and then, (4) some enemies look like allies but still shoot. Every false value has a tell (a flicker or 1 px jitter), and `TRUTH` reveals the real values. In level 5 `TRUTH` is gone: every lie at once, and only attention sees through them.
+The HUD shows what the Party wants believed. Each level adds a lie: (1) the ticker's alliance flips halfway through every level and rewrites the past, (2) the score is inflated, (3) a fake extra life appears now and then, (4) some enemies look like allies but still shoot. Every false value has a tell (a flicker or 1 px jitter), and `TRUTH` reveals the real values. In level 5 `TRUTH` is gone: every lie at once, and only attention sees through them.
 
 ## Ministry of Truth: the rewritten score
 

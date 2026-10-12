@@ -29,6 +29,9 @@ export interface PlatformDef {
 
 export type Word = "FREE" | "ESCAPE" | "TRUTH" | "REMEMBER";
 
+// The two powers Oceania takes turns being at war with.
+export type Enemy = "eurasia" | "eastasia";
+
 export type EnemyKind = "straight" | "sine" | "bomber" | "homing" | "escort";
 
 export interface WaveDef {

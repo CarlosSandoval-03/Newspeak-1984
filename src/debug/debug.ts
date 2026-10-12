@@ -18,6 +18,7 @@ import { GameScene } from "../scenes/GameScene";
 import { record, state } from "../state";
 import { clearHonorRoll, recordRun } from "../systems/HonorRoll";
 import { obedience, standingScore, verdictFor } from "../systems/Ministry";
+import type { LieField } from "../systems/Propaganda";
 import { ALERT } from "../types";
 import { chooseEnding, parseFlow, startFlow, unlockWords } from "./flows";
 import { type ResetScope, resetStorage, sandboxStorage } from "./sandbox";
@@ -220,7 +221,7 @@ function panelLines(settings: Settings, game: GameScene | null): string[] {
     wordsLine(),
   ];
 
-  if (game) lines.push(flightLine(game));
+  if (game) lines.push(flightLine(game), liesLine(game));
   lines.push(
     ...chunks(
       COMMANDS.map(({ code, label }) => `[${code.slice(-1)}] ${label}`),
@@ -236,6 +237,16 @@ function wordsLine(): string {
     (word) => `${word} ${state.words.has(word) ? state.wordLevels[word] : "-"}`,
   );
   return `words ${words.join("  ")}  bombs ${state.bombs}`;
+}
+
+// Which of the regime's lies is on screen right now, and whose war it is.
+function liesLine(game: GameScene): string {
+  const propaganda = game["propaganda"];
+  const fields: LieField[] = ["ticker"];
+  const lies = fields.map(
+    (field) => `${field} ${propaganda.isLying(field) ? "LIE" : "true"}`,
+  );
+  return `lying ${lies.join("  ")}   enemy ${propaganda.enemy}`;
 }
 
 function flightLine(game: GameScene): string {

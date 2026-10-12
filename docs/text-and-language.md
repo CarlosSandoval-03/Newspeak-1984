@@ -22,7 +22,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 | Channel | Voice | When and where | How it changes | Key in `src/i18n` | Example |
 | ------- | ----- | -------------- | -------------- | ----------------- | ------- |
-| Ticker | Machine | Bottom strip during play. | War news, production, warnings. When the alliance flips, every past line re-renders with the new enemy. | `ticker` | `EURASIA FLEET DESTROYED OFF THE COAST`, later `EASTASIA FLEET…` |
+| Ticker | Machine | Bottom strip during play. | War news, production, warnings. When the alliance flips halfway through a level, every past line re-renders with the new enemy; TRUTH shows each line as first written. A downed Thought Police patrol is announced as an enemy raider (`ticker.raiderDowned`). | `ticker` | `EURASIA FLEET DESTROYED OFF THE COAST`, later `EASTASIA FLEET…` |
 | Rooftop murals | Machine | Under the Leader's portrait, in the background. | Usually fixed; a mural may use a banner pair and flip with a one-frame tell. | `slogans.murals` | `HE SEES YOU CLEARLY` |
 | Ground slogans | Machine | Painted on plazas, scrolling with the ground. | Fixed. | `slogans.ground` | `LOOK UP` |
 | Blimp banners | Machine | Towed across the screen. | The most visible flips: each pair swaps to its opposite mid-level. | `slogans.banners` | `ALWAYS OUR ALLY` / `NEVER OUR ALLY` |
