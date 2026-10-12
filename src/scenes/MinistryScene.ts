@@ -127,7 +127,7 @@ export class MinistryScene implements Scene {
   private updateRecord(confirmed: boolean): void {
     if (confirmed) {
       if (this.settled) {
-        this.page = "honorRoll";
+        this.turnPage();
         return;
       }
       this.settle();
@@ -139,6 +139,12 @@ export class MinistryScene implements Scene {
     else if (this.slideAge < SLIDE_FRAMES) this.slideAge++;
     else if (!this.erasureTyping.done) this.erasureTyping.update();
     else if (this.stampAge < STAMP_DELAY) this.stampAge++;
+  }
+
+  // The honor roll only when the Ministry changed something in it; otherwise straight on.
+  private turnPage(): void {
+    if (this.honorRoll.tampered) this.page = "honorRoll";
+    else this.leave();
   }
 
   private updateHonorRoll(confirmed: boolean): void {

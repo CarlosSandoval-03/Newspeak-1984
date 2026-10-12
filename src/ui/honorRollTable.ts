@@ -66,6 +66,11 @@ export class TamperedHonorRoll {
     this.typing = new Typewriter(this.lines);
   }
 
+  // Whether the Ministry touched any row; an untouched or empty archive has nothing to show.
+  get tampered(): boolean {
+    return this.changed.length > 0;
+  }
+
   get done(): boolean {
     return this.typing.done && this.current === this.changed.length;
   }

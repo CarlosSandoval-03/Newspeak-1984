@@ -140,7 +140,18 @@ describe("MinistryScene", () => {
     expect(scene["settled"]).toBe(true);
   });
 
+  // An archive of one entry, which every draw erases.
+  const tamperable = () => {
+    vi.stubGlobal("localStorage", {
+      getItem: () =>
+        JSON.stringify([{ pilotId: "0042", score: 900, unperson: false }]),
+      setItem: () => {},
+    });
+    vi.spyOn(Math, "random").mockReturnValue(0);
+  };
+
   it("settles each page before turning it: the record, then the honor roll, then the next Dictionary", () => {
+    tamperable();
     const change = vi.spyOn(manager, "change");
     const scene = open();
     change.mockClear();
@@ -159,7 +170,39 @@ describe("MinistryScene", () => {
     expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
   });
 
+  it("goes straight on from the record when the Ministry changed nothing in the honor roll", () => {
+    // Every draw leaves the entry alone.
+    vi.stubGlobal("localStorage", {
+      getItem: () =>
+        JSON.stringify([{ pilotId: "0042", score: 900, unperson: false }]),
+      setItem: () => {},
+    });
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const change = vi.spyOn(manager, "change");
+    const scene = open();
+    change.mockClear();
+
+    enter(scene);
+    enter(scene);
+
+    expect(scene["page"]).toBe("record");
+    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+  });
+
+  it("goes straight on from the record when the honor roll is empty", () => {
+    vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {} });
+    const change = vi.spyOn(manager, "change");
+    const scene = open();
+    change.mockClear();
+
+    enter(scene);
+    enter(scene);
+
+    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+  });
+
   it("opens the obedient ending after the last level", () => {
+    tamperable();
     const change = vi.spyOn(manager, "change");
     state.level = LEVELS.length;
     const scene = open();

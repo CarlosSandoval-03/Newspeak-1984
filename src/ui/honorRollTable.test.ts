@@ -103,4 +103,14 @@ describe("TamperedHonorRoll", () => {
 
     expect(lines(roll)).toEqual(["HONOR ROLL", "NO RECORDS."]);
   });
+
+  it("says whether the Ministry touched any row", () => {
+    const untouched = { before: [kept], after: [kept] };
+
+    expect(new TamperedHonorRoll(tampering).tampered).toBe(true);
+    expect(new TamperedHonorRoll(untouched).tampered).toBe(false);
+    expect(new TamperedHonorRoll({ before: [], after: [] }).tampered).toBe(
+      false,
+    );
+  });
 });
