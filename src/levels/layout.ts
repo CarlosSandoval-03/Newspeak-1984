@@ -13,6 +13,7 @@ import {
   LANDMARK_SIZE,
   MAX_BLOCK_CELLS,
   MIN_BLOCK_CELLS,
+  MURAL_SIZE,
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
 } from "../config";
@@ -319,6 +320,11 @@ function anchors(
 
   for (const { x, y, w, h, skylight } of buildings) {
     found.push({ kind: "rooftop", x: x + w / 2, y: y + h / 2 });
+    // A mural covers the roof inside its parapet, so it needs the room and no skylight under it.
+    const roomy =
+      w - 2 * PARAPET >= MURAL_SIZE.w && h - 2 * PARAPET >= MURAL_SIZE.h;
+    if (roomy && !skylight)
+      found.push({ kind: "mural", x: x + w / 2, y: y + h / 2 });
     if (skylight)
       found.push({
         kind: "skylight",

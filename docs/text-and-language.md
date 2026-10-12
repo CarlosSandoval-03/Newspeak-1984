@@ -44,7 +44,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 - **Original only**, in the regime's voice. Never quote Orwell. Orwell's world (Oceania, Eurasia, the Ministries, Newspeak) is the setting; the sentences are ours.
 - **The regime shouts:** everything it displays is UPPERCASE; only long prose (briefings, corrections, diary, endings) uses sentence case.
-- **Short:** at most 22 characters per line (a 176 px mural band) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes. The menu's controls line fits one 60-character VT323 line.
+- **Short:** at most 22 characters per line (88 px of mural band at 10 px) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes. The menu's controls line fits one 60-character VT323 line.
 - **Contradictions come in pairs** stored together (`slogans.banners`); the flip replaces one with the other. For example, `ALWAYS OUR ALLY` / `NEVER OUR ALLY`.
 - **Placeholders** (`{id}`, `{word}`, `{enemy}`…) instead of hard-coded names, so the ticker can rewrite itself and the briefings name the right word in each language.
 
@@ -67,7 +67,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | HUD words | VT323 | 20 | `#e8e4d8`; recharging and removed `#7a7a7a`, removed also struck in red; active `#1a1a1a` on `#e8e4d8` | UPPER |
 | Ticker | VT323 | 20 | `#e8e4d8` on a `#6e1712` (dark red) strip | UPPER |
 | Word pickups | VT323 | 20 | `#1a1a1a` on a `#e8e4d8` card; removed: on a `#7a7a7a` card + red strike-through | UPPER |
-| Mural slogan | VT323 | 20 | `#e8e4d8` on a `#1a1a1a` band | UPPER |
+| Mural slogan | VT323 | 10 | `#e8e4d8` on a `#1a1a1a` band | UPPER |
 | Ground slogan | VT323 | 40 or 60 | `#7a7a7a` on `#3a3a3a` | UPPER |
 | Towed banner | VT323 | 20 | `#1a1a1a` on `#e8e4d8` | UPPER |
 | Telescreen | VT323 | 20 | `#e8e4d8` | UPPER |

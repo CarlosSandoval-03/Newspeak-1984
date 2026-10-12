@@ -67,8 +67,9 @@ export interface TerrainDef {
   landmark?: { at: number; ministry: Ministry };
 }
 
-// Where a ground element can stand; later steps add bridge and railway.
-export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight";
+// Where a ground element can stand; later steps add bridge and railway. A `mural` is the middle of a
+// roof with no skylight and room for a whole mural.
+export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight" | "mural";
 
 export type EyeType = "tower" | "drone";
 
@@ -136,6 +137,8 @@ export interface LevelDef {
   pickups: PickupDef[];
   // On the skylight nearest `at`, so players learn where to look.
   diary: { at: number };
+  // The Leader's portrait painted on the roof nearest `at` with room for it.
+  murals: { at: number; x?: number }[];
   // Comes once the city stops at `length`; the landing waits for it to go down.
   boss: BossKind;
 }

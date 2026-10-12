@@ -5,6 +5,7 @@ import {
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
+  MURAL_SIZE,
   PICKUP_RADIUS,
   REINFORCEMENT_GAP,
   TURRET_STATS,
@@ -33,6 +34,8 @@ type Spawn = {
   turret: (pos: Vec) => void;
   pickup: (word: Word, pos: Vec) => void;
   diary: (pos: Vec) => void;
+  // `index` is the mural's place in the level's list, which picks its slogan.
+  mural: (pos: Vec, index: number) => void;
 };
 
 // Eyes, turrets, and pickups come by scroll distance, not in waves; `place` gets the scroll they finally came at.
@@ -121,7 +124,7 @@ export class Spawner {
 
   // Everything that comes by distance rather than in waves, in the order it is due.
   private plan(): Placement[] {
-    const { eyes, turrets, pickups, diary } = this.level;
+    const { eyes, turrets, pickups, diary, murals } = this.level;
 
     return [
       // Drones fly in above the top edge; towers stand on the ground.
@@ -151,14 +154,15 @@ export class Spawner {
       this.onGround({ at: diary.at, on: "skylight" }, DIARY_HALF_SIZE, (pos) =>
         this.spawn.diary(pos),
       ),
+      ...murals.map((def, index) =>
+        this.onGround({ ...def, on: "mural" }, MURAL_SIZE.h / 2, (pos) =>
+          this.spawn.mural(pos, index),
+        ),
+      ),
     ].sort((a, b) => a.due - b.due);
   }
 
-  private inTheAir(
-    at: number,
-    pos: Vec,
-    spawn: (pos: Vec) => void,
-  ): Placement {
+  private inTheAir(at: number, pos: Vec, spawn: (pos: Vec) => void): Placement {
     return { due: at, place: () => spawn(pos) };
   }
 

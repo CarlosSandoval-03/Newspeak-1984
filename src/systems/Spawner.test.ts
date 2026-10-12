@@ -5,6 +5,7 @@ import {
   ENEMY_STATS,
   EYE_STATS,
   GYRO_INTERVAL,
+  MURAL_SIZE,
   PICKUP_RADIUS,
   REINFORCEMENT_GAP,
   TURRET_STATS,
@@ -26,6 +27,7 @@ const level: LevelDef = {
   terrain: { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } },
   length: 100_000,
   boss: "fortress",
+  murals: [{ at: 500 }, { at: 2000 }],
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },
@@ -46,6 +48,7 @@ describe("Spawner", () => {
   let turrets: Vec[];
   let pickups: { word: Word; pos: Vec }[];
   let diaries: Vec[];
+  let murals: { pos: Vec; index: number }[];
   let spawner: Spawner;
 
   beforeEach(() => {
@@ -54,13 +57,27 @@ describe("Spawner", () => {
     turrets = [];
     pickups = [];
     diaries = [];
+    murals = [];
     spawner = new Spawner(level, {
       enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
       eye: (def, pos) => watching.push({ def, pos }),
       turret: (pos) => turrets.push(pos),
       pickup: (word, pos) => pickups.push({ word, pos }),
       diary: (pos) => diaries.push(pos),
+      mural: (pos, index) => murals.push({ pos, index }),
     });
+  });
+
+  it("paints each mural on the roof with room for it nearest its distance, as the roof comes in", () => {
+    const anchor = anchorNear(level, "mural", 500);
+    const due = anchor.y - MURAL_SIZE.h / 2;
+
+    spawner.update(due - 1, ALERT.normal);
+    expect(murals).toEqual([]);
+    spawner.update(due, ALERT.normal);
+    expect(murals).toEqual([
+      { pos: { x: anchor.x, y: due - anchor.y }, index: 0 },
+    ]);
   });
 
   it("spawns a wave when the scroll reaches it, just above the top edge", () => {
@@ -196,6 +213,7 @@ describe("Spawner", () => {
           turret: () => {},
           pickup: () => {},
           diary: () => {},
+          mural: () => {},
         }).update(0, ALERT.thoughtPolice);
 
         const [{ pos }] = gyros();
@@ -239,6 +257,7 @@ describe("Spawner", () => {
         turret: () => {},
         pickup: () => {},
         diary: () => {},
+        mural: () => {},
       },
     ).update(0, ALERT.alert);
 

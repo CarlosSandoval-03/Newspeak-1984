@@ -8,6 +8,7 @@ import {
   LANDING_LEAD,
   LANDMARK_SIZE,
   MIN_BLOCK_CELLS,
+  MURAL_SIZE,
   PLATFORM_SIZE,
 } from "../config";
 import type { AnchorKind } from "../types";
@@ -232,7 +233,13 @@ describe("chunkLayout", () => {
 });
 
 describe("anchors", () => {
-  const kinds: AnchorKind[] = ["street", "plaza", "rooftop", "skylight"];
+  const kinds: AnchorKind[] = [
+    "street",
+    "plaza",
+    "rooftop",
+    "skylight",
+    "mural",
+  ];
 
   const inside = (x: number, y: number, rect: Rect) =>
     x > rect.x && x < rect.x + rect.w && y > rect.y && y < rect.y + rect.h;
@@ -261,6 +268,16 @@ describe("anchors", () => {
           expect(roofed(x, y)).toBe(false);
         } else if (kind === "rooftop") {
           expect(roofed(x, y)).toBe(true);
+        } else if (kind === "mural") {
+          // The middle of a roof with room for the whole mural, and no skylight under it.
+          const roof = buildings.find((building) => inside(x, y, building));
+          expect(roof?.skylight).toBeNull();
+          expect(roof!.w - 2 * PARAPET).toBeGreaterThanOrEqual(MURAL_SIZE.w);
+          expect(roof!.h - 2 * PARAPET).toBeGreaterThanOrEqual(MURAL_SIZE.h);
+          expect({ x, y }).toEqual({
+            x: roof!.x + roof!.w / 2,
+            y: roof!.y + roof!.h / 2,
+          });
         } else {
           const skylights = buildings.flatMap((b) => b.skylight ?? []);
           expect(skylights.some((s) => inside(x, y, s))).toBe(true);

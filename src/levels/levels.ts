@@ -107,6 +107,8 @@ const LEVEL_1: LevelDef = {
   ],
   // Midway, once the first waves have taught the player to watch the rooftops.
   diary: { at: 1350 },
+  // Spread through the level, the Leader watching from the roofs between the fights.
+  murals: [{ at: 400 }, { at: 1250 }, { at: 2150 }],
   boss: "fortress",
 };
 

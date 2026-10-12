@@ -128,6 +128,9 @@ export const SCROLL_SPEED = 1;
 export const AIRFIELD_AT = -800;
 // launch-platform.png's size, which the layout keeps clear of buildings and anchors.
 export const PLATFORM_SIZE = { w: 112, h: 256 };
+// A rooftop mural: the Leader's portrait in a red frame over a slogan band of two lines, at half
+// the machine's usual size so 22 characters fit a roof.
+export const MURAL_SIZE = { w: 96, h: 100 };
 // A ministry's sprite, and the open plaza around it on every side.
 export const LANDMARK_SIZE = 128;
 export const LANDMARK_MARGIN = 8;

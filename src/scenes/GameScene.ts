@@ -31,6 +31,7 @@ import { Diary } from "../entities/Diary";
 import { Enemy } from "../entities/Enemy";
 import type { Arena } from "../entities/Entity";
 import { Explosion } from "../entities/Explosion";
+import { Mural } from "../entities/Mural";
 import { Eye } from "../entities/Eye";
 import { Pickup } from "../entities/Pickup";
 import { Player } from "../entities/Player";
@@ -87,6 +88,7 @@ export class GameScene implements Scene {
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
   private diary: Diary | null = null;
+  private murals: Mural[] = [];
   private gameOverIn = 0;
   private paused = false;
   private flash = 0;
@@ -215,6 +217,8 @@ export class GameScene implements Scene {
       pickup: (word, pos) =>
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
       diary: (pos) => (this.diary = new Diary(pos, assets.image)),
+      mural: (pos, index) =>
+        this.murals.push(new Mural(pos, muralSlogan(index), assets)),
     });
   }
 
@@ -266,6 +270,7 @@ export class GameScene implements Scene {
   private moveAll(): void {
     // Ground things ride the city, which stops for the boss and starts again to land.
     for (const ground of [
+      ...this.murals,
       ...this.turrets,
       ...this.eyes.filter((eye) => eye.type === "tower"),
       ...(this.diary ? [this.diary] : []),
@@ -286,6 +291,7 @@ export class GameScene implements Scene {
     for (const explosion of this.explosions) explosion.update();
     for (const pickup of this.pickups) pickup.update();
     this.diary?.update();
+    for (const mural of this.murals) mural.update();
     this.hud.update();
   }
 
@@ -297,6 +303,7 @@ export class GameScene implements Scene {
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
     this.pickups = this.pickups.filter((pickup) => pickup.alive);
     if (!this.diary?.alive) this.diary = null;
+    this.murals = this.murals.filter((mural) => mural.alive);
   }
 
   // After watching, so suspicion ends the tick right at the reset when the Thought Police go.
@@ -590,6 +597,8 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.flight.scroll);
+    // Painted on the roofs, under anything that stands on them.
+    for (const mural of this.murals) mural.draw(p);
     this.diary?.draw(p);
     for (const turret of this.turrets) turret.draw(p);
     if (this.boss?.def.ground) this.boss.draw(p);
@@ -631,4 +640,10 @@ export class GameScene implements Scene {
       return { name: boss.kind, health: boss.health, regime: boss.def.regime };
     return null;
   }
+}
+
+// The level's murals take its slogans in turn, each level starting one further along.
+function muralSlogan(index: number): string {
+  const { murals } = currentStrings().slogans;
+  return murals[(state.level - 1 + index) % murals.length];
 }
