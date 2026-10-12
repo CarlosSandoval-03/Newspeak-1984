@@ -354,6 +354,8 @@ export const BOSS_STATS: Record<BossKind, BossDef> = {
     ],
   },
   // Its main cannon fires straight down the street it rides.
+  // Drives up and down most of the upper half of its street, always whole on screen, so the
+  // pilot has to follow it and its aim keeps changing.
   landship: {
     halfSize: 64,
     radius: 48,
@@ -361,8 +363,8 @@ export const BOSS_STATS: Record<BossKind, BossDef> = {
     score: 7000,
     ground: true,
     regime: false,
-    hoverY: 150,
-    sway: { amp: 30, period: 480 },
+    hoverY: 190,
+    sway: { amp: 120, period: 720 },
     phases: [
       {
         from: 1,

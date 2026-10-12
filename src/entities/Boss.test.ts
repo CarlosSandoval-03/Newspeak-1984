@@ -92,6 +92,12 @@ describe("LevelBoss", () => {
     }
   });
 
+  it("keeps a ground boss whole on screen as it drives its street", () => {
+    for (const { ground, hoverY, sway, halfSize } of Object.values(BOSS_STATS))
+      if (ground)
+        expect(hoverY - sway.amp - halfSize).toBeGreaterThanOrEqual(0);
+  });
+
   it("fires its phase's volleys in turn, one every interval", () => {
     const boss = make("fortress");
     const [{ interval, volleys }] = BOSS_STATS.fortress.phases;
