@@ -1,6 +1,12 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
-import { CANVAS_WIDTH, INK, LEATHER_DARK, PAPER } from "../config";
+import {
+  CANVAS_WIDTH,
+  INK,
+  LEATHER_DARK,
+  PAPER,
+  REBEL_DIARY_THRESHOLD,
+} from "../config";
 import { toSeconds } from "../core/math";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
@@ -48,6 +54,11 @@ const PROMPT_Y = 632;
 const PROMPT_SIZE = 20;
 
 export type Ending = "obedient" | "rebel";
+
+// Decided once the Eye is down, by the diary pages read in the whole run.
+export function earnedEnding(): Ending {
+  return state.runStats.diaries >= REBEL_DIARY_THRESHOLD ? "rebel" : "obedient";
+}
 
 // One page of an ending: lines typed in the paperwork's face, under an illustration or on a diary's
 // leather, and the honor roll beneath them on the page that shows it.

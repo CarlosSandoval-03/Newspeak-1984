@@ -14,7 +14,6 @@ import {
   GAME_OVER_DELAY,
   PAPER,
   PLAYER_HALF_SIZE,
-  REBEL_DIARY_THRESHOLD,
   RED,
   THOUGHT_POLICE_STATS,
   TURRET_STATS,
@@ -49,7 +48,7 @@ import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
 import { GameOverScene } from "./GameOverScene";
-import { EndingScene } from "./EndingScene";
+import { EndingScene, earnedEnding } from "./EndingScene";
 import { MinistryScene } from "./MinistryScene";
 
 type Kill = Enemy | Turret | ThoughtPolice | LevelBoss;
@@ -312,12 +311,8 @@ export class GameScene implements Scene {
     this.clearHostileFire();
   }
 
-  // Enough of the diary read by the end of the last level.
   private get rebelling(): boolean {
-    return (
-      state.level === LEVELS.length &&
-      state.runStats.diaries >= REBEL_DIARY_THRESHOLD
-    );
+    return state.level === LEVELS.length && earnedEnding() === "rebel";
   }
 
   private clearHostileFire(): void {
