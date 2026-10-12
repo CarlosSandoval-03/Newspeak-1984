@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
   ALERT_SPAWN_MULT,
+  ALERT_THRESHOLDS,
   BOMB_BOSS_DAMAGE,
   BOSS_STATS,
   CANVAS_WIDTH,
@@ -15,6 +16,7 @@ import {
   LANDING_LEAD,
   LIE_FROM,
   PAPER,
+  PAUSE_SUSPICION_RISE,
   PLAYER_SPAWN,
   REBEL_DIARY_THRESHOLD,
   SCROLL_SPEED,
@@ -460,6 +462,41 @@ describe("GameScene collisions", () => {
       false,
     ]);
     vi.restoreAllMocks();
+  });
+
+  describe("the pause", () => {
+    const pause = (code = "KeyP") => {
+      keys.dispatchEvent(Object.assign(new Event("keydown"), { code }));
+      keys.dispatchEvent(Object.assign(new Event("keyup"), { code }));
+      scene.update();
+      manager.input.endFrame();
+    };
+
+    it("stops the world on P, and starts it again on P or Escape", () => {
+      pause();
+      const { scroll } = scene["flight"];
+      for (let i = 0; i < 60; i++) scene.update();
+      expect(scene["paused"]).toBe(true);
+      expect(scene["flight"].scroll).toBe(scroll);
+
+      pause("Escape");
+      expect(scene["paused"]).toBe(false);
+      scene.update();
+      expect(scene["flight"].scroll).toBeGreaterThan(scroll);
+    });
+
+    it("lets suspicion creep up while paused, but never past the alert threshold", () => {
+      // The tick that pauses is already a paused one.
+      pause();
+      expect(state.suspicion).toBeCloseTo(PAUSE_SUSPICION_RISE);
+
+      for (let i = 0; i < 10000; i++) scene.update();
+      expect(state.suspicion).toBe(ALERT_THRESHOLDS.alert);
+
+      state.suspicion = 80;
+      scene.update();
+      expect(state.suspicion).toBe(80);
+    });
   });
 
   it("changes the war's sides halfway through the level", () => {

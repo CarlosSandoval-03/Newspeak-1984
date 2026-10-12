@@ -98,7 +98,7 @@ flowchart LR
 | Truth (TRUTH) | `V` |
 | Menu: select / activate | Up and Down / `Enter` or Shoot |
 | Confirm / skip text | `Enter` |
-| Pause | `P` or `Escape` |
+| Pause | `P` or `Escape`; suspicion still creeps up while paused, up to the alert threshold |
 
 ## Structure
 

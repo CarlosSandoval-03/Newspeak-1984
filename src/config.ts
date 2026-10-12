@@ -279,6 +279,10 @@ export const SLIDE_FRAMES = 45;
 export const CURSOR_BLINK_FRAMES = 30;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;
+// Even a pause is watched: suspicion creeps up this much a frame while paused, but never past the
+// alert threshold, so stepping away can't call the Thought Police.
+export const PAUSE_SUSPICION_RISE = 0.01;
+export const PAUSE_DIM_ALPHA = 0.7;
 // Unseen, the vignette still holds this much of its strength at full suspicion, and beats in pursuit.
 export const VIGNETTE_BASE_MAX = 0.6;
 // The screen strains under suspicion: at full suspicion every frame glitches, with up to this many

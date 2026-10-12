@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
 import {
+  ALERT_THRESHOLDS,
   BOMB_BOSS_DAMAGE,
   BOMB_FLASH_ALPHA,
   BOMB_FLASH_FRAMES,
@@ -13,6 +14,7 @@ import {
   EYE_STATS,
   GAME_OVER_DELAY,
   PAPER,
+  PAUSE_SUSPICION_RISE,
   PLAYER_HALF_SIZE,
   RED,
   SUSPICION_MAX,
@@ -48,6 +50,7 @@ import { Suspicion } from "../systems/Suspicion";
 import { ALERT, type LevelDef } from "../types";
 import { Glitch, Scanlines, Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
+import { drawPause } from "../ui/pause";
 import { Ticker } from "../ui/Ticker";
 import { GameOverScene } from "./GameOverScene";
 import { EndingScene, earnedEnding } from "./EndingScene";
@@ -85,6 +88,7 @@ export class GameScene implements Scene {
   private pickups: Pickup[] = [];
   private diary: Diary | null = null;
   private gameOverIn = 0;
+  private paused = false;
   private flash = 0;
 
   constructor(p: p5, manager: SceneManager) {
@@ -123,6 +127,13 @@ export class GameScene implements Scene {
   // meets, the regime watches and sends its forces, and the level ends once the plane has landed,
   // or for the rebel, flown away.
   update(): void {
+    // Paused, nothing moves but suspicion: the telescreen stays on.
+    if (this.manager.input.wasPressed("pause")) this.paused = !this.paused;
+    if (this.paused) {
+      this.creepSuspicion();
+      return;
+    }
+
     // The crash has played out: the telescreen switches the pilot off.
     if (this.gameOverIn > 0 && --this.gameOverIn === 0) {
       this.showGameOver();
@@ -158,7 +169,8 @@ export class GameScene implements Scene {
   }
 
   // The ground and what stands on it, then the sky over it, the bomb's flash and the vignette, the
-  // HUD and the ticker; then the telescreen itself: the glitch of suspicion, and its scanlines.
+  // HUD and the ticker, and the pause screen over all of it if paused; then the telescreen itself:
+  // the glitch of suspicion, and its scanlines.
   draw(): void {
     this.drawGround();
     this.drawSky();
@@ -166,6 +178,7 @@ export class GameScene implements Scene {
     this.vignette.draw();
     this.hud.draw(this.bossBar());
     this.ticker.draw(this.p, this.font);
+    if (this.paused) drawPause(this.p, this.manager.assets);
     this.glitch.draw(state.suspicion / SUSPICION_MAX);
     this.scanlines.draw();
   }
@@ -203,6 +216,12 @@ export class GameScene implements Scene {
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
       diary: (pos) => (this.diary = new Diary(pos, assets.image)),
     });
+  }
+
+  // Up to the alert threshold only: a pause is noticed, but never punished with a pursuit.
+  private creepSuspicion(): void {
+    const room = ALERT_THRESHOLDS.alert - state.suspicion;
+    if (room > 0) this.suspicion.add(Math.min(PAUSE_SUSPICION_RISE, room));
   }
 
   // The canvas still holds the last frame drawn, which the telescreen switches off.
