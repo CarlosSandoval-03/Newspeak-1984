@@ -279,6 +279,17 @@ export const SLIDE_FRAMES = 45;
 export const CURSOR_BLINK_FRAMES = 30;
 export const VIGNETTE_FADE_FRAMES = 20;
 export const VIGNETTE_PULSE_FRAMES = 40;
+// Unseen, the vignette still holds this much of its strength at full suspicion, and beats in pursuit.
+export const VIGNETTE_BASE_MAX = 0.6;
+// The screen strains under suspicion: at full suspicion every frame glitches, with up to this many
+// slices shifted up to this far; below it, frames glitch as often as suspicion is high.
+export const GLITCH_MAX_SLICES = 6;
+export const GLITCH_MAX_OFFSET = 12;
+export const GLITCH_SLICE_MIN = 2;
+export const GLITCH_SLICE_MAX = 10;
+// The telescreen's lines: one dark pixel row in every SCANLINE_STEP.
+export const SCANLINE_STEP = 3;
+export const SCANLINE_ALPHA = 0.18;
 
 // From alert up: each wave grows by this share, rounded up, and enemies reload this much faster.
 export const ALERT_SPAWN_MULT = 1.3;

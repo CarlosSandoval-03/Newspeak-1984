@@ -1,16 +1,22 @@
 import type p5 from "p5";
 import { describe, expect, it } from "vitest";
 import {
+  CANVAS_HEIGHT,
   CURSOR_BLINK_FRAMES,
+  GLITCH_MAX_OFFSET,
+  GLITCH_MAX_SLICES,
+  GLITCH_SLICE_MAX,
+  GLITCH_SLICE_MIN,
   TYPEWRITER_CPF,
+  VIGNETTE_BASE_MAX,
   VIGNETTE_FADE_FRAMES,
   VIGNETTE_PULSE_FRAMES,
 } from "../config";
-import { Typewriter, Vignette, wrap } from "./effects";
+import { glitchSlices, Typewriter, Vignette, wrap } from "./effects";
 
 describe("Vignette", () => {
   const seenFor = (vignette: Vignette, frames: number, seen = true) => {
-    for (let i = 0; i < frames; i++) vignette.update(seen);
+    for (let i = 0; i < frames; i++) vignette.update(seen, 0, false);
   };
 
   it("stays clear until the player is seen", () => {
@@ -27,7 +33,7 @@ describe("Vignette", () => {
 
     const beat: number[] = [];
     for (let i = 0; i < VIGNETTE_PULSE_FRAMES; i++) {
-      vignette.update(true);
+      vignette.update(true, 0, false);
       beat.push(vignette.strength);
     }
 
@@ -44,6 +50,68 @@ describe("Vignette", () => {
 
     seenFor(vignette, VIGNETTE_FADE_FRAMES / 2, false);
     expect(vignette.strength).toBe(0);
+  });
+
+  it("holds a base that grows with suspicion while unseen, steady until the pursuit", () => {
+    const vignette = new Vignette({} as p5);
+    const over = (suspicion: number, pursuit: boolean) => {
+      const strengths: number[] = [];
+      for (let i = 0; i < VIGNETTE_PULSE_FRAMES; i++) {
+        vignette.update(false, suspicion, pursuit);
+        strengths.push(vignette.strength);
+      }
+      return strengths;
+    };
+
+    expect(new Set(over(0.5, false))).toEqual(
+      new Set([0.5 * VIGNETTE_BASE_MAX]),
+    );
+    expect(Math.max(...over(1, false))).toBe(VIGNETTE_BASE_MAX);
+
+    const beating = over(1, true);
+    expect(Math.max(...beating)).toBeCloseTo(VIGNETTE_BASE_MAX, 2);
+    expect(Math.min(...beating)).toBeLessThan(VIGNETTE_BASE_MAX * 0.7);
+  });
+});
+
+describe("glitchSlices", () => {
+  // Hands out the given draws in order, then the last one forever.
+  const draws =
+    (...values: number[]) =>
+    () =>
+      values.length > 1 ? values.shift()! : values[0];
+
+  it("never glitches at no suspicion", () => {
+    expect(glitchSlices(0, draws(0))).toEqual([]);
+  });
+
+  it("glitches a frame as often as the intensity is high", () => {
+    expect(glitchSlices(0.3, draws(0.3))).toEqual([]);
+    expect(glitchSlices(0.3, draws(0.29, 0.5))).not.toEqual([]);
+  });
+
+  it("shifts more bands, further, as the intensity grows", () => {
+    const weak = glitchSlices(0.2, draws(0, 1));
+    const strong = glitchSlices(1, draws(0, 1));
+
+    expect(weak.length).toBeLessThan(strong.length);
+    expect(strong).toHaveLength(GLITCH_MAX_SLICES);
+    expect(Math.max(...weak.map(({ dx }) => Math.abs(dx)))).toBeLessThan(
+      Math.max(...strong.map(({ dx }) => Math.abs(dx))),
+    );
+    expect(Math.max(...strong.map(({ dx }) => Math.abs(dx)))).toBe(
+      GLITCH_MAX_OFFSET,
+    );
+  });
+
+  it("keeps every band on the screen and in its size range", () => {
+    for (const { y, h, dx } of glitchSlices(1, Math.random)) {
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThan(CANVAS_HEIGHT);
+      expect(h).toBeGreaterThanOrEqual(GLITCH_SLICE_MIN);
+      expect(h).toBeLessThan(GLITCH_SLICE_MAX);
+      expect(dx).not.toBe(0);
+    }
   });
 });
 

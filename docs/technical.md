@@ -256,9 +256,9 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | Background | 2 `image()` calls per frame. |
 | Sprites | One `image()` each; all images total under 250 KB. |
 | Bullets | `p.circle()`, the cheapest primitive. |
-| Glitch | `p.copy()` on a few horizontal slices; none at suspicion 0. The most expensive effect: cap the slice count in `config.ts`. |
+| Glitch | A few horizontal slices lifted onto a buffer and drawn back shifted, with the 2D context's `drawImage`; never `p.copy()` or the canvas onto itself, which copy the whole canvas per slice. None at suspicion 0. The most expensive effect: the slice count is capped in `config.ts` (`GLITCH_MAX_SLICES`). |
 | Scanlines | One prerendered `p5.Graphics` overlay. |
-| Red vignette | One prerendered `p5.Graphics` (red edges, transparent center), drawn with an alpha driven by suspicion. Never rebuilt per frame. |
+| Red vignette | One prerendered `p5.Graphics` (red edges, transparent center), drawn with an alpha driven by suspicion. Never rebuilt per frame. Like the scanlines and the glitch's buffer, it is removed when the level ends. |
 | Never per frame | `tint()`, `loadPixels()`/`get()` on images, creating `p5.Graphics`. (Boss damage graphics are created once per level, on the boss's first frame.) |
 
 ### Benchmarks

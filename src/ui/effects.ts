@@ -3,10 +3,18 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   CURSOR_BLINK_FRAMES,
+  GLITCH_MAX_OFFSET,
+  GLITCH_MAX_SLICES,
+  GLITCH_SLICE_MAX,
+  GLITCH_SLICE_MIN,
+  INK,
   PAPER,
   RED,
+  SCANLINE_ALPHA,
+  SCANLINE_STEP,
   TYPEWRITER_CPF,
   VIGNETTE_ALPHA,
+  VIGNETTE_BASE_MAX,
   VIGNETTE_FADE_FRAMES,
   VIGNETTE_PULSE_FRAMES,
 } from "../config";
@@ -182,44 +190,160 @@ export function drawStamp(
   p.pop();
 }
 
-export function drawScanlines(): void {}
+// One horizontal band of the screen, redrawn `dx` to the side.
+export interface Slice {
+  y: number;
+  h: number;
+  dx: number;
+}
 
-export function drawGlitch(): void {}
+// The bands to shift this frame, for an intensity from 0 to 1: a frame glitches as often as the
+// intensity is high, and the band count and their reach grow with it. None at 0.
+export function glitchSlices(intensity: number, random: () => number): Slice[] {
+  if (intensity <= 0 || random() >= intensity) return [];
+
+  const count = Math.max(1, Math.round(GLITCH_MAX_SLICES * intensity));
+  const reach = GLITCH_MAX_OFFSET * intensity;
+  return Array.from({ length: count }, () => ({
+    y: Math.floor(random() * CANVAS_HEIGHT),
+    h:
+      GLITCH_SLICE_MIN +
+      Math.floor(random() * (GLITCH_SLICE_MAX - GLITCH_SLICE_MIN)),
+    dx: Math.round((random() * 2 - 1) * reach) || 1,
+  }));
+}
+
+// Shifts bands of what is already on the canvas: a picture under strain, not new content.
+export class Glitch {
+  private readonly p: p5;
+  private buffer: p5.Graphics | null = null;
+
+  constructor(p: p5) {
+    this.p = p;
+  }
+
+  // The bands are lifted onto a buffer first, then laid back shifted: a canvas drawn onto itself
+  // is copied whole for every band, and each band moves the picture as it was, not as already torn.
+  draw(intensity: number): void {
+    const slices = glitchSlices(intensity, Math.random);
+    if (slices.length === 0) return;
+
+    const screen = this.p.drawingContext as CanvasRenderingContext2D;
+    const buffer = this.buffered().drawingContext as CanvasRenderingContext2D;
+    for (const { y, h } of slices)
+      buffer.drawImage(
+        screen.canvas,
+        0,
+        y,
+        CANVAS_WIDTH,
+        h,
+        0,
+        y,
+        CANVAS_WIDTH,
+        h,
+      );
+    for (const { y, h, dx } of slices)
+      screen.drawImage(
+        buffer.canvas,
+        0,
+        y,
+        CANVAS_WIDTH,
+        h,
+        dx,
+        y,
+        CANVAS_WIDTH,
+        h,
+      );
+  }
+
+  remove(): void {
+    this.buffer?.remove();
+  }
+
+  private buffered(): p5.Graphics {
+    this.buffer ??= this.p.createGraphics(CANVAS_WIDTH, CANVAS_HEIGHT);
+    return this.buffer;
+  }
+}
+
+// The telescreen's lines over everything, built once.
+export class Scanlines {
+  private readonly p: p5;
+  private graphics: p5.Graphics | null = null;
+
+  constructor(p: p5) {
+    this.p = p;
+  }
+
+  draw(): void {
+    const { p } = this;
+    p.imageMode(p.CORNER);
+    p.image(this.prerendered(), 0, 0);
+  }
+
+  remove(): void {
+    this.graphics?.remove();
+  }
+
+  private prerendered(): p5.Graphics {
+    if (this.graphics) return this.graphics;
+
+    const graphics = this.p.createGraphics(CANVAS_WIDTH, CANVAS_HEIGHT);
+    const context = graphics.drawingContext as CanvasRenderingContext2D;
+    context.globalAlpha = SCANLINE_ALPHA;
+    graphics.noStroke();
+    graphics.fill(INK);
+    for (let y = 0; y < CANVAS_HEIGHT; y += SCANLINE_STEP)
+      graphics.rect(0, y, CANVAS_WIDTH, 1);
+    this.graphics = graphics;
+    return graphics;
+  }
+}
 
 // Clear in the middle, so it closes in from the edges without hiding the play.
 const VIGNETTE_CLEAR = 0.5;
 // Never fully gone mid-beat, so the pulse reads as a heartbeat and not a blink.
 const VIGNETTE_PULSE_FLOOR = 0.6;
 
-// The player feels watched without reading the meter.
+// The player feels watched without reading the meter: the edges glow red with suspicion, beat
+// while seen, and beat even unseen once the pursuit is on.
 export class Vignette {
   private readonly p: p5;
   private graphics: p5.Graphics | null = null;
   private glow = 0;
+  private base = 0;
+  private pursuit = false;
   private age = 0;
 
   constructor(p: p5) {
     this.p = p;
   }
 
+  // The stronger of the two: the beating glow of being seen, and suspicion's base.
   get strength(): number {
     const beat =
       (1 - Math.cos((2 * Math.PI * this.age) / VIGNETTE_PULSE_FRAMES)) / 2;
-    return (
-      this.glow * (VIGNETTE_PULSE_FLOOR + (1 - VIGNETTE_PULSE_FLOOR) * beat)
-    );
+    const pulse = VIGNETTE_PULSE_FLOOR + (1 - VIGNETTE_PULSE_FLOOR) * beat;
+    return Math.max(this.glow * pulse, this.base * (this.pursuit ? pulse : 1));
   }
 
-  update(seen: boolean): void {
+  // `suspicion` is a share, from 0 to 1.
+  update(seen: boolean, suspicion: number, pursuit: boolean): void {
     this.age++;
     const step = 1 / VIGNETTE_FADE_FRAMES;
     this.glow = seen
       ? Math.min(1, this.glow + step)
       : Math.max(0, this.glow - step);
+    this.base = suspicion * VIGNETTE_BASE_MAX;
+    this.pursuit = pursuit;
+  }
+
+  remove(): void {
+    this.graphics?.remove();
   }
 
   draw(): void {
-    if (this.glow === 0) return;
+    if (this.strength === 0) return;
 
     const { p } = this;
     const context = p.drawingContext as CanvasRenderingContext2D;

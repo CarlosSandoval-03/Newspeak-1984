@@ -15,6 +15,7 @@ import {
   PAPER,
   PLAYER_HALF_SIZE,
   RED,
+  SUSPICION_MAX,
   THOUGHT_POLICE_STATS,
   TURRET_STATS,
 } from "../config";
@@ -45,7 +46,7 @@ import { Propaganda } from "../systems/Propaganda";
 import { Spawner } from "../systems/Spawner";
 import { Suspicion } from "../systems/Suspicion";
 import { ALERT, type LevelDef } from "../types";
-import { Vignette } from "../ui/effects";
+import { Glitch, Scanlines, Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
 import { Ticker } from "../ui/Ticker";
 import { GameOverScene } from "./GameOverScene";
@@ -68,6 +69,8 @@ export class GameScene implements Scene {
   private readonly suspicion = new Suspicion();
   private readonly newspeak = new Newspeak(this.suspicion);
   private readonly vignette: Vignette;
+  private readonly glitch: Glitch;
+  private readonly scanlines: Scanlines;
   private readonly arena: Arena;
   private readonly font: p5.Font;
   private readonly bossDamage: BossDamage;
@@ -101,6 +104,8 @@ export class GameScene implements Scene {
     this.hud = new HUD(p, assets.font, this.propaganda);
     this.ticker = new Ticker(this.propaganda, state.level);
     this.vignette = new Vignette(p);
+    this.glitch = new Glitch(p);
+    this.scanlines = new Scanlines(p);
     this.background = new Background(p, level, assets);
     this.player = new Player(input, assets.image, fire);
     this.flight = new Flight(this.player, level, assets.platform);
@@ -152,8 +157,8 @@ export class GameScene implements Scene {
     this.flight.advance();
   }
 
-  // The ground and what stands on it, then the sky over it, then the screen-wide effects, the HUD,
-  // and the ticker along the bottom.
+  // The ground and what stands on it, then the sky over it, the bomb's flash and the vignette, the
+  // HUD and the ticker; then the telescreen itself: the glitch of suspicion, and its scanlines.
   draw(): void {
     this.drawGround();
     this.drawSky();
@@ -161,10 +166,15 @@ export class GameScene implements Scene {
     this.vignette.draw();
     this.hud.draw(this.bossBar());
     this.ticker.draw(this.p, this.font);
+    this.glitch.draw(state.suspicion / SUSPICION_MAX);
+    this.scanlines.draw();
   }
 
   exit(): void {
     this.bossDamage.remove();
+    this.vignette.remove();
+    this.glitch.remove();
+    this.scanlines.remove();
   }
 
   // It reads the word clocks only once the level runs, by when the pilot exists.
@@ -393,7 +403,11 @@ export class GameScene implements Scene {
     const seenBy = this.eyes.filter((eye) => eye.detecting);
 
     this.suspicion.update(seenBy, player.pos);
-    this.vignette.update(seenBy.length > 0);
+    this.vignette.update(
+      seenBy.length > 0,
+      state.suspicion / SUSPICION_MAX,
+      state.alertLevel >= ALERT.pursuit,
+    );
   }
 
   // Asked afresh for every pair: a hit earlier in the same tick changes it.
