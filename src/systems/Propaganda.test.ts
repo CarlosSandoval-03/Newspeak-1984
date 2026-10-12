@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   ALLIANCE_FLIP_AT,
+  ALLIED_SHARE,
+  ALLIED_TELL_PERIOD,
   FAKE_LIFE_FRAMES,
   FAKE_LIFE_HIDDEN_MAX,
   FAKE_LIFE_HIDDEN_MIN,
@@ -138,6 +140,52 @@ describe("Propaganda", () => {
       const level2 = atLevel(2);
       for (let i = 0; i < 2 * FAKE_LIFE_HIDDEN_MAX; i++) level2.update(0);
       expect(level2.displayedLives()).toBe(state.realLives);
+    });
+  });
+
+  describe("the allies", () => {
+    let truth: number;
+    let draws: number[];
+    const atLevel = (level: number) =>
+      new Propaganda(
+        { ...clocks, truthLeft: () => truth },
+        level,
+        () => draws.shift() ?? 0,
+      );
+
+    beforeEach(() => {
+      truth = 0;
+      // The inflation and the fake life's first wait, then each disguise's roll and phase.
+      draws = [0, 0];
+    });
+
+    it("disguises a share of the fighters from level 4, and none before", () => {
+      expect(atLevel(3).disguise()).toBeNull();
+
+      const level4 = atLevel(4);
+      draws.push(ALLIED_SHARE - 0.01, 0);
+      expect(level4.disguise()).not.toBeNull();
+      draws.push(ALLIED_SHARE);
+      expect(level4.disguise()).toBeNull();
+    });
+
+    it("shows its own colors for one frame each period, at its own moment, and all through TRUTH", () => {
+      const level4 = atLevel(4);
+      draws.push(0, 5 / ALLIED_TELL_PERIOD);
+      const disguise = level4.disguise()!;
+
+      const plain: number[] = [];
+      for (let frame = 0; frame < 2 * ALLIED_TELL_PERIOD; frame++) {
+        if (!disguise.shown()) plain.push(frame);
+        level4.update(0);
+      }
+      expect(plain).toEqual([
+        ALLIED_TELL_PERIOD - 5,
+        2 * ALLIED_TELL_PERIOD - 5,
+      ]);
+
+      truth = 0.5;
+      expect(disguise.shown()).toBe(false);
     });
   });
 

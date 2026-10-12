@@ -164,6 +164,31 @@ describe("Enemy", () => {
     expect(lastSprite()).toBe("enemy-bomber");
   });
 
+  it("wears the ally's colors while its disguise holds, under any flash", () => {
+    const image = vi.fn();
+    const p = {
+      CENTER: "center",
+      imageMode: () => {},
+      image,
+      drawingContext: {},
+    } as unknown as p5;
+    const enemy = make("straight");
+    let shown = true;
+    enemy.disguise = { shown: () => shown };
+    const lastSprite = () => {
+      enemy.draw(p);
+      return image.mock.calls.at(-1)?.[0];
+    };
+
+    expect(lastSprite()).toBe("enemy-fighter-allied");
+    shown = false;
+    expect(lastSprite()).toBe("enemy-fighter");
+    // A fighter dies at the first hit, so the flash is set as a survived hit would.
+    shown = true;
+    enemy["flash"] = HIT_FLASH_FRAMES;
+    expect(lastSprite()).toBe("enemy-fighter-flash");
+  });
+
   it("is a faint shimmer when camouflaged, unless revealed", () => {
     const context = { globalAlpha: 1 };
     const alphas: number[] = [];

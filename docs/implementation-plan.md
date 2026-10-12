@@ -574,7 +574,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the HUD lies, and the screen itself shows the strain of being watched.
 
-**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. From level 2 the HUD's score is inflated by a factor drawn per level in [`SCORE_INFLATION_MIN`, `SCORE_INFLATION_MAX`], and shifts a pixel for a frame every `SCORE_TELL_PERIOD`; from level 3 an extra life shows for `FAKE_LIFE_FRAMES` at random intervals, and blinks out for a frame every `LIVES_TELL_PERIOD`. Each lie starts at its level in `LIE_FROM`. The debug panel shows what is lying.
+**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. From level 2 the HUD's score is inflated by a factor drawn per level in [`SCORE_INFLATION_MIN`, `SCORE_INFLATION_MAX`], and shifts a pixel for a frame every `SCORE_TELL_PERIOD`; from level 3 an extra life shows for `FAKE_LIFE_FRAMES` at random intervals, and blinks out for a frame every `LIVES_TELL_PERIOD`; from level 4, `ALLIED_SHARE` of the fighters fly disguised as allies and still fire, each showing its own sprite for a frame every `ALLIED_TELL_PERIOD`, at its own moment. Each lie starts at its level in `LIE_FROM`. The debug panel shows what is lying.
 
 Already on `main` for `0.6.0`, from playing step 4:
 - The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with its standing score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
@@ -593,11 +593,15 @@ Already on `main` for `0.6.0`, from playing step 4:
 displayedLives(): number
 displayedScore(): number
 displayedSuspicion(): number
-apparentColor(enemy: Enemy): string
-isLying(field: "lives" | "score" | "suspicion" | "ticker" | "enemyColor"): boolean
+enemy: Enemy                              // whose war it is now
+displayedEnemy(written: Enemy): Enemy     // the enemy a ticker line names
+disguise(): Disguise | null               // a fighter's ally colors, or none
+isLying(field: "ticker" | "score" | "lives"): boolean
 ```
 
-The HUD and the enemy rendering go only through this API. While TRUTH is active, every method returns the real value and `isLying()` returns `false`.
+The HUD, the ticker, and the enemy rendering go only through this API. While TRUTH is active, every method returns the real value, no disguise is shown, and `isLying()` returns `false`.
+
+- **Decision:** the "allied" lie is a sprite, not a color: `enemy-fighter-allied.png`, a fighter drawn to look like the player's plane. Each fighter spawned from level 4 asks Propaganda for a `disguise()`; `ALLIED_SHARE` of them get one, which the fighter wears while it says so, and keeps flying and firing. Only fighters take it, since the asset is a fighter. Suspicion is never shown false, so it has no lie.
 
 **Lies escalate by level.** Each level adds a new lie and keeps the earlier ones.
 
@@ -606,7 +610,7 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 | 1 | The ticker's alliance flips mid-level (`OCEANIA FIGHTS {enemy}. THE RECORD CONFIRMS IT ALWAYS HAS.`), and the earlier text is rewritten without acknowledgment. |
 | 2 | The score shown is inflated by a factor in `[SCORE_INFLATION_MIN, SCORE_INFLATION_MAX]`. |
 | 3 | An extra life is shown intermittently: `displayedLives = realLives + 1` for a few seconds at random intervals. |
-| 4 | Some enemies are drawn in the "allied" color but still shoot. |
+| 4 | Some fighters are drawn as allies (`enemy-fighter-allied.png`) but still shoot. |
 
 - **Decision:** the score lie inflates the standing score by one factor per level (1.15 to 1.4), so it grows with the real one and can't be told apart by its trend; the honor roll never stores it. The extra life shows for 3 s, then hides for 8 to 15 s. The score's tell is a 1 px shift and the lives' a blank frame, on different beats (every 24 and 40 frames), so a player who learns them can tell which value is lying.
 - **Decision:** the war starts on Eurasia in level 1 and changes sides once a level, halfway through, so each level opens on the enemy the last one ended with. Each ticker line keeps the enemy it was written with, which is what TRUTH shows; without it, every line names the current enemy. The ticker's tell is one blank frame when the record rewrites itself. Its width is computed from the machine face's fixed advance (0.4 of its size), so the tape's logic needs no p5.
@@ -616,7 +620,7 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 **Fairness rule:** every false value has a tell the player can learn to spot.
 
 - A lying number jitters by 1 px horizontally or flickers once every few frames.
-- An enemy drawn in the allied color flickers back to its real color for a single frame now and then.
+- A disguised fighter shows its own sprite for a single frame once every `ALLIED_TELL_PERIOD`, each at its own moment, so they never flicker in step.
 - Tune the tell rates in `config.ts` so the tells are subtle but noticeable once the player knows to look.
 
 **Ticker** (`ui/Ticker.ts`): a strip of news that scrolls along the bottom edge in VT323. It shows production figures, war news, and slogans. **All slogans are original**; don't quote Orwell's.

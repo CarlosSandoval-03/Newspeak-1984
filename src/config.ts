@@ -68,7 +68,7 @@ export const ALLIANCE_FLIP_AT = 0.5;
 export const TELL_FLICKER_FRAMES = 1;
 export const TICKER_SPEED = 1;
 // The level each lie starts in; every later level keeps it.
-export const LIE_FROM = { ticker: 1, score: 2, lives: 3 } as const;
+export const LIE_FROM = { ticker: 1, score: 2, lives: 3, allies: 4 } as const;
 // The score shown is the real one times a factor drawn once per level in this range.
 export const SCORE_INFLATION_MIN = 1.15;
 export const SCORE_INFLATION_MAX = 1.4;
@@ -80,6 +80,10 @@ export const FAKE_LIFE_HIDDEN_MAX = 900;
 // each once every so many frames, at different beats so they can be told apart.
 export const SCORE_TELL_PERIOD = 24;
 export const LIVES_TELL_PERIOD = 40;
+// This share of fighters fly disguised in the ally's colors; each shows its own colors for a frame
+// once every ALLIED_TELL_PERIOD, at its own moment.
+export const ALLIED_SHARE = 0.35;
+export const ALLIED_TELL_PERIOD = 45;
 
 // The Ministry's obedience factor for a level: kills raise it, everything the regime dislikes lowers
 // it. A good citizen lands around 1.3–1.6, a rebel around 0.3–0.6.

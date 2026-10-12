@@ -1,5 +1,7 @@
 import {
   ALLIANCE_FLIP_AT,
+  ALLIED_SHARE,
+  ALLIED_TELL_PERIOD,
   FAKE_LIFE_FRAMES,
   FAKE_LIFE_HIDDEN_MAX,
   FAKE_LIFE_HIDDEN_MIN,
@@ -36,6 +38,11 @@ export interface WordView {
 export const LIE_FIELDS = ["ticker", "score", "lives"] as const;
 export type LieField = (typeof LIE_FIELDS)[number];
 
+// A fighter flying in the ally's colors, as long as Propaganda keeps it up.
+export interface Disguise {
+  shown(): boolean;
+}
+
 const ENEMIES: readonly Enemy[] = ["eurasia", "eastasia"];
 
 // What the HUD and the ticker are allowed to show. The lies escalate level by level, and while
@@ -48,6 +55,8 @@ export class Propaganda {
   private flipped = false;
   private fakeLife = 0;
   private fakeLifeIn: number;
+  // Ticks of the level, to time the disguises' tells.
+  private age = 0;
 
   constructor(clocks: WordClocks, level = state.level, random = Math.random) {
     this.clocks = clocks;
@@ -73,6 +82,7 @@ export class Propaganda {
   // `progress` is the share of the level flown: halfway through, the war changes sides. The extra
   // life comes and goes on its own clock.
   update(progress: number): void {
+    this.age++;
     if (this.lies("ticker") && progress >= ALLIANCE_FLIP_AT)
       this.flipped = true;
     if (this.lies("lives")) this.countFakeLife();
@@ -81,6 +91,19 @@ export class Propaganda {
   // Every line names the enemy of the moment; TRUTH shows the one it was written with.
   displayedEnemy(written: Enemy): Enemy {
     return this.telling ? written : this.enemy;
+  }
+
+  // From the level the lie starts in, some fighters fly in the ally's colors; the rest get none.
+  // Each shows its own colors for a frame now and then, at its own moment, and all of them while
+  // TRUTH is active.
+  disguise(): Disguise | null {
+    if (!this.lies("allies") || this.random() >= ALLIED_SHARE) return null;
+
+    const phase = Math.floor(this.random() * ALLIED_TELL_PERIOD);
+    return {
+      shown: () =>
+        !this.telling && (this.age + phase) % ALLIED_TELL_PERIOD !== 0,
+    };
   }
 
   // Whether what is on screen for `field` is false right now.
@@ -112,7 +135,7 @@ export class Propaganda {
     return WORD_REMOVAL_ORDER.map((word) => this.view(word));
   }
 
-  private lies(field: LieField): boolean {
+  private lies(field: keyof typeof LIE_FROM): boolean {
     return this.level >= LIE_FROM[field];
   }
 

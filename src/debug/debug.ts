@@ -239,13 +239,13 @@ function wordsLine(): string {
   return `words ${words.join("  ")}  bombs ${state.bombs}`;
 }
 
-// Which of the regime's lies is on screen right now, and whose war it is.
+// Which of the regime's lies are on screen right now, and whose war it is.
 function liesLine(game: GameScene): string {
   const propaganda = game["propaganda"];
-  const lies = LIE_FIELDS.map(
-    (field) => `${field} ${propaganda.isLying(field) ? "LIE" : "true"}`,
-  );
-  return `lying ${lies.join("  ")}   enemy ${propaganda.enemy}`;
+  const lying = LIE_FIELDS.filter((field) => propaganda.isLying(field));
+  const allies = game["enemies"].filter((enemy) => enemy.disguise?.shown());
+
+  return `lying ${lying.join(" ") || "-"}  allies ${allies.length}  enemy ${propaganda.enemy}`;
 }
 
 function flightLine(game: GameScene): string {

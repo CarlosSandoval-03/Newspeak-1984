@@ -182,6 +182,9 @@ export class GameScene implements Scene {
         const enemy = new Enemy(kind, pos, this.arena);
         enemy.drops = drops;
         enemy.camo = camo;
+        // The ally's colors only come in a fighter's shape.
+        if (kind === "straight" || kind === "sine")
+          enemy.disguise = this.propaganda.disguise();
         this.enemies.push(enemy);
       },
       eye: (def, pos) => this.eyes.push(new Eye(def, pos, assets.image)),

@@ -13,6 +13,7 @@ import {
   EYE_STATS,
   GAME_OVER_DELAY,
   LANDING_LEAD,
+  LIE_FROM,
   PAPER,
   PLAYER_SPAWN,
   REBEL_DIARY_THRESHOLD,
@@ -442,6 +443,23 @@ describe("GameScene collisions", () => {
       expect(state.suspicion).toBe(0);
       expect(scene["bullets"]).toHaveLength(0);
     });
+  });
+
+  it("lets Propaganda disguise only fighters, in the level the lie starts in", () => {
+    state.level = LIE_FROM.allies;
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const level = new GameScene({ get: () => ({}) } as unknown as p5, manager);
+    const spawn = level["spawner"]["spawn"];
+    const pos = { x: 100, y: -20 };
+
+    spawn.enemy("straight", pos, { drops: null, camo: false });
+    spawn.enemy("bomber", pos, { drops: null, camo: false });
+
+    expect(level["enemies"].map(({ disguise }) => disguise !== null)).toEqual([
+      true,
+      false,
+    ]);
+    vi.restoreAllMocks();
   });
 
   it("changes the war's sides halfway through the level", () => {

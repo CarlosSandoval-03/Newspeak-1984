@@ -23,6 +23,7 @@ import { state } from "../state";
 import { ALERT, type EnemyKind, type Vec, type Word } from "../types";
 import { Bullet } from "./Bullet";
 import { Destructible } from "./Destructible";
+import type { Disguise } from "../systems/Propaganda";
 import type { Arena } from "./Entity";
 
 const SPRITES = {
@@ -67,6 +68,8 @@ export class Enemy extends Destructible {
   camo = false;
   // Set by the scene while TRUTH is active.
   revealed = false;
+  // A fighter Propaganda dresses in the ally's colors: only its look changes, and it still fires.
+  disguise: Disguise | null = null;
   private readonly startX: number;
   private age = 0;
   // Radians, with π/2 straight down the screen; only an autogyro ever turns.
@@ -115,7 +118,7 @@ export class Enemy extends Destructible {
   draw(p: p5): void {
     const { images } = this.arena;
     const sprite = SPRITES[this.kind];
-    const body = this.flash > 0 ? (`${sprite}-flash` as const) : sprite;
+    const body = this.body(sprite);
     const turn = this.heading - Math.PI / 2;
 
     this.drawAircraft(
@@ -126,6 +129,12 @@ export class Enemy extends Destructible {
       this.camo && !this.revealed ? CAMO_ALPHA : 1,
     );
     if (this.kind === "homing") this.drawRotor(p, turn);
+  }
+
+  // The flash over everything; otherwise the ally's colors while the disguise holds.
+  private body(sprite: (typeof SPRITES)[EnemyKind]) {
+    if (this.flash > 0) return `${sprite}-flash` as const;
+    return this.disguise?.shown() ? "enemy-fighter-allied" : sprite;
   }
 
   private move(): void {

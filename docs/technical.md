@@ -70,7 +70,7 @@ newspeak-1984/
 - **Shared math** (angles, velocities, fans of bullets, clamping, easing) lives in `core/math.ts`, never copied into an entity.
 - **The p5 instance is passed explicitly**, never stored globally.
 - **`core/` is theme-agnostic:** scenes, input, circles, canvas scaling; nothing about 1984.
-- **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `displayedWords()`, `apparentColor()`, `isLying()`), which turns the lies on level by level and tells the truth while TRUTH is active. The score is the Ministry's official record plus the current level's earnings, not yet judged; the ticker names the enemy Propaganda allows (`enemy`, `displayedEnemy()`), and `isLying(field)` says which values are false right now.
+- **The HUD never reads real state.** It asks `Propaganda` (`displayedLives()`, `displayedScore()`, `displayedWords()`, `isLying()`), as do the ticker (`displayedEnemy()`) and the fighters (`disguise()`), which turns the lies on level by level and tells the truth while TRUTH is active. The score is the Ministry's official record plus the current level's earnings, not yet judged; the ticker names the enemy Propaganda allows (`enemy`, `displayedEnemy()`), and `isLying(field)` says which values are false right now.
 - **Levels are data, not code:** waves, eyes, turrets, pickups, diary location, boss, and the terrain recipe. The code turns the recipe into a city ([City layout](#city-layout)).
 - **The scrolling background is drawn into `p5.Graphics`** (see [Background](#background)).
 
