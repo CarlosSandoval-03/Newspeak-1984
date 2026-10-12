@@ -78,15 +78,18 @@ export class Telescreen extends Entity {
     else this.drawLines(p, center);
   }
 
-  // Random shades only change pixels, never the game, so they are drawn fresh each frame.
+  // Random shades only change pixels, never the game, so they are drawn fresh each frame. Straight
+  // on the 2D context: hundreds of p5 rects a frame cost a millisecond.
   private drawStatic(p: p5, center: Vec): void {
+    const context = p.drawingContext as CanvasRenderingContext2D;
     const left = center.x - TELESCREEN_SIZE.w / 2 + FRAME;
     const top = center.y - TELESCREEN_SIZE.h / 2 + FRAME;
 
     for (let y = 0; y < TELESCREEN_SIZE.h - 2 * FRAME; y += NOISE)
       for (let x = 0; x < TELESCREEN_SIZE.w - 2 * FRAME; x += NOISE) {
-        p.fill(NOISE_SHADES[Math.floor(Math.random() * NOISE_SHADES.length)]);
-        p.rect(left + x, top + y, NOISE, NOISE);
+        context.fillStyle =
+          NOISE_SHADES[Math.floor(Math.random() * NOISE_SHADES.length)];
+        context.fillRect(left + x, top + y, NOISE, NOISE);
       }
   }
 
@@ -95,12 +98,9 @@ export class Telescreen extends Entity {
     const look = lookToward(center, this.target(), PUPIL_TRAVEL);
     const pupil = { x: center.x + look.x, y: center.y + look.y };
 
-    p.fill(PAPER);
-    drawPixelDisc(p, center, SCLERA_RADIUS);
-    p.fill(RED);
-    drawPixelDisc(p, center, IRIS_RADIUS);
-    p.fill(INK);
-    drawPixelDisc(p, pupil, PUPIL_RADIUS);
+    drawPixelDisc(p, center, SCLERA_RADIUS, PAPER);
+    drawPixelDisc(p, center, IRIS_RADIUS, RED);
+    drawPixelDisc(p, pupil, PUPIL_RADIUS, INK);
     p.fill(PAPER);
     p.rect(pupil.x + GLINT.x, pupil.y + GLINT.y, 1, 1);
   }

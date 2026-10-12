@@ -111,10 +111,8 @@ export class LevelBoss extends Boss {
 
     p.noStroke();
     p.rectMode(p.CORNER);
-    p.fill(RED);
-    drawPixelDisc(p, lens, IRIS_PATCH_RADIUS);
-    p.fill(INK);
-    drawPixelDisc(p, pupil, PUPIL_RADIUS);
+    drawPixelDisc(p, lens, IRIS_PATCH_RADIUS, RED);
+    drawPixelDisc(p, pupil, PUPIL_RADIUS, INK);
     p.fill(PAPER);
     p.rect(pupil.x + GLINT.x, pupil.y + GLINT.y, 1, 1);
   }

@@ -204,10 +204,15 @@ describe("LevelBoss", () => {
     const painted = (boss: LevelBoss) => {
       const calls: unknown[][] = [];
       let fill: unknown = null;
+      const context = {
+        fillStyle: null as unknown,
+        fillRect: (x: number, y: number, w: number) =>
+          calls.push([context.fillStyle, x, y, w]),
+      };
       boss.draw({
         CENTER: "center",
         CORNER: "corner",
-        drawingContext: {},
+        drawingContext: context,
         imageMode: () => {},
         image: () => {},
         noStroke: () => {},

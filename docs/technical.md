@@ -259,6 +259,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 | Glitch | A few horizontal slices lifted onto a buffer and drawn back shifted, with the 2D context's `drawImage`; never `p.copy()` or the canvas onto itself, which copy the whole canvas per slice. None at suspicion 0. The most expensive effect: the slice count is capped in `config.ts` (`GLITCH_MAX_SLICES`). |
 | Scanlines | One prerendered `p5.Graphics` overlay. |
 | Red vignette | One prerendered `p5.Graphics` (red edges, transparent center), drawn with an alpha driven by suspicion. Never rebuilt per frame. Like the scanlines and the glitch's buffer, it is removed when the level ends. |
+| Pixel shapes | Many small rects a frame (an eye's pixel discs, a telescreen's static) go straight to the 2D context's `fillRect`: a `p.rect()` costs about 11 µs in p5 2.x, and the ~80 rows of a telescreen's eye cost 0.85 ms of p95 that way. |
 | Never per frame | `tint()`, `loadPixels()`/`get()` on images, creating `p5.Graphics`. (Boss damage graphics are created once per level, on the boss's first frame.) |
 
 ### Benchmarks

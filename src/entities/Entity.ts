@@ -77,11 +77,20 @@ export abstract class Entity {
 }
 
 // A filled circle in whole pixels, a row at a time: canvas circles blur their edges, and the
-// pixel art around it is crisp.
-export function drawPixelDisc(p: p5, center: Vec, radius: number): void {
+// pixel art around it is crisp. Straight on the 2D context, since a p5 rect per row costs
+// about a millisecond for a large eye.
+export function drawPixelDisc(
+  p: p5,
+  center: Vec,
+  radius: number,
+  color: string,
+): void {
+  const context = p.drawingContext as CanvasRenderingContext2D;
+
+  context.fillStyle = color;
   for (let dy = -radius; dy <= radius; dy++) {
     const half = Math.floor(Math.sqrt(radius * radius - dy * dy));
-    p.rect(center.x - half, center.y + dy, half * 2 + 1, 1);
+    context.fillRect(center.x - half, center.y + dy, half * 2 + 1, 1);
   }
 }
 

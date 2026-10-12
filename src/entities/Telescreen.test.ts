@@ -14,17 +14,20 @@ const font = "VT323" as unknown as p5.Font;
 // Records the text and the pupil-colored rows of one frame.
 function drawn(screen: Telescreen) {
   const frame = { texts: [] as string[], inkRows: [] as number[] };
-  let fill: unknown = null;
+  const context = {
+    fillStyle: null as unknown,
+    fillRect: (x: number, _y: number, w: number) => {
+      if (context.fillStyle === INK) frame.inkRows.push(x + w / 2);
+    },
+  };
   const p = {
     CORNER: "corner",
     CENTER: "center",
+    drawingContext: context,
     noStroke: () => {},
     rectMode: () => {},
-    fill: (color: unknown) => (fill = color),
-    rect: (x: number, _y: number, w: number) => {
-      if (fill === INK && w < TELESCREEN_SIZE.w / 2)
-        frame.inkRows.push(x + w / 2);
-    },
+    fill: () => {},
+    rect: () => {},
     textFont: () => {},
     textSize: () => {},
     textAlign: () => {},
