@@ -53,7 +53,7 @@ pnpm dev
 
 Open http://localhost:5173 in your browser.
 
-On the dev server only, press `` ` `` for the debug panel, or open a flow directly, such as http://localhost:5173/?start=boss:3. See [docs/debug.md](docs/debug.md).
+On the dev server only, `?debug=true` turns on the debug tools, in a storage sandbox of their own: press `` ` `` for the panel, or open a flow directly, such as http://localhost:5173/?debug=true&start=boss:3. See [docs/debug.md](docs/debug.md).
 
 #### Scripts
 

@@ -32,8 +32,12 @@ const sketch = (p: p5) => {
 
     manager = new SceneManager(await loadAssets(p), new Input());
     manager.change(new MenuScene(p, manager));
-    // The debug tools live only on the dev server: the build drops this branch, and them with it.
-    if (import.meta.env.DEV)
+    // The debug tools live only on the dev server, and only when the URL asks for them: the build
+    // drops this branch, and them with it.
+    if (
+      import.meta.env.DEV &&
+      new URLSearchParams(location.search).get("debug") === "true"
+    )
       (await import("./debug/debug")).installDebug(p, manager);
   };
 

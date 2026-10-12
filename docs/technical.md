@@ -51,7 +51,7 @@ newspeak-1984/
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps), honorRollTable
     ├── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
-    └── debug/            # dev server only: start flows from the URL, the debug panel and its keys
+    └── debug/            # dev server with ?debug=true only: start flows from the URL, the debug panel, the storage sandbox
 ```
 
 ## Code conventions
@@ -304,7 +304,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
 
 ### Debug tools
 
-On the dev server (`pnpm dev`) only, `main.ts` loads `src/debug/` behind `import.meta.env.DEV`: the build replaces the check with `false` and drops the module, so neither the GitHub Pages build nor the release zip contains it. The tools open any point of the game from the URL and add a panel that shows and changes the hidden state; they reach the scenes through their private fields, so the game has no debug hooks. Everything about them is in [debug.md](debug.md).
+On the dev server (`pnpm dev`) only, and only with `?debug=true` in the URL, `main.ts` loads `src/debug/` behind `import.meta.env.DEV`: the build replaces the check with `false` and drops the module, so neither the GitHub Pages build nor the release zip contains it. A debug session keeps everything the game stores in a sandbox of its own (`newspeak1984.debug.*`), so it never touches a real run's honor roll or settings. The tools open any point of the game from the URL and add a panel that shows and changes the hidden state; they reach the scenes through their private fields, so the game has no debug hooks. Everything about them is in [debug.md](debug.md).
 
 ### Git
 

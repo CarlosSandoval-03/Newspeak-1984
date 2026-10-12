@@ -20,8 +20,10 @@ import { clearHonorRoll, recordRun } from "../systems/HonorRoll";
 import { obedience, standingScore, verdictFor } from "../systems/Ministry";
 import { ALERT } from "../types";
 import { chooseEnding, parseFlow, startFlow, unlockWords } from "./flows";
+import { type ResetScope, resetStorage, sandboxStorage } from "./sandbox";
 
-const SETTINGS_KEY = "newspeak1984.debug";
+// Inside the sandbox, like everything a debug session stores.
+const SETTINGS_KEY = "newspeak1984.tools";
 const TOGGLE_KEY = "Backquote";
 const PANEL = { x: 4, y: 64, w: 472, lineHeight: 16, padding: 6 };
 const TEXT_SIZE = 16;
@@ -93,11 +95,17 @@ const COMMANDS: Command[] = [
   },
 ];
 
-// Dev server only: opens the flow the URL names, listens for the debug keys, and after every frame
-// keeps the lives full and draws the hitboxes and the panel, as their settings say.
+// Dev server only, with `?debug=true`: resets storage if asked, moves the game into its sandbox,
+// opens the flow the URL names, listens for the debug keys, and after every frame keeps the lives
+// full and draws the hitboxes and the panel, as their settings say.
 export function installDebug(p: p5, manager: SceneManager): void {
-  const settings = loadSettings();
   const params = new URLSearchParams(location.search);
+
+  // On the real storage first, then nothing outside the sandbox is touched again.
+  const reset = params.get("reset");
+  if (isResetScope(reset)) resetStorage(reset);
+  sandboxStorage();
+  const settings = loadSettings();
 
   // The archive first, so a flow that shows it finds it ready.
   seedHonorRoll(params.get("honorroll"));
@@ -120,6 +128,10 @@ export function installDebug(p: p5, manager: SceneManager): void {
     frame(ms);
     afterFrame(p, manager, settings);
   };
+}
+
+function isResetScope(scope: string | null): scope is ResetScope {
+  return scope === "debug" || scope === "all";
 }
 
 // The toggle key always; the commands only while the panel shows them. True if the key was used.
