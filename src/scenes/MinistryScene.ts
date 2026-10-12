@@ -14,7 +14,7 @@ import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { state } from "../state";
-import { enterHonorRoll, tamperHonorRoll } from "../systems/HonorRoll";
+import { tamperHonorRoll } from "../systems/HonorRoll";
 import { TamperedHonorRoll } from "../ui/honorRollTable";
 import { type Report, reportedKills } from "../systems/Ministry";
 import { VERDICT } from "../types";
@@ -29,7 +29,7 @@ import {
   wrap,
 } from "../ui/effects";
 import { DictionaryScene } from "./DictionaryScene";
-import { MenuScene } from "./MenuScene";
+import { EndingScene } from "./EndingScene";
 
 // The clerk's room at 2×, cut above the floor; the slot is the burning window behind him.
 const ILLUSTRATION = { y: 68, rows: 112 };
@@ -210,16 +210,12 @@ export class MinistryScene implements Scene {
     this.stampAge = STAMP_DELAY;
   }
 
-  // The next level's Dictionary, or after the last level, the run's entry on the honor roll and the
-  // Menu, until the endings exist.
+  // The next level's Dictionary, or after the last level, the obedient ending.
   private leave(): void {
     if (state.level < LEVELS.length) {
       state.level++;
       this.manager.change(new DictionaryScene(this.p, this.manager));
-      return;
-    }
-    enterHonorRoll(state.pilotId, state.officialScore);
-    this.manager.change(new MenuScene(this.p, this.manager));
+    } else this.manager.change(new EndingScene(this.p, this.manager));
   }
 
   private drawIllustration(): void {

@@ -7,11 +7,10 @@ import { SceneManager } from "../core/SceneManager";
 import { LANGUAGES, setLanguage } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
-import { readHonorRoll } from "../systems/HonorRoll";
 import type { Report } from "../systems/Ministry";
 import { type Stats, VERDICT } from "../types";
 import { DictionaryScene } from "./DictionaryScene";
-import { MenuScene } from "./MenuScene";
+import { EndingScene } from "./EndingScene";
 import { MinistryScene } from "./MinistryScene";
 
 // The top of the prompt's 20 px line, whose baseline is at 632.
@@ -160,26 +159,15 @@ describe("MinistryScene", () => {
     expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
   });
 
-  it("goes back to the Menu after the last level, entering the run on the honor roll", () => {
-    const saved = new Map<string, string>();
-    vi.stubGlobal("localStorage", {
-      getItem: (key: string) => saved.get(key) ?? null,
-      setItem: (key: string, value: string) => saved.set(key, value),
-    });
+  it("opens the obedient ending after the last level", () => {
     const change = vi.spyOn(manager, "change");
     state.level = LEVELS.length;
-    state.pilotId = "6079";
-    state.officialScore = 31000;
     const scene = open();
 
-    for (let i = 0; i < 3; i++) enter(scene);
-    expect(readHonorRoll()).toEqual([]);
-    enter(scene);
+    for (let i = 0; i < 4; i++) enter(scene);
 
-    expect(readHonorRoll()).toEqual([
-      { pilotId: "6079", score: 31000, unperson: false },
-    ]);
-    expect(change).toHaveBeenLastCalledWith(expect.any(MenuScene));
+    expect(state.level).toBe(LEVELS.length);
+    expect(change).toHaveBeenLastCalledWith(expect.any(EndingScene));
   });
 
   it("tampers with the honor roll at every visit", () => {

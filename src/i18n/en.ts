@@ -227,6 +227,7 @@ export const en = {
   },
 
   endings: {
+    pressEnter: "PRESS ENTER",
     obedient: {
       title: "A GRATEFUL CITIZEN",
       lines: [

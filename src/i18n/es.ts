@@ -222,6 +222,7 @@ export const es: Strings = {
   },
 
   endings: {
+    pressEnter: "PULSA ENTER",
     obedient: {
       title: "UN CIUDADANO AGRADECIDO",
       lines: [
