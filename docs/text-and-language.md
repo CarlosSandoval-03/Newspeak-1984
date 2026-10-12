@@ -29,14 +29,14 @@ Every place where the player reads something: when it appears, in which voice, h
 | Telescreens | Machine | Background screens. | Static, the eye, or a line. | `slogans.telescreens` | `THE LEADER IS WATCHING` |
 | HUD | Machine | Score, lives, suspicion, alert state, words; during a battle, the boss's name in place of the suspicion line. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT`, `FLYING FORTRESS` |
 | Word pickups | Machine | Falling pickups, each on a paper card. | Removed words appear struck out in red, on a card dulled to steel. | `words` | `FREE` struck in red |
-| Menu | Machine | Start screen, as a vertical list. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
+| Menu | Machine | Start screen, as a vertical list: begin, honor roll, language. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
 | Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level, by the Ministry's verdict on the last level: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
 | Diary line | Human | Bottom of the screen on pickup, without pausing; typed, and slides left once it reaches the margin. | One per level, in order. | `diary.pages[].line` | `These ruins were not made by the enemy.` |
 | Pause | Machine | Over the pause telescreen. | — | `pause` | `THE TELESCREEN REMAINS ON` |
 | Ministry | Paperwork | After each boss. | One correction per non-zero stat; the kills line follows the Ministry's verdict and counts downed Thought Police as enemy aircraft, and the next line denies any officer was lost. Once the real score is down the memory hole, `NEVER EXISTED` is typed in its place. | `ministry` | `Surveillance towers lost: 3, corrected to 0. No towers were lost.` |
 | Stamps | Machine, red | Ministry, game over. | — | `ministry.stamps`, `gameOver.stamp` | `CORRECTED`, `VAPORIZED` |
-| Honor roll | Machine | Menu, Ministry, obedient ending. | Completed runs only; at every Ministry visit, past entries are altered or become unpersons. | `honorRoll` | `[UNPERSON]` |
+| Honor roll | Machine | Menu, Ministry, obedient ending. | Completed runs only; at every Ministry visit, past entries are altered or become unpersons. An empty archive says so. | `honorRoll` | `[UNPERSON]` |
 | Game over | Machine | Over the squadron photo. | — | `gameOver` | `PILOT 6079 NEVER EXISTED.` |
 | Endings | Paperwork (obedient), human (rebel) | After level 5. | Obedient: the Party's message. Rebel: the truth beside the record, plus the full diary pages. | `endings`, `diary.pages[].page` | `Pilot 6079 did not land.` |
 

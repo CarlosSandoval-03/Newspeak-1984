@@ -192,6 +192,7 @@ export const es: Strings = {
     title: "CUADRO DE HONOR",
     pilot: "PILOTO {id}",
     unperson: "[NO-PERSONA]",
+    empty: "SIN REGISTROS.",
   },
 
   diary: {

@@ -82,6 +82,13 @@ export const HERO_KILLS_ROUNDING = 10;
 // The suspicion the next level starts with, set by the verdict: on alert at worst, never in pursuit.
 export const SUSPICION_REVIEW = 20;
 export const SUSPICION_SUSPECT = 40;
+// The honor roll keeps the best official scores of finished runs. At every Ministry visit, each
+// entry may be erased into an unperson, or else have its score scaled by a factor in [MIN, MAX].
+export const HONOR_ROLL_SIZE = 10;
+export const SCORE_ERASE_CHANCE = 0.05;
+export const SCORE_ALTER_CHANCE = 0.2;
+export const SCORE_ALTER_MIN = 0.5;
+export const SCORE_ALTER_MAX = 1.5;
 // The game keeps running this long after the last life: the plane goes down and the world flies on.
 export const GAME_OVER_DELAY = 120;
 // The telescreen cuts the broadcast, collapsing the picture to a line, then a dot.

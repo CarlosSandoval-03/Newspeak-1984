@@ -63,7 +63,29 @@ describe("MenuScene", () => {
     expect(change).toHaveBeenCalledOnce();
   });
 
+  it("opens the honor roll from storage, and closes it with Enter", () => {
+    const saved = [{ pilotId: "6079", score: 4210, unperson: false }];
+    vi.stubGlobal("localStorage", {
+      getItem: () => JSON.stringify(saved),
+      setItem: () => {},
+    });
+    const change = vi.spyOn(manager, "change");
+
+    press(keys, "ArrowDown");
+    tick();
+    press(keys, "Enter");
+    tick();
+    expect(menu["honorRoll"]).toEqual(saved);
+
+    press(keys, "Enter");
+    tick();
+    expect(menu["honorRoll"]).toBeNull();
+    expect(change).not.toHaveBeenCalled();
+  });
+
   it("switches the language with Enter, Left, and Right", () => {
+    press(keys, "ArrowDown");
+    tick();
     press(keys, "ArrowDown");
     tick();
 

@@ -14,6 +14,7 @@ import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { state } from "../state";
+import { enterHonorRoll, tamperHonorRoll } from "../systems/HonorRoll";
 import { type Report, reportedKills } from "../systems/Ministry";
 import { VERDICT } from "../types";
 import {
@@ -90,7 +91,10 @@ export class MinistryScene implements Scene {
     return this.stampAge >= STAMP_DELAY;
   }
 
-  enter(): void {}
+  // The archive is tampered with at every visit, whether or not the pilot ever gets to see it.
+  enter(): void {
+    tamperHonorRoll();
+  }
 
   // Enter first settles the page, then leaves, so a press never skips what wasn't seen. Otherwise
   // one thing happens at a time: the record is typed and its score struck, the correction is typed,
@@ -158,12 +162,16 @@ export class MinistryScene implements Scene {
     this.stampAge = STAMP_DELAY;
   }
 
-  // The next level's Dictionary, or the Menu after the last level, until the endings exist.
+  // The next level's Dictionary, or after the last level, the run's entry on the honor roll and the
+  // Menu, until the endings exist.
   private leave(): void {
     if (state.level < LEVELS.length) {
       state.level++;
       this.manager.change(new DictionaryScene(this.p, this.manager));
-    } else this.manager.change(new MenuScene(this.p, this.manager));
+      return;
+    }
+    enterHonorRoll(state.pilotId, state.officialScore);
+    this.manager.change(new MenuScene(this.p, this.manager));
   }
 
   private drawIllustration(): void {

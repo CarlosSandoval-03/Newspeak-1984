@@ -7,6 +7,7 @@ import { SceneManager } from "../core/SceneManager";
 import { LANGUAGES, setLanguage } from "../i18n";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
+import { readHonorRoll } from "../systems/HonorRoll";
 import type { Report } from "../systems/Ministry";
 import { type Stats, VERDICT } from "../types";
 import { DictionaryScene } from "./DictionaryScene";
@@ -64,6 +65,7 @@ describe("MinistryScene", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("files the real score and the official one, six digits each", () => {
@@ -153,15 +155,43 @@ describe("MinistryScene", () => {
     expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
   });
 
-  it("goes back to the Menu after the last level, until the endings exist", () => {
+  it("goes back to the Menu after the last level, entering the run on the honor roll", () => {
+    const saved = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => saved.get(key) ?? null,
+      setItem: (key: string, value: string) => saved.set(key, value),
+    });
     const change = vi.spyOn(manager, "change");
     state.level = LEVELS.length;
+    state.pilotId = "6079";
+    state.officialScore = 31000;
     const scene = open();
 
     enter(scene);
+    expect(readHonorRoll()).toEqual([]);
     enter(scene);
 
+    expect(readHonorRoll()).toEqual([
+      { pilotId: "6079", score: 31000, unperson: false },
+    ]);
     expect(change).toHaveBeenLastCalledWith(expect.any(MenuScene));
+  });
+
+  it("tampers with the honor roll at every visit", () => {
+    vi.stubGlobal("localStorage", {
+      getItem: () =>
+        JSON.stringify([{ pilotId: "0042", score: 900, unperson: false }]),
+      setItem: (_: string, value: string) => (stored = value),
+    });
+    let stored = "";
+    // Every draw erases.
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    open();
+
+    expect(JSON.parse(stored)).toEqual([
+      { pilotId: "0042", score: 0, unperson: true },
+    ]);
   });
 
   it("stamps a hero's file approved, and any other corrected", () => {

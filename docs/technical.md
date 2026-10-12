@@ -47,9 +47,9 @@ newspeak-1984/
     ├── i18n/             # en.ts, es.ts (all player-facing text), index.ts (detection, t())
     ├── core/             # Scene, SceneManager, Input, Collisions, math, display (theme-agnostic)
     ├── entities/         # Entity, Destructible, Player, Bullet, Enemy, Explosion, Eye, Turret, Boss, BossDamage, ThoughtPolice, Pickup, Diary
-    ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, Spawner, Flight
+    ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, HonorRoll, Spawner, Flight
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
-    ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps)
+    ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps), honorRollTable
     └── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
 ```
 

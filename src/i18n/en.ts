@@ -195,6 +195,7 @@ export const en = {
     title: "HONOR ROLL",
     pilot: "PILOT {id}",
     unperson: "[UNPERSON]",
+    empty: "NO RECORDS.",
   },
 
   // The erased pilot's diary: one page per level, in order.
