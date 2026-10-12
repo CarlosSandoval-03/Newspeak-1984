@@ -247,9 +247,12 @@ export const es: Strings = {
         score: "Puntuación",
         kills: "Aviones derribados",
         eyesDestroyed: "Torres destruidas",
+        policeDestroyed: "Policías derribados",
         secondsSeen: "Segundos observado",
         diaries: "Páginas del diario leídas",
       },
+      policeNote:
+        "El Ministerio registró a cada agente que derribaste como un avión eurasiático.",
     },
   },
 };

@@ -14,6 +14,7 @@ import {
   GAME_OVER_DELAY,
   PAPER,
   PLAYER_HALF_SIZE,
+  REBEL_DIARY_THRESHOLD,
   RED,
   THOUGHT_POLICE_STATS,
   TURRET_STATS,
@@ -48,6 +49,7 @@ import { ALERT, type LevelDef } from "../types";
 import { Vignette } from "../ui/effects";
 import { type BossBar, HUD } from "../ui/HUD";
 import { GameOverScene } from "./GameOverScene";
+import { EndingScene } from "./EndingScene";
 import { MinistryScene } from "./MinistryScene";
 
 type Kill = Enemy | Turret | ThoughtPolice | LevelBoss;
@@ -109,7 +111,8 @@ export class GameScene implements Scene {
   }
 
   // One tick of the level: the flight sets the city's speed, the pilot acts, everything moves and
-  // meets, the regime watches and sends its forces, and the level ends once the plane has landed.
+  // meets, the regime watches and sends its forces, and the level ends once the plane has landed,
+  // or for the rebel, flown away.
   update(): void {
     // The crash has played out: the telescreen switches the pilot off.
     if (this.gameOverIn > 0 && --this.gameOverIn === 0) {
@@ -117,9 +120,9 @@ export class GameScene implements Scene {
       return;
     }
 
-    // Takeoff, the pilot's stretch, or the landing; a finished landing ends the level.
+    // Takeoff, the pilot's stretch, then the landing or the departure; either one ends the level.
     this.flight.update();
-    if (this.flight.landed) {
+    if (this.flight.landed || this.flight.departed) {
       this.leaveLevel();
       return;
     }
@@ -133,10 +136,10 @@ export class GameScene implements Scene {
     this.collide();
     this.removeDead();
 
-    // The regime's eyes, its Thought Police, and the level's boss; then the landing, once it is time.
+    // The regime's eyes, its Thought Police, and the level's boss; then the way out, once it is time.
     this.watch();
     this.updateRegime();
-    if (this.readyToLand()) this.startLanding();
+    if (this.readyToLeave()) this.startLeaving();
 
     this.flight.advance();
   }
@@ -188,9 +191,14 @@ export class GameScene implements Scene {
     this.manager.change(new GameOverScene(this.p, this.manager, this.p.get()));
   }
 
-  // Landed: the Ministry closes the level's file before anything else happens.
+  // Landed, the Ministry closes the level's file before anything else happens. The rebel goes
+  // straight to the truth, and the Ministry never gets to correct the last level.
   private leaveLevel(): void {
-    this.manager.change(new MinistryScene(this.p, this.manager, judgeLevel()));
+    const { p, manager } = this;
+
+    if (this.flight.departed)
+      manager.change(new EndingScene(p, manager, "rebel"));
+    else manager.change(new MinistryScene(p, manager, judgeLevel()));
   }
 
   // Only a pilot with the stick acts. The bomb flash fades either way, and TRUTH's clock runs
@@ -286,7 +294,7 @@ export class GameScene implements Scene {
   }
 
   // The boss is down, the sky is clear, and the pilot is still flying.
-  private readyToLand(): boolean {
+  private readyToLeave(): boolean {
     return (
       this.flight.flying &&
       this.bossDown &&
@@ -296,9 +304,20 @@ export class GameScene implements Scene {
     );
   }
 
-  private startLanding(): void {
-    this.flight.startLanding();
+  // The regime flies the plane in, except the rebel's after the Eye: no platform comes, and the
+  // plane climbs away.
+  private startLeaving(): void {
+    if (this.rebelling) this.flight.startDeparture();
+    else this.flight.startLanding();
     this.clearHostileFire();
+  }
+
+  // Enough of the diary read by the end of the last level.
+  private get rebelling(): boolean {
+    return (
+      state.level === LEVELS.length &&
+      state.runStats.diaries >= REBEL_DIARY_THRESHOLD
+    );
   }
 
   private clearHostileFire(): void {

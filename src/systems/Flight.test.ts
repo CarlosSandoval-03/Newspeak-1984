@@ -6,6 +6,7 @@ import {
   LANDING_HOLD_FRAMES,
   LANDING_LEAD,
   LIFTOFF_FRAMES,
+  PLAYER_HALF_SIZE,
   PLAYER_SPAWN,
   SCROLL_SPEED,
 } from "../config";
@@ -84,6 +85,30 @@ describe("Flight", () => {
 
     expect(flight.scroll).toBe(level.length);
     expect(flight.speed).toBe(0);
+  });
+
+  it("lets the rebel climb away: the city stands, and the plane rises past flight height off the screen", () => {
+    flight["phase"] = "flying";
+    flight.scroll = level.length;
+    player.altitude = 1;
+    player.pos = { x: 200, y: 500 };
+    flight.startDeparture();
+
+    let { altitude } = player;
+    let { y } = player.pos;
+    while (!flight.departed) {
+      tick();
+      expect(flight.speed).toBe(0);
+      expect(player.altitude).toBeGreaterThan(altitude);
+      expect(player.pos.y).toBeLessThan(y);
+      ({ altitude } = player);
+      ({ y } = player.pos);
+    }
+
+    expect(flight.scroll).toBe(level.length);
+    expect(flight.flying).toBe(false);
+    expect(player.pos.x).toBe(200);
+    expect(player.pos.y).toBeLessThan(-2 * PLAYER_HALF_SIZE);
   });
 
   it("lands the plane: lines it up, touches down at the line, and stops it on the eye", () => {

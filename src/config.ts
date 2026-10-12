@@ -117,6 +117,10 @@ export const LANDING_ACCEL = 0.02;
 export const DESCENT_DISTANCE = 160;
 // Parked on the eye this long before the level is over.
 export const LANDING_HOLD_FRAMES = 90;
+// The rebel never lands: after the Eye, the plane climbs off the top of the screen, gaining a level
+// of altitude every DEPARTURE_CLIMB_FRAMES, so its shadow drifts away and fades.
+export const REBEL_DIARY_THRESHOLD = 3;
+export const DEPARTURE_CLIMB_FRAMES = 60;
 // Runway lamps: one row in every RUNWAY_LAMP_SPACING is lit, moving a row each RUNWAY_LAMP_STEP px of scroll.
 export const RUNWAY_LAMP_SPACING = 5;
 export const RUNWAY_LAMP_STEP = 4;

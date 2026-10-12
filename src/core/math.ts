@@ -1,3 +1,4 @@
+import { TICK_MS } from "../config";
 import type { Vec } from "../types";
 
 export const radians = (degrees: number) => (degrees * Math.PI) / 180;
@@ -32,3 +33,7 @@ export function fan(center: number, count: number, width: number): number[] {
   const step = width / (count - 1);
   return Array.from({ length: count }, (_, i) => center - width / 2 + i * step);
 }
+
+// Whole seconds, as a person would count them.
+export const toSeconds = (frames: number) =>
+  Math.round((frames * TICK_MS) / 1000);

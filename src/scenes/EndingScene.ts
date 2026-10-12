@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Assets } from "../assets";
-import { CANVAS_WIDTH, INK, PAPER } from "../config";
+import { CANVAS_WIDTH, INK, LEATHER_DARK, PAPER } from "../config";
+import { toSeconds } from "../core/math";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
@@ -33,13 +34,26 @@ const PARAGRAPH_GAP = 8;
 const SCORE_Y = 584;
 const NUMBER_X = 312;
 const HONOR_ROLL_Y = 356;
+// The record: the run beside what the Ministry made of it, in three columns.
+const TABLE_TITLE_Y = 64;
+const TABLE_Y = 120;
+const TABLE_ROW_STEP = 28;
+const COLUMN_X = [MARGIN, 296, 384];
+const NOTE_Y = 336;
+// A diary page is shown on its own leather, like the line read in flight.
+const SHEET = { x: 12, y: 24, w: 456, h: 568 };
+const DIARY_TITLE_Y = 64;
+const DIARY_TEXT_Y = 104;
 const PROMPT_Y = 632;
 const PROMPT_SIZE = 20;
 
-// One page of an ending: lines typed in the paperwork's face, under an illustration or not, and
-// the honor roll beneath them on the page that shows it.
+export type Ending = "obedient" | "rebel";
+
+// One page of an ending: lines typed in the paperwork's face, under an illustration or on a diary's
+// leather, and the honor roll beneath them on the page that shows it.
 interface EndingPage {
   illustration: keyof Assets["image"] | null;
+  leather: boolean;
   lines: PageLine[];
   honorRoll: boolean;
 }
@@ -54,12 +68,12 @@ export class EndingScene implements Scene {
   private page = 0;
   private typing: Typewriter;
 
-  constructor(p: p5, manager: SceneManager) {
+  constructor(p: p5, manager: SceneManager, ending: Ending) {
     this.p = p;
     this.manager = manager;
     enterHonorRoll(state.pilotId, state.officialScore);
     this.honorRoll = readHonorRoll();
-    this.pages = obedientPages();
+    this.pages = ending === "obedient" ? obedientPages() : rebelPages();
     this.typing = typewriterFor(this.pages[0]);
   }
 
@@ -81,20 +95,24 @@ export class EndingScene implements Scene {
     this.typing.update();
   }
 
-  // The illustration, the page typed so far with its cursor, the honor roll if the page shows it,
-  // and the prompt once the page is typed.
+  // The illustration or the leather, the page typed so far with its cursor, the honor roll if the
+  // page shows it, and the prompt once the page is typed.
   draw(): void {
     const { p } = this;
     const { image, font } = this.manager.assets;
-    const { illustration, lines, honorRoll } = this.current;
+    const { illustration, leather, lines, honorRoll } = this.current;
 
     p.background(INK);
+    p.noStroke();
     if (illustration) {
       p.imageMode(p.CORNER);
       p.image(image[illustration], 0, 0, CANVAS_WIDTH, ILLUSTRATION_HEIGHT);
     }
+    if (leather) {
+      p.fill(LEATHER_DARK);
+      p.rect(SHEET.x, SHEET.y, SHEET.w, SHEET.h);
+    }
 
-    p.noStroke();
     p.textFont(font.paperwork);
     p.textAlign(p.LEFT, p.BASELINE);
     lines.forEach((line, i) => this.drawLine(line, this.typing.shown(i)));
@@ -152,6 +170,7 @@ function obedientPages(): EndingPage[] {
   return [
     {
       illustration: "ending-obedient",
+      leather: false,
       lines: [
         ...stack([obedient.title], { x: MARGIN, y: TITLE_Y, size: TITLE_SIZE }),
         ...paragraphs(story, PROSE_Y),
@@ -168,8 +187,82 @@ function obedientPages(): EndingPage[] {
       ],
       honorRoll: false,
     },
-    { illustration: "ending-obedient", lines: [], honorRoll: true },
+    {
+      illustration: "ending-obedient",
+      leather: false,
+      lines: [],
+      honorRoll: true,
+    },
   ];
+}
+
+// The pilot who did not land, under the open sky; then the record beside the truth; then every
+// diary page read, in full.
+function rebelPages(): EndingPage[] {
+  const { rebel } = currentStrings().endings;
+  const story = rebel.lines.map((line) => format(line, { id: state.pilotId }));
+
+  return [
+    {
+      illustration: "ending-rebel",
+      leather: false,
+      lines: [
+        ...stack([rebel.title], { x: MARGIN, y: TITLE_Y, size: TITLE_SIZE }),
+        ...paragraphs(story, PROSE_Y),
+      ],
+      honorRoll: false,
+    },
+    { illustration: null, leather: false, lines: record(), honorRoll: false },
+    ...state.runStats.pagesRead.map(diaryPage),
+  ];
+}
+
+// The run as it happened beside the run as the Ministry recorded it, which stops before the last
+// level; the officers it filed as enemy aircraft are noted below.
+function record(): PageLine[] {
+  const { title, columns, rows, policeNote } = currentStrings().endings.rebel;
+  const { realScore, officialScore, runStats } = state;
+  const table = [
+    [columns.item, columns.real, columns.official],
+    [rows.score, realScore, officialScore],
+    [rows.kills, runStats.kills, runStats.officialKills],
+    [rows.eyesDestroyed, runStats.eyesDestroyed, 0],
+    [rows.policeDestroyed, runStats.policeDestroyed, 0],
+    [rows.secondsSeen, toSeconds(runStats.framesSeen), 0],
+    [rows.diaries, runStats.diaries, 0],
+  ];
+
+  return [
+    ...stack([title], { x: MARGIN, y: TABLE_TITLE_Y, size: TITLE_SIZE }),
+    ...table.flatMap((cells, row) =>
+      cells.map((cell, column) => ({
+        text: String(cell),
+        x: COLUMN_X[column],
+        y: TABLE_Y + row * TABLE_ROW_STEP,
+        size: PROSE_SIZE,
+      })),
+    ),
+    ...(runStats.policeDestroyed > 0 ? paragraphs([policeNote], NOTE_Y) : []),
+  ];
+}
+
+// One of the pages the pilot read in flight, whole at last.
+function diaryPage(page: number): EndingPage {
+  const { diary } = currentStrings();
+
+  return {
+    illustration: null,
+    leather: true,
+    lines: [
+      ...stack([diary.title], {
+        x: MARGIN,
+        y: DIARY_TITLE_Y,
+        size: TITLE_SIZE,
+      }),
+      ...paragraphs([diary.pages[page].page], DIARY_TEXT_Y),
+    ],
+    honorRoll: false,
+  };
 }
 
 // Prose wrapped to the page, a little space between paragraphs.

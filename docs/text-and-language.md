@@ -38,7 +38,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Stamps | Machine, red | Ministry, game over. | — | `ministry.stamps`, `gameOver.stamp` | `CORRECTED`, `VAPORIZED` |
 | Honor roll | Machine | Menu, Ministry, obedient ending. | Completed runs only; at every Ministry visit, past entries are altered or become unpersons. An empty archive says so. | `honorRoll` | `[UNPERSON]` |
 | Game over | Machine | Over the squadron photo. | — | `gameOver` | `PILOT 6079 NEVER EXISTED.` |
-| Endings | Paperwork (obedient), human (rebel) | After level 5, a page at a time. | Obedient: the Party's message with the official score, then the honor roll. Rebel: the truth beside the record, plus the full diary pages. | `endings`, `diary.pages[].page` | `Pilot 6079 did not land.` |
+| Endings | Paperwork (obedient), human (rebel) | After level 5, a page at a time. | Obedient: the Party's message with the official score, then the honor roll. Rebel: the truth beside the record (with a note when the Ministry filed downed officers as Eurasian aircraft), plus the full diary pages, each on its own leather page. | `endings`, `diary.pages[].page` | `Pilot 6079 did not land.` |
 
 ## Writing
 

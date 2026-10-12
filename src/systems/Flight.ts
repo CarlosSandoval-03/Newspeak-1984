@@ -1,11 +1,13 @@
 import {
   AIRFIELD_AT,
+  DEPARTURE_CLIMB_FRAMES,
   DESCENT_DISTANCE,
   LANDING_ACCEL,
   LANDING_HOLD_FRAMES,
   LANDING_LEAD,
   LANDING_SPEED,
   LIFTOFF_FRAMES,
+  PLAYER_HALF_SIZE,
   PLAYER_SPAWN,
   SCROLL_SPEED,
   TAKEOFF_RAMP_FRAMES,
@@ -14,11 +16,15 @@ import { smoothstep } from "../core/math";
 import type { Player } from "../entities/Player";
 import type { LevelDef, PlatformDef } from "../types";
 
-type Phase = "takeoff" | "flying" | "landing";
+type Phase = "takeoff" | "flying" | "landing" | "departing";
+
+// Far enough above the screen that the plane and its drifting shadow are both gone.
+const DEPARTURE_EXIT_Y = -4 * PLAYER_HALF_SIZE;
 
 // A level's flight as the regime schedules it: the takeoff from the start platform, the stretch the
-// pilot flies until the city stops at the level's length, and the landing on the next platform.
-// It owns the scroll and its speed, and flies the plane itself whenever the pilot may not.
+// pilot flies until the city stops at the level's length, and the landing on the next platform;
+// or, for the rebel after the Eye, the climb away that no one scheduled. It owns the scroll and its
+// speed, and flies the plane itself whenever the pilot may not.
 export class Flight {
   // Parked on the start platform's eye.
   scroll = AIRFIELD_AT + PLAYER_SPAWN.y;
@@ -27,6 +33,7 @@ export class Flight {
   private liftoffFrames = 0;
   private takeoffFrames = 0;
   private landedFrames = 0;
+  private departureFrames = 0;
   private readonly player: Player;
   private readonly level: Pick<LevelDef, "length">;
   private readonly platform: PlatformDef;
@@ -61,16 +68,22 @@ export class Flight {
     return this.landedFrames >= LANDING_HOLD_FRAMES;
   }
 
+  // Off the top of the screen, never to land.
+  get departed(): boolean {
+    return this.phase === "departing" && this.player.pos.y <= DEPARTURE_EXIT_Y;
+  }
+
   // The scroll at which the landing platform's eye lies under the parked plane.
   private get parked(): number {
     return this.level.length + LANDING_LEAD + PLAYER_SPAWN.y;
   }
 
   // Sets this tick's speed: rolling and climbing on takeoff, standing still at the city's end, and
-  // braking toward the eye while landing.
+  // braking toward the eye while landing; the departure leaves the city standing.
   update(): void {
     if (this.phase === "takeoff") this.takeOff();
     else if (this.phase === "landing") this.land();
+    else if (this.phase === "departing") this.depart();
     else if (this.atEnd) this.speed = 0;
   }
 
@@ -80,6 +93,10 @@ export class Flight {
 
   startLanding(): void {
     this.phase = "landing";
+  }
+
+  startDeparture(): void {
+    this.phase = "departing";
   }
 
   // The runway rolls under the parked plane, and once the lift-off line has passed beneath it, the
@@ -125,5 +142,12 @@ export class Flight {
     this.scroll = this.parked;
     this.speed = 0;
     this.landedFrames++;
+  }
+
+  // Straight up and off the screen, higher and higher, while the city stays where it stopped.
+  private depart(): void {
+    this.speed = 0;
+    this.player.altitude = 1 + ++this.departureFrames / DEPARTURE_CLIMB_FRAMES;
+    this.player.autopilot({ x: this.player.pos.x, y: 2 * DEPARTURE_EXIT_Y });
   }
 }

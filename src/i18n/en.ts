@@ -253,9 +253,12 @@ export const en = {
         score: "Score",
         kills: "Aircraft destroyed",
         eyesDestroyed: "Towers destroyed",
+        policeDestroyed: "Thought Police downed",
         secondsSeen: "Seconds observed",
         diaries: "Diary pages read",
       },
+      policeNote:
+        "The Ministry filed every officer you shot down as a Eurasian aircraft.",
     },
   },
 };

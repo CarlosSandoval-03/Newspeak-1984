@@ -6,9 +6,8 @@ import {
   SLIDE_FRAMES,
   STAMP_DELAY,
   STRIKE_FRAMES,
-  TICK_MS,
 } from "../config";
-import { smoothstep } from "../core/math";
+import { smoothstep, toSeconds } from "../core/math";
 import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { currentStrings, format, t } from "../i18n";
@@ -215,7 +214,8 @@ export class MinistryScene implements Scene {
     if (state.level < LEVELS.length) {
       state.level++;
       this.manager.change(new DictionaryScene(this.p, this.manager));
-    } else this.manager.change(new EndingScene(this.p, this.manager));
+    } else
+      this.manager.change(new EndingScene(this.p, this.manager, "obedient"));
   }
 
   private drawIllustration(): void {
@@ -348,7 +348,7 @@ function correctionLines(report: Report): PageLine[] {
 function corrections({ stats, officialKills, verdict }: Report): string[] {
   const { corrections } = currentStrings().ministry;
   const kills = reportedKills(stats);
-  const seconds = Math.round((stats.framesSeen * TICK_MS) / 1000);
+  const seconds = toSeconds(stats.framesSeen);
   const lines: string[] = [];
 
   if (kills)

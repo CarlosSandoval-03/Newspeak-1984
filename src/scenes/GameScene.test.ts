@@ -2,12 +2,12 @@ import type p5 from "p5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Assets } from "../assets";
 import {
+  ALERT_SPAWN_MULT,
+  BOMB_BOSS_DAMAGE,
   BOSS_STATS,
   CANVAS_WIDTH,
   CELL_SIZE,
-  ALERT_SPAWN_MULT,
   DIARY_BONUS_SCORE,
-  BOMB_BOSS_DAMAGE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
@@ -15,6 +15,7 @@ import {
   LANDING_LEAD,
   PAPER,
   PLAYER_SPAWN,
+  REBEL_DIARY_THRESHOLD,
   SCROLL_SPEED,
   STARTING_LIVES,
   SUSPICION_DECAY,
@@ -38,6 +39,7 @@ import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
 import { GameScene } from "./GameScene";
 import { GameOverScene } from "./GameOverScene";
+import { EndingScene } from "./EndingScene";
 import { MinistryScene } from "./MinistryScene";
 
 // Each image is stood in for by its own name; nothing here draws.
@@ -378,6 +380,49 @@ describe("GameScene collisions", () => {
       expect(change).toHaveBeenCalledWith(expect.any(MinistryScene));
       expect(change.mock.calls[0][0]).toMatchObject({
         report: { realScore: 1000, officialScore: 1000 },
+      });
+    });
+
+    describe("after the Eye", () => {
+      // The last level, flown to its end with the Eye already down.
+      const lastLevel = (diaries: number) => {
+        state.level = LEVELS.length;
+        state.runStats.diaries = diaries;
+        const last = new GameScene(
+          { get: () => ({}) } as unknown as p5,
+          manager,
+        );
+        manager.change(last);
+        fly(last);
+        last["flight"].scroll = LEVELS[LEVELS.length - 1].length;
+        last["bossDown"] = true;
+        return last;
+      };
+
+      it("lets a rebel climb away, straight to the rebel ending, never judged", () => {
+        const last = lastLevel(REBEL_DIARY_THRESHOLD);
+        state.realScore += 1000;
+        const change = vi.spyOn(manager, "change");
+
+        while (change.mock.calls.length === 0) last.update();
+
+        expect(last["flight"].departed).toBe(true);
+        expect(last["flight"].scroll).toBe(LEVELS[LEVELS.length - 1].length);
+        expect(last["player"].altitude).toBeGreaterThan(1);
+        expect(state.officialScore).toBe(0);
+        const [[ending]] = change.mock.calls;
+        expect(ending).toBeInstanceOf(EndingScene);
+        expect((ending as EndingScene)["pages"][0].illustration).toBe(
+          "ending-rebel",
+        );
+      });
+
+      it("lands an obedient pilot at the Ministry of Love as usual", () => {
+        const last = lastLevel(REBEL_DIARY_THRESHOLD - 1);
+
+        last.update();
+
+        expect(last["flight"].landing).toBe(true);
       });
     });
 
