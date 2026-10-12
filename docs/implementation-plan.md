@@ -150,7 +150,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Game over**
 
 - **Decision:** a scene of its own, `GameOverScene`, since VAPORIZED is not an ending. When the last life is lost, the game keeps running for `GAME_OVER_DELAY` frames (2 s) without the player: the crash plays out and the world flies on. Then the telescreen cuts the broadcast over `SIGNAL_OFF_FRAMES`: the game's last frame collapses into a brightening line, the line shrinks to a dot, and the dot fades. `vaporized.png` fades in from ink over `PHOTO_FADE_FRAMES`; `STAMP_DELAY` frames after it starts the red `VAPORIZED` stamp lands on the erased pilot, and `GAME_OVER_TEXT_DELAY` frames later `gameOver.line` and `PRESS ENTER` appear. Enter returns to the Menu, but only once it has been offered, so a key mashed during the crash can't skip the screen.
-- The run goes on the honor roll (step 4) as an `[UNPERSON]` with the score the HUD showed: the Party keeps the number and erases the pilot, like the diarist.
+- The run goes on the honor roll (step 4) as an `[UNPERSON]` with its standing score: the Party keeps the number and erases the pilot, like the diarist.
 
 **HUD**
 
@@ -526,8 +526,8 @@ officialLevelScore = round(realLevelScore * obedience)
 
 **Honor roll** (`localStorage`, with every access wrapped in `try/catch`)
 
-- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, unperson }`, top 10, storing only scores the regime showed, never the real ones: official totals, and for a vaporized run the HUD's last score. Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
-- **Decision:** a run is recorded once, when it ends, so only runs that ended reach the archive. The EndingScene, either variant, records it under its pilot with the official total. The GameOverScene records it as an `[UNPERSON]` with the score the HUD showed (the official record plus the level's unjudged earnings): the Party keeps the number and erases the name. A run abandoned mid-way is never recorded. Tampering leaves an unperson as it is.
+- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, unperson }`, top 10, storing only scores the regime showed, never the real ones: official totals, and for a vaporized run its standing score (the official record plus the level's unjudged earnings, before Propaganda inflates it). Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
+- **Decision:** a run is recorded once, when it ends, so only runs that ended reach the archive. The EndingScene, either variant, records it under its pilot with the official total. The GameOverScene records it as an `[UNPERSON]` with its standing score (`standingScore()`: the official record plus the level's unjudged earnings, which the HUD shows until Propaganda inflates it from level 2): the Party keeps the number and erases the name. A run abandoned mid-way is never recorded. Tampering leaves an unperson as it is.
 - **Decision:** while the run is flown, the MinistryScene's honor roll shows it among the archive at its place, under its pilot with the official score so far, without storing it. It sits on the same row before and after the tampering, so only the past runs are seen to change.
 - **Decision:** the stored entries are tampered with at every MinistryScene, so the player watches the archive change during the run:
   - Each one has a `SCORE_ALTER_CHANCE` chance of its score being multiplied by a random factor.
@@ -574,10 +574,10 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the HUD lies, and the screen itself shows the strain of being watched.
 
-**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. The debug panel shows what is lying.
+**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. From level 2 the HUD's score is inflated by a factor drawn per level in [`SCORE_INFLATION_MIN`, `SCORE_INFLATION_MAX`], and shifts a pixel for a frame every `SCORE_TELL_PERIOD`; from level 3 an extra life shows for `FAKE_LIFE_FRAMES` at random intervals, and blinks out for a frame every `LIVES_TELL_PERIOD`. Each lie starts at its level in `LIE_FROM`. The debug panel shows what is lying.
 
 Already on `main` for `0.6.0`, from playing step 4:
-- The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with the HUD's last score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
+- The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with its standing score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
 - The ending's condition lives once, in `earnedEnding()`.
 - The debug tools ([debug.md](debug.md)): on the dev server with `?debug=true`, start any flow from the URL, steer the run (lives, boss, suspicion, words, diary pages, ending), see the hidden state in a panel, all in a storage sandbox that never touches the real honor roll.
 
@@ -608,6 +608,7 @@ The HUD and the enemy rendering go only through this API. While TRUTH is active,
 | 3 | An extra life is shown intermittently: `displayedLives = realLives + 1` for a few seconds at random intervals. |
 | 4 | Some enemies are drawn in the "allied" color but still shoot. |
 
+- **Decision:** the score lie inflates the standing score by one factor per level (1.15 to 1.4), so it grows with the real one and can't be told apart by its trend; the honor roll never stores it. The extra life shows for 3 s, then hides for 8 to 15 s. The score's tell is a 1 px shift and the lives' a blank frame, on different beats (every 24 and 40 frames), so a player who learns them can tell which value is lying.
 - **Decision:** the war starts on Eurasia in level 1 and changes sides once a level, halfway through, so each level opens on the enemy the last one ended with. Each ticker line keeps the enemy it was written with, which is what TRUTH shows; without it, every line names the current enemy. The ticker's tell is one blank frame when the record rewrites itself. Its width is computed from the machine face's fixed advance (0.4 of its size), so the tape's logic needs no p5.
 
 **The downed police.** From level 1, when the Thought Police are shot down, the ticker announces an enemy raider downed over the sector (`{ENEMY} RAIDER DOWNED OVER SECTOR {n}`, with the enemy of the moment): the player has just watched the regime's own red aircraft fall, and reads the lie live. It is the same rewrite the Ministry files after the level.

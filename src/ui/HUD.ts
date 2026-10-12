@@ -9,13 +9,15 @@ import {
   INK,
   LEATHER,
   LEATHER_DARK,
+  LIVES_TELL_PERIOD,
   PAPER,
   RED,
+  SCORE_TELL_PERIOD,
   STEEL,
   SUSPICION_MAX,
 } from "../config";
 import { t } from "../i18n";
-import type { Propaganda, WordView } from "../systems/Propaganda";
+import type { LieField, Propaganda, WordView } from "../systems/Propaganda";
 import type { BossKind } from "../types";
 import { scoreDigits, Typewriter } from "./effects";
 
@@ -57,6 +59,8 @@ export class HUD {
   private readonly propaganda: Propaganda;
   private diary: Typewriter | null = null;
   private diaryHold = 0;
+  // Frames drawn, to time the tells.
+  private age = 0;
 
   constructor(p: p5, fonts: Assets["font"], propaganda: Propaganda) {
     this.p = p;
@@ -72,9 +76,8 @@ export class HUD {
 
   // Typed, then held a while, then gone.
   update(): void {
-    if (!this.diary) return;
-    if (!this.diary.done) this.diary.update();
-    else if (--this.diaryHold === 0) this.diary = null;
+    this.age++;
+    this.updateDiary();
   }
 
   // The diary band first, under everything; then the score and lives, the second line (the
@@ -94,18 +97,33 @@ export class HUD {
     this.words(this.propaganda.displayedWords());
   }
 
+  // A lying number gives itself away now and then: the score shifts a pixel, the lives blink out.
   private scoreLine(): void {
     const { p, propaganda } = this;
     const score = scoreDigits(propaganda.displayedScore());
+    const shift = this.telling("score", SCORE_TELL_PERIOD) ? 1 : 0;
 
     p.textAlign(p.LEFT, p.BASELINE);
-    this.text(`${t("hud.score")} ${score}`, MARGIN, TOP_BASELINE);
+    this.text(`${t("hud.score")} ${score}`, MARGIN + shift, TOP_BASELINE);
+    if (this.telling("lives", LIVES_TELL_PERIOD)) return;
+
     p.textAlign(p.RIGHT, p.BASELINE);
     this.text(
       `${t("hud.lives")} ${propaganda.displayedLives()}`,
       RIGHT_EDGE,
       TOP_BASELINE,
     );
+  }
+
+  // On one frame in every `period`, a value Propaganda is lying about shows its tell.
+  private telling(field: LieField, period: number): boolean {
+    return this.propaganda.isLying(field) && this.age % period === 0;
+  }
+
+  private updateDiary(): void {
+    if (!this.diary) return;
+    if (!this.diary.done) this.diary.update();
+    else if (--this.diaryHold === 0) this.diary = null;
   }
 
   private suspicionLine(): void {

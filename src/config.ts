@@ -67,6 +67,19 @@ export const ALLIANCE_FLIP_AT = 0.5;
 // A lie's tell: how long the rewritten text vanishes when it changes.
 export const TELL_FLICKER_FRAMES = 1;
 export const TICKER_SPEED = 1;
+// The level each lie starts in; every later level keeps it.
+export const LIE_FROM = { ticker: 1, score: 2, lives: 3 } as const;
+// The score shown is the real one times a factor drawn once per level in this range.
+export const SCORE_INFLATION_MIN = 1.15;
+export const SCORE_INFLATION_MAX = 1.4;
+// The extra life shows this long, then hides for a random while in this range.
+export const FAKE_LIFE_FRAMES = 180;
+export const FAKE_LIFE_HIDDEN_MIN = 480;
+export const FAKE_LIFE_HIDDEN_MAX = 900;
+// The tells: a lying score shifts 1 px for a frame, and a lying lives count vanishes for a frame,
+// each once every so many frames, at different beats so they can be told apart.
+export const SCORE_TELL_PERIOD = 24;
+export const LIVES_TELL_PERIOD = 40;
 
 // The Ministry's obedience factor for a level: kills raise it, everything the regime dislikes lowers
 // it. A good citizen lands around 1.3–1.6, a rebel around 0.3–0.6.

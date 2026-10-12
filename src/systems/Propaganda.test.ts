@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { ALLIANCE_FLIP_AT } from "../config";
+import {
+  ALLIANCE_FLIP_AT,
+  FAKE_LIFE_FRAMES,
+  FAKE_LIFE_HIDDEN_MAX,
+  FAKE_LIFE_HIDDEN_MIN,
+  SCORE_INFLATION_MIN,
+} from "../config";
 import { resetGame, state } from "../state";
 import { ALERT, type Word } from "../types";
 import { Propaganda, type WordClocks } from "./Propaganda";
@@ -76,6 +82,62 @@ describe("Propaganda", () => {
       expect(war.isLying("ticker")).toBe(true);
       truth = 0.5;
       expect(war.isLying("ticker")).toBe(false);
+    });
+  });
+
+  describe("the numbers", () => {
+    let truth: number;
+    // Every draw at the bottom of its range: the least inflation, the shortest wait.
+    const atLevel = (level: number) =>
+      new Propaganda({ ...clocks, truthLeft: () => truth }, level, () => 0);
+
+    beforeEach(() => {
+      truth = 0;
+      state.realScore = 1000;
+    });
+
+    it("inflates the score from level 2, and TRUTH shows the real one", () => {
+      expect(atLevel(1).displayedScore()).toBe(1000);
+      expect(atLevel(1).isLying("score")).toBe(false);
+
+      const level2 = atLevel(2);
+      expect(level2.displayedScore()).toBe(
+        Math.round(1000 * SCORE_INFLATION_MIN),
+      );
+      expect(level2.isLying("score")).toBe(true);
+
+      truth = 0.5;
+      expect(level2.displayedScore()).toBe(1000);
+      expect(level2.isLying("score")).toBe(false);
+    });
+
+    it("tells no lie about a score of nothing", () => {
+      state.realScore = 0;
+      expect(atLevel(2).isLying("score")).toBe(false);
+    });
+
+    it("shows an extra life from level 3, for a while, then hides it until later", () => {
+      const level3 = atLevel(3);
+      const lives = () => level3.displayedLives() - state.realLives;
+
+      for (let i = 1; i < FAKE_LIFE_HIDDEN_MIN; i++) level3.update(0);
+      expect(lives()).toBe(0);
+      level3.update(0);
+      expect(lives()).toBe(1);
+      expect(level3.isLying("lives")).toBe(true);
+
+      truth = 0.5;
+      expect(lives()).toBe(0);
+      truth = 0;
+
+      for (let i = 0; i < FAKE_LIFE_FRAMES; i++) level3.update(0);
+      expect(lives()).toBe(0);
+    });
+
+    it("never shows an extra life before level 3", () => {
+      const level2 = atLevel(2);
+      for (let i = 0; i < 2 * FAKE_LIFE_HIDDEN_MAX; i++) level2.update(0);
+      expect(level2.displayedLives()).toBe(state.realLives);
     });
   });
 

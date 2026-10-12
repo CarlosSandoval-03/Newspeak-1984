@@ -18,7 +18,7 @@ import { GameScene } from "../scenes/GameScene";
 import { record, state } from "../state";
 import { clearHonorRoll, recordRun } from "../systems/HonorRoll";
 import { obedience, standingScore, verdictFor } from "../systems/Ministry";
-import type { LieField } from "../systems/Propaganda";
+import { LIE_FIELDS } from "../systems/Propaganda";
 import { ALERT } from "../types";
 import { chooseEnding, parseFlow, startFlow, unlockWords } from "./flows";
 import { type ResetScope, resetStorage, sandboxStorage } from "./sandbox";
@@ -242,8 +242,7 @@ function wordsLine(): string {
 // Which of the regime's lies is on screen right now, and whose war it is.
 function liesLine(game: GameScene): string {
   const propaganda = game["propaganda"];
-  const fields: LieField[] = ["ticker"];
-  const lies = fields.map(
+  const lies = LIE_FIELDS.map(
     (field) => `${field} ${propaganda.isLying(field) ? "LIE" : "true"}`,
   );
   return `lying ${lies.join("  ")}   enemy ${propaganda.enemy}`;

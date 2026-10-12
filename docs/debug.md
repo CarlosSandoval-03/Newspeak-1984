@@ -70,7 +70,7 @@ Tools for testing the game without playing the whole run every time. With them y
 - the real, official, and standing scores, the standing score being what the HUD shows;
 - each word's level, a dash once the Party has taken it, and the bombs;
 - in a level, the flight phase, the scroll against the level's length, and the boss's or the Thought Police's health;
-- in a level, which of Propaganda's fields are lying right now (`isLying()`), and the enemy of the moment.
+- in a level, which of Propaganda's fields are lying right now (`isLying()`: the ticker, the score, the lives), and the enemy of the moment. To see each lie, start the level it begins in: `level:1` for the ticker, `level:2` for the score, `level:3` for the lives.
 
 While the panel shows, the number keys run commands. They don't clash with the game's controls. `2`, `3`, `4`, `6`, and `7` act on a level and do nothing outside one; the rest work in any scene.
 

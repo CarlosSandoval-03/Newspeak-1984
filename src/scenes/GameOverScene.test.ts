@@ -72,7 +72,7 @@ describe("GameOverScene", () => {
     manager.change(scene);
   });
 
-  it("enters the run on the honor roll as an unperson, with the score the HUD showed", () => {
+  it("enters the run on the honor roll as an unperson, with its standing score", () => {
     const saved = new Map<string, string>();
     vi.stubGlobal("localStorage", {
       getItem: (key: string) => saved.get(key) ?? null,

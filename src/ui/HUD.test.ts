@@ -9,8 +9,10 @@ import {
   INK,
   LEATHER,
   LEATHER_DARK,
+  LIVES_TELL_PERIOD,
   PAPER,
   RED,
+  SCORE_TELL_PERIOD,
   STEEL,
 } from "../config";
 import type { Propaganda, WordView } from "../systems/Propaganda";
@@ -57,6 +59,7 @@ describe("HUD", () => {
       displayedSuspicion: () => 0,
       displayedAlert: () => ALERT.normal,
       displayedWords: () => [],
+      isLying: () => false,
       ...shown,
     } as Propaganda;
 
@@ -76,6 +79,39 @@ describe("HUD", () => {
 
     expect(shown).toContain("SCORE 004210");
     expect(shown).toContain("LIVES 3");
+  });
+
+  describe("the tells", () => {
+    // The score's x and whether the lives were drawn, on the frame `frames` updates in.
+    const at = (lying: string[], frames: number) => {
+      const { placed } = draw(
+        { isLying: (field) => lying.includes(field) },
+        null,
+        (hud) => {
+          for (let i = 0; i < frames; i++) hud.update();
+        },
+      );
+      const score = placed.find(({ text }) => text.startsWith("SCORE"));
+      return {
+        scoreX: score!.x,
+        lives: placed.some(({ text }) => text.startsWith("LIVES")),
+      };
+    };
+
+    it("shifts a lying score a pixel, once every period", () => {
+      expect(at(["score"], SCORE_TELL_PERIOD).scoreX).toBe(
+        at([], SCORE_TELL_PERIOD).scoreX + 1,
+      );
+      expect(at(["score"], SCORE_TELL_PERIOD + 1).scoreX).toBe(
+        at([], SCORE_TELL_PERIOD).scoreX,
+      );
+    });
+
+    it("blinks a lying lives count out, once every period", () => {
+      expect(at(["lives"], LIVES_TELL_PERIOD).lives).toBe(false);
+      expect(at(["lives"], LIVES_TELL_PERIOD + 1).lives).toBe(true);
+      expect(at([], LIVES_TELL_PERIOD).lives).toBe(true);
+    });
   });
 
   it("shows the suspicion and the alert state Propaganda reports", () => {

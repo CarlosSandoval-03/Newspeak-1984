@@ -1,4 +1,13 @@
-import { ALLIANCE_FLIP_AT, WORD_REMOVAL_ORDER } from "../config";
+import {
+  ALLIANCE_FLIP_AT,
+  FAKE_LIFE_FRAMES,
+  FAKE_LIFE_HIDDEN_MAX,
+  FAKE_LIFE_HIDDEN_MIN,
+  LIE_FROM,
+  SCORE_INFLATION_MAX,
+  SCORE_INFLATION_MIN,
+  WORD_REMOVAL_ORDER,
+} from "../config";
 import { state } from "../state";
 import type { AlertLevel, Enemy, Word } from "../types";
 import { standingScore } from "./Ministry";
@@ -23,8 +32,9 @@ export interface WordView {
   timeLeft: number;
 }
 
-// The values the regime has lied about so far; the rest are still told straight.
-export type LieField = "ticker";
+// The values the regime lies about; the rest are told straight.
+export const LIE_FIELDS = ["ticker", "score", "lives"] as const;
+export type LieField = (typeof LIE_FIELDS)[number];
 
 const ENEMIES: readonly Enemy[] = ["eurasia", "eastasia"];
 
@@ -33,11 +43,20 @@ const ENEMIES: readonly Enemy[] = ["eurasia", "eastasia"];
 export class Propaganda {
   private readonly clocks: WordClocks;
   private readonly level: number;
+  private readonly random: () => number;
+  private readonly inflation: number;
   private flipped = false;
+  private fakeLife = 0;
+  private fakeLifeIn: number;
 
-  constructor(clocks: WordClocks, level = state.level) {
+  constructor(clocks: WordClocks, level = state.level, random = Math.random) {
     this.clocks = clocks;
     this.level = level;
+    this.random = random;
+    this.inflation =
+      SCORE_INFLATION_MIN +
+      random() * (SCORE_INFLATION_MAX - SCORE_INFLATION_MIN);
+    this.fakeLifeIn = this.hiddenFor();
   }
 
   // The enemy Oceania is at war with now, which it has always been. The war has changed sides once
@@ -51,9 +70,12 @@ export class Propaganda {
     return this.clocks.truthLeft() > 0;
   }
 
-  // `progress` is the share of the level flown.
+  // `progress` is the share of the level flown: halfway through, the war changes sides. The extra
+  // life comes and goes on its own clock.
   update(progress: number): void {
-    if (progress >= ALLIANCE_FLIP_AT) this.flipped = true;
+    if (this.lies("ticker") && progress >= ALLIANCE_FLIP_AT)
+      this.flipped = true;
+    if (this.lies("lives")) this.countFakeLife();
   }
 
   // Every line names the enemy of the moment; TRUTH shows the one it was written with.
@@ -63,15 +85,18 @@ export class Propaganda {
 
   // Whether what is on screen for `field` is false right now.
   isLying(field: LieField): boolean {
-    return field === "ticker" && this.flipped && !this.telling;
+    if (this.telling) return false;
+    if (field === "ticker") return this.flipped;
+    if (field === "lives") return this.fakeLife > 0;
+    return this.lies("score") && this.inflatedScore() !== standingScore();
   }
 
   displayedLives(): number {
-    return state.realLives;
+    return state.realLives + (this.isLying("lives") ? 1 : 0);
   }
 
   displayedScore(): number {
-    return standingScore();
+    return this.isLying("score") ? this.inflatedScore() : standingScore();
   }
 
   displayedSuspicion(): number {
@@ -85,6 +110,30 @@ export class Propaganda {
   // In the order the Party takes them, so the row empties from the left.
   displayedWords(): WordView[] {
     return WORD_REMOVAL_ORDER.map((word) => this.view(word));
+  }
+
+  private lies(field: LieField): boolean {
+    return this.level >= LIE_FROM[field];
+  }
+
+  private inflatedScore(): number {
+    return Math.round(standingScore() * this.inflation);
+  }
+
+  // Shown for a while, then hidden until a random time later.
+  private countFakeLife(): void {
+    if (this.fakeLife > 0) {
+      if (--this.fakeLife === 0) this.fakeLifeIn = this.hiddenFor();
+      return;
+    }
+    if (--this.fakeLifeIn <= 0) this.fakeLife = FAKE_LIFE_FRAMES;
+  }
+
+  private hiddenFor(): number {
+    return Math.round(
+      FAKE_LIFE_HIDDEN_MIN +
+        this.random() * (FAKE_LIFE_HIDDEN_MAX - FAKE_LIFE_HIDDEN_MIN),
+    );
   }
 
   private view(word: Word): WordView {
