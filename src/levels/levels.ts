@@ -109,6 +109,13 @@ const LEVEL_1: LevelDef = {
   diary: { at: 1350 },
   // Spread through the level, the Leader watching from the roofs between the fights.
   murals: [{ at: 400 }, { at: 1250 }, { at: 2150 }],
+  // Early, on the one open plaza the stand-in city has room on.
+  groundSlogans: [{ at: 600 }],
+  // The first is in the sky when the record changes halfway, so its banner flips in plain view.
+  blimps: [
+    { at: 1200, y: 140, from: "left" },
+    { at: 2100, y: 220, from: "right" },
+  ],
   boss: "fortress",
 };
 
@@ -130,15 +137,22 @@ const LEVEL_2: LevelDef = {
 // Levels 3 to 5 replay the stand-in with their own bosses and ministries, so every removal and
 // every boss can be played until the real levels are written. The land battleship rides the middle
 // street at the end, so the Ministry of Peace stands halfway; the ruined prole district has none.
+// A ministry reshapes the city around it, so these cities have fewer roofs with room for a mural.
 export const LEVELS: LevelDef[] = [
   LEVEL_1,
   LEVEL_2,
   {
     ...LEVEL_2,
     terrain: { ...CITY, landmark: { at: 1500, ministry: "peace" } },
+    murals: [{ at: 400 }],
     boss: "landship",
   },
-  { ...LEVEL_2, terrain: CITY, boss: "wing" },
+  {
+    ...LEVEL_2,
+    terrain: CITY,
+    murals: [{ at: 400 }, { at: 1250 }],
+    boss: "wing",
+  },
   {
     ...LEVEL_2,
     terrain: {

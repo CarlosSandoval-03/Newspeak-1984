@@ -5,6 +5,7 @@ import {
   CELL_SIZE,
   CHUNK_HEIGHT,
   CRATER_SIZE,
+  GROUND_SLOGAN_SIZE,
   LANDING_LEAD,
   LANDMARK_SIZE,
   MIN_BLOCK_CELLS,
@@ -47,6 +48,13 @@ const everyChunk = (check: (layout: ChunkLayout, recipe: City) => void) => {
     for (let index = 0; index < CHUNKS; index++)
       check(chunkLayout(recipe, index), recipe);
 };
+
+// The ground a painted slogan covers, centered on its anchor.
+const sloganBox = ({ x, y }: { x: number; y: number }): Rect => ({
+  x: x - GROUND_SLOGAN_SIZE.w / 2,
+  y: y - GROUND_SLOGAN_SIZE.h / 2,
+  ...GROUND_SLOGAN_SIZE,
+});
 
 const cellCorners = (corners: Terrain[][], row: number, column: number) => [
   corners[row][column],
@@ -239,6 +247,7 @@ describe("anchors", () => {
     "rooftop",
     "skylight",
     "mural",
+    "slogan",
   ];
 
   const inside = (x: number, y: number, rect: Rect) =>
@@ -266,6 +275,21 @@ describe("anchors", () => {
             Array(4).fill("plaza"),
           );
           expect(roofed(x, y)).toBe(false);
+        } else if (kind === "slogan") {
+          // All of it on whole plaza cells: inside the curb, under no roof.
+          const box = sloganBox({ x, y });
+          for (let r = box.y / CELL_SIZE; r < (box.y + box.h) / CELL_SIZE; r++)
+            for (
+              let c = box.x / CELL_SIZE;
+              c < (box.x + box.w) / CELL_SIZE;
+              c++
+            )
+              expect(
+                cellCorners(corners, Math.floor(r), Math.floor(c)),
+              ).toEqual(Array(4).fill("plaza"));
+          expect(buildings.some((building) => touches(building, box))).toBe(
+            false,
+          );
         } else if (kind === "rooftop") {
           expect(roofed(x, y)).toBe(true);
         } else if (kind === "mural") {
@@ -341,6 +365,12 @@ describe("anchors", () => {
       );
       expect(
         anchors.some((anchor) => touches({ ...anchor, w: 0, h: 0 }, plaza)),
+      ).toBe(false);
+      expect(
+        anchors.some(
+          (anchor) =>
+            anchor.kind === "slogan" && touches(sloganBox(anchor), plaza),
+        ),
       ).toBe(false);
       expect(chunkLayout(city, index + 2).landmarks).toEqual([]);
     }

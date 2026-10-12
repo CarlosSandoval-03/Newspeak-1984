@@ -24,8 +24,8 @@ Every place where the player reads something: when it appears, in which voice, h
 | ------- | ----- | -------------- | -------------- | ----------------- | ------- |
 | Ticker | Machine | Bottom strip during play. | War news, production, warnings. When the alliance flips halfway through a level, every past line re-renders with the new enemy; TRUTH shows each line as first written. A downed Thought Police patrol is announced as an enemy raider (`ticker.raiderDowned`). | `ticker` | `EURASIA FLEET DESTROYED OFF THE COAST`, later `EASTASIA FLEET…` |
 | Rooftop murals | Machine | Under the Leader's portrait, in the background. | Usually fixed; a mural may use a banner pair and flip with a one-frame tell. | `slogans.murals` | `HE SEES YOU CLEARLY` |
-| Ground slogans | Machine | Painted on plazas, scrolling with the ground. | Fixed. | `slogans.ground` | `LOOK UP` |
-| Blimp banners | Machine | Towed across the screen. | The most visible flips: each pair swaps to its opposite mid-level. | `slogans.banners` | `ALWAYS OUR ALLY` / `NEVER OUR ALLY` |
+| Ground slogans | Machine | Painted on plazas, one word a line like a road marking, scrolling with the ground. | Fixed. | `slogans.ground` | `LOOK UP` |
+| Blimp banners | Machine | Towed across the screen. | The most visible flips: each pair swaps to its opposite halfway through the level, when the war changes sides, and the banner goes blank for a frame as it does. TRUTH shows the slogan as first written. | `slogans.banners` | `ALWAYS OUR ALLY` / `NEVER OUR ALLY` |
 | Telescreens | Machine | Background screens. | Static, the eye, or a line. | `slogans.telescreens` | `THE LEADER IS WATCHING` |
 | HUD | Machine | Score, lives, suspicion, alert state, words; during a battle, the boss's name in place of the suspicion line. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT`, `FLYING FORTRESS` |
 | Word pickups | Machine | Falling pickups, each on a paper card. | Removed words appear struck out in red, on a card dulled to steel. | `words` | `FREE` struck in red |
@@ -44,7 +44,7 @@ Every place where the player reads something: when it appears, in which voice, h
 
 - **Original only**, in the regime's voice. Never quote Orwell. Orwell's world (Oceania, Eurasia, the Ministries, Newspeak) is the setting; the sentences are ours.
 - **The regime shouts:** everything it displays is UPPERCASE; only long prose (briefings, corrections, diary, endings) uses sentence case.
-- **Short:** at most 22 characters per line (88 px of mural band at 10 px) and two lines, in every language. Ground slogans: at most 12 characters. A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes. The menu's controls line fits one 60-character VT323 line.
+- **Short:** at most 22 characters per line (88 px of mural band at 10 px) and two lines, in every language. Ground slogans: two words of at most 8 characters, one a line (128 px at 40 px). A diary line may run past the band, which slides like a typewriter carriage, but keep it to 80 characters so it is read before it goes. The menu's controls line fits one 60-character VT323 line.
 - **Contradictions come in pairs** stored together (`slogans.banners`); the flip replaces one with the other. For example, `ALWAYS OUR ALLY` / `NEVER OUR ALLY`.
 - **Placeholders** (`{id}`, `{word}`, `{enemy}`…) instead of hard-coded names, so the ticker can rewrite itself and the briefings name the right word in each language.
 
@@ -68,7 +68,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Ticker | VT323 | 20 | `#e8e4d8` on a `#6e1712` (dark red) strip | UPPER |
 | Word pickups | VT323 | 20 | `#1a1a1a` on a `#e8e4d8` card; removed: on a `#7a7a7a` card + red strike-through | UPPER |
 | Mural slogan | VT323 | 10 | `#e8e4d8` on a `#1a1a1a` band | UPPER |
-| Ground slogan | VT323 | 40 or 60 | `#7a7a7a` on `#3a3a3a` | UPPER |
+| Ground slogan | VT323 | 40 | `#7a7a7a` on `#3a3a3a` | UPPER |
 | Towed banner | VT323 | 20 | `#1a1a1a` on `#e8e4d8` | UPPER |
 | Telescreen | VT323 | 20 | `#e8e4d8` | UPPER |
 | High scores | VT323 | 20 | `#e8e4d8`; erased entries `#7a7a7a` | UPPER, scores right-aligned |

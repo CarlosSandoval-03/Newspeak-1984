@@ -139,7 +139,7 @@ export const en = {
       "FEWER WORDS\nCLEARER MINDS",
       "YOUR DOUBTS\nARE NOTED",
     ],
-    // Painted on plazas at 40-60 px, so 12 characters at most.
+    // Painted on plazas at 40 px, one word a line: two words of 8 characters at most.
     ground: ["HE SEES", "LOOK UP", "REPORT", "OBEY"],
     // Blimp banners that flip mid-level: [before, after].
     banners: [

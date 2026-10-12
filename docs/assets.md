@@ -141,7 +141,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `diary.png` (pickup) | One line of the page typed at the bottom of the screen on a leather band, without pausing. | — | 3 |
 | `pilot-portrait.png` | — | Thin frame and pilot ID caption. | 4 |
 | `poster-leader.png` | **Mural** (`MURAL_SIZE`, 96×100): the portrait at 1× on a red field, over a `#1a1a1a` band with the slogan's two lines in VT323 at 10 px. Painted on a roof with room for it, under anything standing there. | Slogan flips mid-level with a one-frame flicker. | 5 |
-| `propaganda-blimp.png` | **Towed banner**: tow line and a light banner with dark VT323 text behind the blimp. | Banner sways slightly. | 5 |
+| `propaganda-blimp.png` | **Towed banner**: an ink tow line and a 192×24 `#e8e4d8` banner trimmed in red behind the blimp, with the slogan in `#1a1a1a` VT323 at 20 px. Mirrored to fly left; its shadow keeps to the same side. | Banner sways 2 px; it goes blank for a frame when its slogan flips. | 5 |
 | `boss-*-damaged.png` | Reveal damage regions progressively from `boss-*-damage.json`, never a single swap. | Smoke: grey particles from the revealed holes, more as more regions show. | 4 |
 | `player-bank-*.png` | Use while the horizontal input is held. | — | 1 |
 | `launch-platform.png` | **Runway lamps:** light the sockets from the JSON in `#e0503a`, chasing toward the direction of travel (forward on takeoff, backward on landing). | — | 4 |

@@ -85,6 +85,17 @@ describe("Propaganda", () => {
       truth = 0.5;
       expect(war.isLying("ticker")).toBe(false);
     });
+
+    it("rewrites a slogan into its opposite with the war, and TRUTH shows it as written", () => {
+      const war = atLevel(1);
+      const pair = ["ALWAYS OUR ALLY", "NEVER OUR ALLY"];
+      expect(war.displayedSlogan(pair)).toBe("ALWAYS OUR ALLY");
+
+      war.update(ALLIANCE_FLIP_AT);
+      expect(war.displayedSlogan(pair)).toBe("NEVER OUR ALLY");
+      truth = 0.5;
+      expect(war.displayedSlogan(pair)).toBe("ALWAYS OUR ALLY");
+    });
   });
 
   describe("the numbers", () => {

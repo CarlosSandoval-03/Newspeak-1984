@@ -93,6 +93,12 @@ export class Propaganda {
     return this.telling ? written : this.enemy;
   }
 
+  // A pair of slogans that contradict each other: the second replaces the first once the record
+  // has changed. TRUTH shows the first, as it was written.
+  displayedSlogan(pair: readonly string[]): string {
+    return pair[this.isLying("ticker") ? 1 : 0];
+  }
+
   // From the level the lie starts in, some fighters fly in the ally's colors; the rest get none.
   // Each shows its own colors for a frame now and then, at its own moment, and all of them while
   // TRUTH is active.

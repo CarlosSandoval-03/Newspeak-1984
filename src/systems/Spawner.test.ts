@@ -4,6 +4,7 @@ import {
   DIARY_HALF_SIZE,
   ENEMY_STATS,
   EYE_STATS,
+  GROUND_SLOGAN_SIZE,
   GYRO_INTERVAL,
   MURAL_SIZE,
   PICKUP_RADIUS,
@@ -13,6 +14,7 @@ import {
 import { anchorNear } from "../levels/layout";
 import {
   ALERT,
+  type BlimpDef,
   type EnemyKind,
   type EyeDef,
   type LevelDef,
@@ -28,6 +30,8 @@ const level: LevelDef = {
   length: 100_000,
   boss: "fortress",
   murals: [{ at: 500 }, { at: 2000 }],
+  groundSlogans: [{ at: 700 }],
+  blimps: [{ at: 350, y: 120, from: "right" }],
   waves: [
     { at: 100, kind: "straight", count: 3, x: 50, spacing: 40 },
     { at: 200, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "FREE" },
@@ -49,6 +53,8 @@ describe("Spawner", () => {
   let pickups: { word: Word; pos: Vec }[];
   let diaries: Vec[];
   let murals: { pos: Vec; index: number }[];
+  let slogans: { pos: Vec; index: number }[];
+  let blimps: { def: BlimpDef; index: number }[];
   let spawner: Spawner;
 
   beforeEach(() => {
@@ -58,6 +64,8 @@ describe("Spawner", () => {
     pickups = [];
     diaries = [];
     murals = [];
+    slogans = [];
+    blimps = [];
     spawner = new Spawner(level, {
       enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
       eye: (def, pos) => watching.push({ def, pos }),
@@ -65,6 +73,8 @@ describe("Spawner", () => {
       pickup: (word, pos) => pickups.push({ word, pos }),
       diary: (pos) => diaries.push(pos),
       mural: (pos, index) => murals.push({ pos, index }),
+      groundSlogan: (pos, index) => slogans.push({ pos, index }),
+      blimp: (def, index) => blimps.push({ def, index }),
     });
   });
 
@@ -78,6 +88,25 @@ describe("Spawner", () => {
     expect(murals).toEqual([
       { pos: { x: anchor.x, y: due - anchor.y }, index: 0 },
     ]);
+  });
+
+  it("paints each ground slogan on the open plaza with room for it nearest its distance", () => {
+    const anchor = anchorNear(level, "slogan", 700);
+    const due = anchor.y - GROUND_SLOGAN_SIZE.h / 2;
+
+    spawner.update(due - 1, ALERT.normal);
+    expect(slogans).toEqual([]);
+    spawner.update(due, ALERT.normal);
+    expect(slogans).toEqual([
+      { pos: { x: anchor.x, y: due - anchor.y }, index: 0 },
+    ]);
+  });
+
+  it("sends a blimp across when the scroll reaches it", () => {
+    spawner.update(349, ALERT.normal);
+    expect(blimps).toEqual([]);
+    spawner.update(350, ALERT.normal);
+    expect(blimps).toEqual([{ def: level.blimps[0], index: 0 }]);
   });
 
   it("spawns a wave when the scroll reaches it, just above the top edge", () => {
@@ -214,6 +243,8 @@ describe("Spawner", () => {
           pickup: () => {},
           diary: () => {},
           mural: () => {},
+          groundSlogan: () => {},
+          blimp: () => {},
         }).update(0, ALERT.thoughtPolice);
 
         const [{ pos }] = gyros();
@@ -258,6 +289,8 @@ describe("Spawner", () => {
         pickup: () => {},
         diary: () => {},
         mural: () => {},
+        groundSlogan: () => {},
+        blimp: () => {},
       },
     ).update(0, ALERT.alert);
 

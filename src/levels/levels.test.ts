@@ -57,6 +57,17 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
       expect(() => anchorNear(level, "skylight", level.diary.at)).not.toThrow();
     });
 
+    it("paints each mural and ground slogan on a spot of its own", () => {
+      const spots = [
+        ...level.murals.map(({ at, x }) => anchorNear(level, "mural", at, x)),
+        ...level.groundSlogans.map(({ at, x }) =>
+          anchorNear(level, "slogan", at, x),
+        ),
+      ].map(({ x, y }) => `${x},${y}`);
+
+      expect(new Set(spots).size).toBe(spots.length);
+    });
+
     it("keeps every pickup on screen", () => {
       for (const pickup of level.pickups) {
         expect(pickup.x - PICKUP_RADIUS).toBeGreaterThanOrEqual(0);

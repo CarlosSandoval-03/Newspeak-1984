@@ -68,8 +68,10 @@ export interface TerrainDef {
 }
 
 // Where a ground element can stand; later steps add bridge and railway. A `mural` is the middle of a
-// roof with no skylight and room for a whole mural.
-export type AnchorKind = "street" | "plaza" | "rooftop" | "skylight" | "mural";
+// roof with no skylight and room for a whole mural; a `slogan`, of an open plaza with room for a
+// painted slogan.
+export type AnchorKind =
+  "street" | "plaza" | "rooftop" | "skylight" | "mural" | "slogan";
 
 export type EyeType = "tower" | "drone";
 
@@ -95,6 +97,13 @@ export interface TurretDef {
   at: number;
   on: AnchorKind;
   x?: number;
+}
+
+// Enters at `at` from one side at height `y`, and flies out the other.
+export interface BlimpDef {
+  at: number;
+  y: number;
+  from: "left" | "right";
 }
 
 export type BossKind = "fortress" | "airship" | "landship" | "wing" | "eye";
@@ -139,6 +148,10 @@ export interface LevelDef {
   diary: { at: number };
   // The Leader's portrait painted on the roof nearest `at` with room for it.
   murals: { at: number; x?: number }[];
+  // Painted on the open plaza nearest `at` with room for it.
+  groundSlogans: { at: number; x?: number }[];
+  // Each crosses the sky once, towing a banner whose slogan the record rewrites halfway through.
+  blimps: BlimpDef[];
   // Comes once the city stops at `length`; the landing waits for it to go down.
   boss: BossKind;
 }

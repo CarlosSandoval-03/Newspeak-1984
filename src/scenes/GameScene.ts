@@ -26,13 +26,15 @@ import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { LevelBoss } from "../entities/Boss";
 import { BossDamage } from "../entities/BossDamage";
+import { Blimp } from "../entities/Blimp";
 import type { Bullet } from "../entities/Bullet";
 import { Diary } from "../entities/Diary";
 import { Enemy } from "../entities/Enemy";
 import type { Arena } from "../entities/Entity";
 import { Explosion } from "../entities/Explosion";
-import { Mural } from "../entities/Mural";
 import { Eye } from "../entities/Eye";
+import { GroundSlogan } from "../entities/GroundSlogan";
+import { Mural } from "../entities/Mural";
 import { Pickup } from "../entities/Pickup";
 import { Player } from "../entities/Player";
 import { ThoughtPolice } from "../entities/ThoughtPolice";
@@ -88,7 +90,9 @@ export class GameScene implements Scene {
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
   private diary: Diary | null = null;
-  private murals: Mural[] = [];
+  // Painted on the city: murals on its roofs, slogans on its plazas.
+  private paintings: (Mural | GroundSlogan)[] = [];
+  private blimps: Blimp[] = [];
   private gameOverIn = 0;
   private paused = false;
   private flash = 0;
@@ -202,6 +206,8 @@ export class GameScene implements Scene {
   }
 
   private createSpawner(assets: Assets): Spawner {
+    const { murals, ground, banners } = currentStrings().slogans;
+
     return new Spawner(this.level, {
       enemy: (kind, pos, { drops, camo }) => {
         const enemy = new Enemy(kind, pos, this.arena);
@@ -218,7 +224,17 @@ export class GameScene implements Scene {
         this.pickups.push(new Pickup(word, pos, assets.font.machine)),
       diary: (pos) => (this.diary = new Diary(pos, assets.image)),
       mural: (pos, index) =>
-        this.murals.push(new Mural(pos, muralSlogan(index), assets)),
+        this.paintings.push(new Mural(pos, inTurn(murals, index), assets)),
+      groundSlogan: (pos, index) =>
+        this.paintings.push(
+          new GroundSlogan(pos, inTurn(ground, index), this.font),
+        ),
+      blimp: (def, index) => {
+        const pair = inTurn(banners, index);
+        this.blimps.push(
+          new Blimp(def, () => this.propaganda.displayedSlogan(pair), assets),
+        );
+      },
     });
   }
 
@@ -270,7 +286,7 @@ export class GameScene implements Scene {
   private moveAll(): void {
     // Ground things ride the city, which stops for the boss and starts again to land.
     for (const ground of [
-      ...this.murals,
+      ...this.paintings,
       ...this.turrets,
       ...this.eyes.filter((eye) => eye.type === "tower"),
       ...(this.diary ? [this.diary] : []),
@@ -291,7 +307,8 @@ export class GameScene implements Scene {
     for (const explosion of this.explosions) explosion.update();
     for (const pickup of this.pickups) pickup.update();
     this.diary?.update();
-    for (const mural of this.murals) mural.update();
+    for (const painting of this.paintings) painting.update();
+    for (const blimp of this.blimps) blimp.update();
     this.hud.update();
   }
 
@@ -303,7 +320,8 @@ export class GameScene implements Scene {
     this.explosions = this.explosions.filter((explosion) => explosion.alive);
     this.pickups = this.pickups.filter((pickup) => pickup.alive);
     if (!this.diary?.alive) this.diary = null;
-    this.murals = this.murals.filter((mural) => mural.alive);
+    this.paintings = this.paintings.filter((painting) => painting.alive);
+    this.blimps = this.blimps.filter((blimp) => blimp.alive);
   }
 
   // After watching, so suspicion ends the tick right at the reset when the Thought Police go.
@@ -597,18 +615,19 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.flight.scroll);
-    // Painted on the roofs, under anything that stands on them.
-    for (const mural of this.murals) mural.draw(p);
+    // Painted on the roofs and plazas, under anything that stands on them.
+    for (const painting of this.paintings) painting.draw(p);
     this.diary?.draw(p);
     for (const turret of this.turrets) turret.draw(p);
     if (this.boss?.def.ground) this.boss.draw(p);
     for (const eye of this.eyes) eye.draw(p);
   }
 
-  // Everything in the air, with explosions over it all.
+  // Everything in the air, the blimps lowest and explosions over it all.
   private drawSky(): void {
     const { p } = this;
 
+    for (const blimp of this.blimps) blimp.draw(p);
     for (const enemy of this.enemies) enemy.draw(p);
     this.police?.draw(p);
     if (this.boss && !this.boss.def.ground) this.boss.draw(p);
@@ -642,8 +661,8 @@ export class GameScene implements Scene {
   }
 }
 
-// The level's murals take its slogans in turn, each level starting one further along.
-function muralSlogan(index: number): string {
-  const { murals } = currentStrings().slogans;
-  return murals[(state.level - 1 + index) % murals.length];
+// A level's murals, ground slogans, and banners each take their slogans in turn, each level
+// starting one further along.
+function inTurn<T>(list: readonly T[], index: number): T {
+  return list[(state.level - 1 + index) % list.length];
 }

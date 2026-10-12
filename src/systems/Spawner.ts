@@ -4,6 +4,7 @@ import {
   DIARY_HALF_SIZE,
   ENEMY_STATS,
   EYE_STATS,
+  GROUND_SLOGAN_SIZE,
   GYRO_INTERVAL,
   MURAL_SIZE,
   PICKUP_RADIUS,
@@ -17,6 +18,7 @@ import {
   type EnemyKind,
   type EyeDef,
   type AnchorKind,
+  type BlimpDef,
   type LevelDef,
   type Vec,
   type WaveDef,
@@ -34,11 +36,13 @@ type Spawn = {
   turret: (pos: Vec) => void;
   pickup: (word: Word, pos: Vec) => void;
   diary: (pos: Vec) => void;
-  // `index` is the mural's place in the level's list, which picks its slogan.
+  // `index` is a mural's, ground slogan's, or blimp's place in its level list, which picks its slogan.
   mural: (pos: Vec, index: number) => void;
+  groundSlogan: (pos: Vec, index: number) => void;
+  blimp: (def: BlimpDef, index: number) => void;
 };
 
-// Eyes, turrets, and pickups come by scroll distance, not in waves; `place` gets the scroll they finally came at.
+// Eyes, turrets, pickups, and the city's slogans come by scroll distance, not in waves; `place` gets the scroll they finally came at.
 type Placement = { due: number; place: (scroll: number) => void };
 
 export class Spawner {
@@ -124,7 +128,8 @@ export class Spawner {
 
   // Everything that comes by distance rather than in waves, in the order it is due.
   private plan(): Placement[] {
-    const { eyes, turrets, pickups, diary, murals } = this.level;
+    const { eyes, turrets, pickups, diary, murals, groundSlogans, blimps } =
+      this.level;
 
     return [
       // Drones fly in above the top edge; towers stand on the ground.
@@ -159,6 +164,18 @@ export class Spawner {
           this.spawn.mural(pos, index),
         ),
       ),
+      ...groundSlogans.map((def, index) =>
+        this.onGround(
+          { ...def, on: "slogan" },
+          GROUND_SLOGAN_SIZE.h / 2,
+          (pos) => this.spawn.groundSlogan(pos, index),
+        ),
+      ),
+      // A blimp flies in from the side, so its data holds where.
+      ...blimps.map((def, index) => ({
+        due: def.at,
+        place: () => this.spawn.blimp(def, index),
+      })),
     ].sort((a, b) => a.due - b.due);
   }
 

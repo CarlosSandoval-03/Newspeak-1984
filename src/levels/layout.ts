@@ -7,6 +7,7 @@ import {
   CHUNK_HEIGHT,
   CRATER_CHANCE,
   FIXTURE_DENSITY,
+  GROUND_SLOGAN_SIZE,
   LAMP_CHANCE,
   LANDING_LEAD,
   LANDMARK_MARGIN,
@@ -198,6 +199,11 @@ export function landmarkPlaza({ x, y, w, h }: Rect): Rect {
   };
 }
 
+// An open plaza block. One under a runway or a ministry is kept bare, so nothing is painted on it.
+interface Plaza extends Rect {
+  bare: boolean;
+}
+
 // Cells [left, right) × [top, bottom).
 interface Block {
   left: number;
@@ -219,7 +225,7 @@ function blocks(
     Array<Terrain>(COLUMNS + 1).fill("asphalt"),
   );
   const buildings: Building[] = [];
-  const plazas: Vec[] = [];
+  const plazas: Plaza[] = [];
 
   for (const [top, bottom] of spans(streetCells.rows.slice(1), 1, ROWS))
     for (const [left, right] of spans(streetCells.columns, 0, COLUMNS)) {
@@ -234,7 +240,7 @@ function blocks(
 
       if (!open && rng() < BUILDING_CHANCE)
         buildings.push(building(rng, inset(block)));
-      else plazas.push(blockCenter(block));
+      else plazas.push({ ...blockRect(block), bare: open });
     }
 
   return { corners, buildings, plazas };
@@ -271,11 +277,6 @@ const blockRect = ({ left, top, right, bottom }: Block): Rect => ({
   h: (bottom - top) * CELL_SIZE,
 });
 
-const blockCenter = ({ left, top, right, bottom }: Block): Vec => ({
-  x: ((left + right) / 2) * CELL_SIZE,
-  y: ((top + bottom) / 2) * CELL_SIZE,
-});
-
 // Centered across the screen, with its eye at level distance `at`, in the chunk's pixels.
 function airfield(index: number, at: number, landing: boolean): Airfield {
   const { w, h } = PLATFORM_SIZE;
@@ -295,7 +296,7 @@ function inside(point: Vec, rect: Rect): boolean {
 // Centered on a street cell, an open plaza, a roof, or a skylight, so a sprite sits square on its ground.
 function anchors(
   streetCells: { rows: number[]; columns: number[] },
-  plazas: Vec[],
+  plazas: Plaza[],
   buildings: Building[],
   craters: Vec[],
 ): Anchor[] {
@@ -316,7 +317,15 @@ function anchors(
       if (!cratered(x, y)) found.push({ kind: "street", x, y });
     }
 
-  for (const plaza of plazas) found.push({ kind: "plaza", ...plaza });
+  for (const { x, y, w, h, bare } of plazas) {
+    const center = { x: x + w / 2, y: y + h / 2 };
+    found.push({ kind: "plaza", ...center });
+    // A slogan is painted inside the curb, a cell in from every side of the block.
+    const roomy =
+      w - 2 * CELL_SIZE >= GROUND_SLOGAN_SIZE.w &&
+      h - 2 * CELL_SIZE >= GROUND_SLOGAN_SIZE.h;
+    if (roomy && !bare) found.push({ kind: "slogan", ...center });
+  }
 
   for (const { x, y, w, h, skylight } of buildings) {
     found.push({ kind: "rooftop", x: x + w / 2, y: y + h / 2 });

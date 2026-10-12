@@ -131,6 +131,12 @@ export const PLATFORM_SIZE = { w: 112, h: 256 };
 // A rooftop mural: the Leader's portrait in a red frame over a slogan band of two lines, at half
 // the machine's usual size so 22 characters fit a roof.
 export const MURAL_SIZE = { w: 96, h: 100 };
+// A slogan painted on a plaza, one word a line in the machine's face at 40 px: two words of up to
+// 8 characters. It needs this much open plaza inside the curb.
+export const GROUND_SLOGAN_SIZE = { w: 128, h: 96 };
+// The propaganda blimp drifts across the screen, and slowly down it, as the plane flies on.
+export const BLIMP_SPEED = 1;
+export const BLIMP_DRIFT = 0.25;
 // A ministry's sprite, and the open plaza around it on every side.
 export const LANDMARK_SIZE = 128;
 export const LANDMARK_MARGIN = 8;
