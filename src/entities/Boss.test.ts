@@ -1,7 +1,7 @@
 import type p5 from "p5";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Assets } from "../assets";
-import { BOSS_STATS, DAMAGE_END } from "../config";
+import { BOSS_STATS, DAMAGE_END, INK, PAPER, RED } from "../config";
 import type { BossKind, Vec } from "../types";
 import { LevelBoss } from "./Boss";
 import type { BossDamage } from "./BossDamage";
@@ -169,6 +169,60 @@ describe("LevelBoss", () => {
     ]);
     boss.hit(1);
     expect(drawn(boss)[1]).toBe("boss-fortress-damaged-flash");
+  });
+
+  describe("the Eye's pupil", () => {
+    // The fills and the rects drawn after the hull, as [color, x, y, w].
+    const painted = (boss: LevelBoss) => {
+      const calls: unknown[][] = [];
+      let fill: unknown = null;
+      boss.draw({
+        CENTER: "center",
+        CORNER: "corner",
+        drawingContext: {},
+        imageMode: () => {},
+        image: () => {},
+        noStroke: () => {},
+        rectMode: () => {},
+        fill: (color: unknown) => (fill = color),
+        rect: (x: number, y: number, w: number) => calls.push([fill, x, y, w]),
+      } as unknown as p5);
+      return calls;
+    };
+    // The middle row of the disc drawn in this color: its center and its width.
+    const middle = (calls: unknown[][], color: string) => {
+      const rows = calls.filter(([fill]) => fill === color);
+      const [, x, y, w] = rows[(rows.length - 1) / 2] as number[];
+      return { x: x + (w - 1) / 2, y, w };
+    };
+
+    it("is patched over with iris, then drawn looking toward the pilot", () => {
+      const eye = make("eye");
+      eye.pos = { x: 240, y: 140 };
+      target = { x: 480, y: 140 };
+
+      const calls = painted(eye);
+
+      expect(middle(calls, RED)).toEqual({ x: 239, y: 140, w: 15 });
+      expect(middle(calls, INK)).toEqual({ x: 242, y: 140, w: 11 });
+      expect(calls.at(-1)).toEqual([PAPER, 244, 142, 1]);
+    });
+
+    it("looks down at a pilot below", () => {
+      const eye = make("eye");
+      eye.pos = { x: 240, y: 140 };
+      target = { x: 239, y: 540 };
+
+      expect(middle(painted(eye), INK)).toMatchObject({ x: 239, y: 143 });
+    });
+
+    it("is hidden by the flash, and only the Eye has one", () => {
+      const eye = make("eye");
+      eye.hit();
+
+      expect(painted(eye)).toEqual([]);
+      expect(painted(make("wing"))).toEqual([]);
+    });
   });
 
   it("fires the regime's red only for the Eye", () => {

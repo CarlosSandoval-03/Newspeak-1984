@@ -4,6 +4,9 @@ import {
   BOSS_STATS,
   DAMAGE_END,
   ENEMY_BULLET_SPEED,
+  INK,
+  PAPER,
+  RED,
 } from "../config";
 import { angleTo, fan, radians, velocity } from "../core/math";
 import type { BossDef, BossKind, Vec, VolleyDef } from "../types";
@@ -13,6 +16,14 @@ import { Destructible } from "./Destructible";
 import type { Arena } from "./Entity";
 
 type BossStats = Pick<BossDef, "halfSize" | "radius" | "hp" | "score">;
+
+// The Eye's lens, from the sprite's center: its painted pupil is covered with iris, and a pupil
+// drawn over it looks toward the pilot, as far as the iris leaves room for.
+const LENS = { x: -1, y: 0 };
+const IRIS_PATCH_RADIUS = 7;
+const PUPIL_RADIUS = 5;
+const PUPIL_TRAVEL = 3;
+const GLINT = { x: 2, y: 2 };
 
 // Shared by the Thought Police and every level boss: a score, a clock, and an hp bar to show.
 export abstract class Boss extends Destructible {
@@ -83,6 +94,32 @@ export class LevelBoss extends Boss {
       p.imageMode(p.CENTER);
       p.image(sprite, Math.round(this.pos.x), Math.round(this.pos.y));
     } else this.drawAircraft(p, sprite, images[`${name}-shadow`]);
+
+    // The flash whitens the whole hull, lens included.
+    if (this.kind === "eye" && this.flash === 0) this.drawPupil(p);
+  }
+
+  // The painted pupil is patched over with iris, then the pupil is drawn shifted toward the pilot,
+  // with its glint.
+  private drawPupil(p: p5): void {
+    const lens = {
+      x: Math.round(this.pos.x) + LENS.x,
+      y: Math.round(this.pos.y) + LENS.y,
+    };
+    const look = velocity(angleTo(lens, this.arena.target()), PUPIL_TRAVEL);
+    const pupil = {
+      x: lens.x + Math.round(look.x),
+      y: lens.y + Math.round(look.y),
+    };
+
+    p.noStroke();
+    p.rectMode(p.CORNER);
+    p.fill(RED);
+    drawPixelDisc(p, lens, IRIS_PATCH_RADIUS);
+    p.fill(INK);
+    drawPixelDisc(p, pupil, PUPIL_RADIUS);
+    p.fill(PAPER);
+    p.rect(pupil.x + GLINT.x, pupil.y + GLINT.y, 1, 1);
   }
 
   private sway(): void {
@@ -111,5 +148,14 @@ export class LevelBoss extends Boss {
       this.arena.fire(
         new Bullet(owner, this.pos, velocity(angle, ENEMY_BULLET_SPEED)),
       );
+  }
+}
+
+// A filled circle in whole pixels, a row at a time: canvas circles blur their edges, and the
+// sprite under it is crisp pixel art.
+function drawPixelDisc(p: p5, center: Vec, radius: number): void {
+  for (let dy = -radius; dy <= radius; dy++) {
+    const half = Math.floor(Math.sqrt(radius * radius - dy * dy));
+    p.rect(center.x - half, center.y + dy, half * 2 + 1, 1);
   }
 }

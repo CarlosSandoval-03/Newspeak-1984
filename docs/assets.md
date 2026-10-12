@@ -132,7 +132,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `enemy-gyro.png` | **Rotor**: two crossed `#7a7a7a` lines, ~40 px, rotating over the hub (4 px behind the center), drawn after the body. The body and its shadow turn with the gyro's heading. | Rotor at 60% alpha. | 2 |
 | `eye-tower.png` | **Vision cone** (`arc(..., PIE)`) from the lens, drawn before the tower; grey idle, red detecting. | — | 2 |
 | `thought-police.png`, `boss-*.png` | Hp bar and `-flash` on hit. | Blinking outline on weak points; pulsing red lights. | 2, 4 |
-| `boss-eye.png` | **Pupil**: a `#1a1a1a` circle over the lens, shifted toward the player. | Pupil narrows as hp drops. | 4 |
+| `boss-eye.png` | **Pupil**: the painted pupil is patched with `#b3261e`, then a `#1a1a1a` disc with a `#e8e4d8` glint is drawn over the lens in whole pixels, shifted up to 3 px toward the player; hidden during the hit flash. | Pupil narrows as hp drops. | 4 |
 | `boss-landship.png` | — (scrolls with the ground). | Muzzle flash on the main cannon. | 4 |
 | `diary.png` | ~60% alpha. | One-pixel glint every few seconds. | 3 |
 | `enemy-fighter.png` (camo) | 12% alpha, shadow included, unless TRUTH is active. | — | 3 |
