@@ -36,7 +36,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | Pause | Machine | Over the pause telescreen. | — | `pause` | `THE TELESCREEN REMAINS ON` |
 | Ministry | Paperwork | After each boss. | One correction per non-zero stat; the kills line follows the Ministry's verdict and counts downed Thought Police as enemy aircraft, and the next line denies any officer was lost. Once the real score is down the memory hole, `NEVER EXISTED` is typed in its place. A second page shows the honor roll being tampered with, when the Ministry touched any entry. | `ministry` | `Surveillance towers lost: 3, corrected to 0. No towers were lost.` |
 | Stamps | Machine, red | Ministry, game over. | — | `ministry.stamps`, `gameOver.stamp` | `CORRECTED`, `VAPORIZED` |
-| Honor roll | Machine | Menu, Ministry, obedient ending. | Completed runs only; at every Ministry visit, past entries are altered or become unpersons. An empty archive says so. | `honorRoll` | `[UNPERSON]` |
+| Honor roll | Machine | Menu, Ministry, obedient ending. | Every run once over, a vaporized one as an unperson; at every Ministry visit, past entries are altered or become unpersons. An empty archive says so. | `honorRoll` | `[UNPERSON]` |
 | Game over | Machine | Over the squadron photo. | — | `gameOver` | `PILOT 6079 NEVER EXISTED.` |
 | Endings | Paperwork (obedient), human (rebel) | After level 5, a page at a time. | Obedient: the Party's message with the official score, then the honor roll. Rebel: the truth beside the record (with a note when the Ministry filed downed officers as Eurasian aircraft), plus the full diary pages, each on its own leather page. | `endings`, `diary.pages[].page` | `Pilot 6079 did not land.` |
 

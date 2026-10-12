@@ -64,7 +64,7 @@ The HUD shows what the Party wants believed. Each level adds a lie: (1) the tick
 
 ## Ministry of Truth: the rewritten score
 
-After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it, and downed Thought Police most of all. Yet the Ministry files those police as enemy aircraft among the kills, and records that no officer was ever lost: the record credits what the verdict punishes. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Only completed runs are recorded; a vaporized pilot leaves no entry. The real score appears only in the rebel ending.
+After each level the real score is crossed out and an "official" one typed in, scaled by obedience: kills raise it; destroyed eyes, time observed, and diaries lower it, and downed Thought Police most of all. Yet the Ministry files those police as enemy aircraft among the kills, and records that no officer was ever lost: the record credits what the verdict punishes. A list of bureaucratic "corrections" justifies the changes. The Ministry then gives its verdict on the pilot: a hero's kills are rounded up, a pilot under review shares them with the squadron, and a suspect's are erased. The verdict, not what really happened, also sets the next briefing's tone and the suspicion the next level starts with: a hero's file is closed, a suspect's stays open. At every visit, past high scores are quietly altered or replaced with `[UNPERSON]`. Every run is recorded once it is over; a vaporized pilot is entered as an `[UNPERSON]`, the number kept and the name erased. The real score appears only in the rebel ending.
 
 ```mermaid
 flowchart LR
@@ -114,7 +114,7 @@ flowchart TD
     takeoff --> game["Game: level N"]
     game -->|"P or Escape"| pause["Pause"]
     pause --> game
-    game -->|"last life lost"| vaporized["VAPORIZED<br/>the run leaves no record"]
+    game -->|"last life lost"| vaporized["VAPORIZED<br/>the run kept as an unperson"]
     vaporized -->|"Enter"| menu
     game -->|"boss destroyed, levels 1 to 4"| landing["Landing on a platform"]
     landing --> ministry["Ministry of Truth<br/>score rewritten, verdict given"]

@@ -34,9 +34,10 @@ export function readHonorRoll(): HonorRollEntry[] {
   return saved === null ? [] : parse(saved);
 }
 
-// Only a finished run is entered, scored as the Ministry recorded it.
-export function enterHonorRoll(pilotId: string, score: number): void {
-  write(ranked([...readHonorRoll(), { pilotId, score, unperson: false }]));
+// Every run is entered once it is over: a finished one under its pilot, a vaporized one as an
+// unperson whose number the Party keeps.
+export function enterHonorRoll(entry: HonorRollEntry): void {
+  write(ranked([...readHonorRoll(), entry]));
 }
 
 // At every Ministry visit; saved ranked, so the next visit finds the archive already reordered.

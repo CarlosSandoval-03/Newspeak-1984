@@ -1,6 +1,7 @@
 import { WORD_REMOVAL_ORDER } from "../config";
 import { state } from "../state";
 import type { AlertLevel, Word } from "../types";
+import { standingScore } from "./Ministry";
 
 // The clocks of the timed words, which live on the pilot and in Newspeak, not in the game state.
 export interface WordClocks {
@@ -34,9 +35,8 @@ export class Propaganda {
     return state.realLives;
   }
 
-  // The Ministry's record so far, plus what this level has earned until it is judged.
   displayedScore(): number {
-    return state.officialScore + state.realScore - state.levelStartScore;
+    return standingScore();
   }
 
   displayedSuspicion(): number {

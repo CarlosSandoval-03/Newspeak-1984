@@ -14,6 +14,8 @@ import type { Scene } from "../core/Scene";
 import type { SceneManager } from "../core/SceneManager";
 import { t } from "../i18n";
 import { state } from "../state";
+import { enterHonorRoll } from "../systems/HonorRoll";
+import { standingScore } from "../systems/Ministry";
 import { drawStamp } from "../ui/effects";
 import { MenuScene } from "./MenuScene";
 
@@ -32,7 +34,8 @@ const DOT_SIZE = 4;
 const STAMP_AT = SIGNAL_OFF_FRAMES + STAMP_DELAY;
 const TEXT_AT = STAMP_AT + GAME_OVER_TEXT_DELAY;
 
-// The run leaves no record here: a vaporized pilot never existed.
+// A vaporized pilot never existed: the run goes on the honor roll as an unperson, the Party keeping
+// the number and erasing the name.
 export class GameOverScene implements Scene {
   private readonly p: p5;
   private readonly manager: SceneManager;
@@ -43,6 +46,11 @@ export class GameOverScene implements Scene {
     this.p = p;
     this.manager = manager;
     this.lastFrame = lastFrame;
+    enterHonorRoll({
+      pilotId: state.pilotId,
+      score: standingScore(),
+      unperson: true,
+    });
   }
 
   private get textShown(): boolean {

@@ -50,7 +50,7 @@ flowchart LR
     lands --> obedient["Obedient ending<br/>official score, the Party's message,<br/>the corrected honor roll"]
     pages -->|"3 or more"| leaves["Never lands:<br/>the official record stops at level 4"]
     leaves --> rebel["Rebel ending<br/>real and official score side by side,<br/>the real record, the pages read, no red"]
-    run -.->|"last life lost"| vaporized["VAPORIZED<br/>no ending, no record"]
+    run -.->|"last life lost"| vaporized["VAPORIZED<br/>no ending, kept as an unperson"]
 ```
 
 Every page is optional and costs +25 suspicion and a worse verdict, so the rebel ending is earned by taking risks, not by skill alone.

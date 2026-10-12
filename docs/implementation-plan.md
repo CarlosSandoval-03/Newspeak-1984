@@ -150,7 +150,7 @@ Create every file from the structure in [technical.md › Project structure](tec
 **Game over**
 
 - **Decision:** a scene of its own, `GameOverScene`, since VAPORIZED is not an ending. When the last life is lost, the game keeps running for `GAME_OVER_DELAY` frames (2 s) without the player: the crash plays out and the world flies on. Then the telescreen cuts the broadcast over `SIGNAL_OFF_FRAMES`: the game's last frame collapses into a brightening line, the line shrinks to a dot, and the dot fades. `vaporized.png` fades in from ink over `PHOTO_FADE_FRAMES`; `STAMP_DELAY` frames after it starts the red `VAPORIZED` stamp lands on the erased pilot, and `GAME_OVER_TEXT_DELAY` frames later `gameOver.line` and `PRESS ENTER` appear. Enter returns to the Menu, but only once it has been offered, so a key mashed during the crash can't skip the screen.
-- The run is not recorded: only completed runs reach the honor roll (step 4). The vaporized pilot leaves no trace, like the diarist.
+- The run goes on the honor roll (step 4) as an `[UNPERSON]` with the score the HUD showed: the Party keeps the number and erases the pilot, like the diarist.
 
 **HUD**
 
@@ -526,8 +526,8 @@ officialLevelScore = round(realLevelScore * obedience)
 
 **Honor roll** (`localStorage`, with every access wrapped in `try/catch`)
 
-- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, unperson }`, top 10, storing **official** scores only. Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
-- **Decision:** only completed runs are recorded. The EndingScene, either variant, saves one entry with the run's pilot ID and official total. A vaporized pilot leaves no record.
+- Key: `newspeak1984.scores`. Value: a JSON array of `{ pilotId, score, unperson }`, top 10, storing only scores the regime showed, never the real ones: official totals, and for a vaporized run the HUD's last score. Store data, not text: the row is rendered with `t('honorRoll.pilot')` or `t('honorRoll.unperson')`, so the table follows the current language.
+- **Decision:** every run is recorded once it is over, one entry per run, so the archive fills before anyone finishes a run. The EndingScene, either variant, saves the run's pilot ID and official total. The GameOverScene saves a vaporized run as an `[UNPERSON]` with the score the HUD showed (the official record plus the level's unjudged earnings): the Party keeps the number and erases the name. Tampering leaves an unperson as it is.
 - **Decision:** the stored entries are tampered with at every MinistryScene, so the player watches the archive change during the run:
   - Each one has a `SCORE_ALTER_CHANCE` chance of its score being multiplied by a random factor.
   - Each one has a `SCORE_ERASE_CHANCE` chance of being replaced with `[UNPERSON]` and a score of 0.
@@ -562,7 +562,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - [x] Boss damage appears region by region as hp drops; at `DAMAGE_END` the boss matches its `-damaged` sprite.
 - [x] Official score = real score × obedience, with the factor clamped to [0.1, 2.0]. Check this by hand for one level.
 - [x] The MinistryScene shows the crossed-out real score, the typed official score, and the correction lines. The verdict sets the kills correction, the stamp, the next briefing's tone, and the next level's starting suspicion.
-- [x] Only completed runs reach the honor roll. Entries persist across reloads, change at every Ministry visit, and the game still runs with storage blocked (test it in a private window or with an exception thrown in DevTools).
+- [x] Every run reaches the honor roll once it is over, a vaporized one as an unperson. Entries persist across reloads, change at every Ministry visit, and the game still runs with storage blocked (test it in a private window or with an exception thrown in DevTools).
 - [x] Every level starts with a takeoff and ends with a landing; the shadow shows the height, and the player has no control during either.
 - [x] After the Eye, an obedient pilot lands and sees the Ministry; a rebel climbs off the screen and goes straight to the rebel ending.
 - [x] Both endings can be reached.
@@ -667,7 +667,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 2 | 480 × 640 canvas, shown at the largest integer scale that fits the window | 1 | Confirmed |
 | 3 | Plain `Vec` type instead of `p5.Vector` | 1 | Confirmed |
 | 4 | The control scheme in [gameplay.md › Controls](gameplay.md#controls) | 1 | Confirmed |
-| 5 | Game over: the `VAPORIZED` stamp, then `Enter` returns to the Menu; the run leaves no record | 1 | Confirmed |
+| 5 | Game over: the `VAPORIZED` stamp, then `Enter` returns to the Menu; the run goes on the honor roll as an `[UNPERSON]` | 1 | Confirmed |
 | 6 | Thought Police: suspicion frozen while they are on screen; killed or outlasted, it resets to 50; never once the city stops for the boss; `AlertLevel` 3 | 2 | Confirmed |
 | 7 | Eye vision ignores line of sight | 2 | Confirmed |
 | 8 | TRUTH is an active, timed ability | 3 | Confirmed |
@@ -689,7 +689,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 24 | The Menu is a vertical list; Up/Down select, Enter or Shoot activates; Shoot confirms only in the Menu | 1 | Confirmed |
 | 25 | Between levels the Ministry rewrites suspicion from its verdict (0, ~20, or ~40), never into pursuit | 4 | Confirmed |
 | 26 | One verdict per level, from obedience, sets the kills correction, the stamp, the next briefing's tone, and the starting suspicion | 4 | Confirmed |
-| 27 | Only completed runs reach the honor roll, one entry per run | 4 | Confirmed |
+| 27 | Every run reaches the honor roll once over, one entry per run: a vaporized one as an `[UNPERSON]` that keeps its score | 4 | Confirmed |
 | 28 | The honor roll is tampered with at every Ministry visit, not only when a score is saved | 4 | Confirmed |
 | 29 | Terrain is generated by rules from a per-level recipe (streets, blocks, river, railway, landmark); ground elements stand on anchors it generates | 1 | Confirmed |
 | 30 | Word upgrades last the whole run and survive removal; REMEMBER's level is the bombs per level | 3 | Confirmed |

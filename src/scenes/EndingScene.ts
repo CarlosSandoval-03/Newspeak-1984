@@ -58,8 +58,8 @@ interface EndingPage {
   honorRoll: boolean;
 }
 
-// The run's last screens, typed a page at a time. Reaching them completes the run, the only kind
-// the honor roll records.
+// The run's last screens, typed a page at a time. Reaching them completes the run, which the honor
+// roll records under its pilot.
 export class EndingScene implements Scene {
   private readonly p: p5;
   private readonly manager: SceneManager;
@@ -71,7 +71,11 @@ export class EndingScene implements Scene {
   constructor(p: p5, manager: SceneManager, ending: Ending) {
     this.p = p;
     this.manager = manager;
-    enterHonorRoll(state.pilotId, state.officialScore);
+    enterHonorRoll({
+      pilotId: state.pilotId,
+      score: state.officialScore,
+      unperson: false,
+    });
     this.honorRoll = readHonorRoll();
     this.pages = ending === "obedient" ? obedientPages() : rebelPages();
     this.typing = typewriterFor(this.pages[0]);

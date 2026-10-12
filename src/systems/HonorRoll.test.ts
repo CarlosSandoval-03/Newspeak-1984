@@ -47,7 +47,7 @@ describe("the honor roll in storage", () => {
 
   it("keeps only the best runs, highest first, as data", () => {
     for (let i = 0; i <= HONOR_ROLL_SIZE; i++)
-      enterHonorRoll(String(i).padStart(4, "0"), i * 100);
+      enterHonorRoll(pilot(String(i).padStart(4, "0"), i * 100));
 
     const roll = readHonorRoll();
     expect(roll).toHaveLength(HONOR_ROLL_SIZE);
@@ -68,8 +68,8 @@ describe("the honor roll in storage", () => {
   });
 
   it("is tampered with as it stood, row for row, and saved reordered", () => {
-    enterHonorRoll("0001", 2000);
-    enterHonorRoll("0002", 1000);
+    enterHonorRoll(pilot("0001", 2000));
+    enterHonorRoll(pilot("0002", 1000));
 
     // The first is erased; the second is altered to the top of its range.
     const { before, after } = tamperHonorRoll(draws(0, 1, 0, 1));
@@ -94,7 +94,7 @@ describe("the honor roll without storage", () => {
     };
     vi.stubGlobal("localStorage", { getItem: blocked, setItem: blocked });
 
-    expect(() => enterHonorRoll("1984", 4210)).not.toThrow();
+    expect(() => enterHonorRoll(pilot("1984", 4210))).not.toThrow();
     expect(readHonorRoll()).toContainEqual(pilot("1984", 4210));
   });
 });

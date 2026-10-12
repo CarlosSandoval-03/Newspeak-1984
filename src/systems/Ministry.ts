@@ -67,6 +67,11 @@ export function correctedKills(kills: number, verdict: Verdict): number {
   return 0;
 }
 
+// The official record so far, plus what the current level has earned until it is judged.
+export function standingScore(): number {
+  return state.officialScore + state.realScore - state.levelStartScore;
+}
+
 // The regime can't admit losing its police, so it files them as enemy aircraft.
 export function reportedKills({ kills, policeDestroyed }: Stats): number {
   return kills + policeDestroyed;

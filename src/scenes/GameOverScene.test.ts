@@ -9,6 +9,7 @@ import {
 import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { resetGame, state } from "../state";
+import { readHonorRoll } from "../systems/HonorRoll";
 import { GameOverScene } from "./GameOverScene";
 import { MenuScene } from "./MenuScene";
 
@@ -69,6 +70,27 @@ describe("GameOverScene", () => {
     );
     scene = new GameOverScene(p, manager, lastFrame);
     manager.change(scene);
+  });
+
+  it("enters the run on the honor roll as an unperson, with the score the HUD showed", () => {
+    const saved = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => saved.get(key) ?? null,
+      setItem: (key: string, value: string) => saved.set(key, value),
+    });
+    Object.assign(state, {
+      pilotId: "6079",
+      officialScore: 3000,
+      levelStartScore: 2500,
+      realScore: 2500 + 700,
+    });
+
+    new GameOverScene(p, manager, lastFrame);
+
+    expect(readHonorRoll()).toEqual([
+      { pilotId: "6079", score: 3700, unperson: true },
+    ]);
+    vi.unstubAllGlobals();
   });
 
   it("switches the game's last frame off before the photo appears", () => {
