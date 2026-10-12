@@ -145,7 +145,7 @@ export const es: Strings = {
       ["NADIE TE VIGILA", "TODOS TE VIGILAN"],
       ["CREE EN TUS OJOS", "CREE EN EL PARTIDO"],
     ],
-    telescreens: ["ESPERE", "EL LÍDER LE OBSERVA", "PERMANEZCA SENTADO"],
+    telescreens: ["ESPERE", "EL LÍDER LE\nOBSERVA", "PERMANEZCA\nSENTADO"],
   },
 
   pause: {

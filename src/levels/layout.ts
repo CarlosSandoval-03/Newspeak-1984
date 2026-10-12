@@ -17,6 +17,7 @@ import {
   MURAL_SIZE,
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
+  TELESCREEN_SIZE,
 } from "../config";
 import type { AnchorKind, LevelDef, Ministry, TerrainDef, Vec } from "../types";
 
@@ -327,13 +328,16 @@ function anchors(
     if (roomy && !bare) found.push({ kind: "slogan", ...center });
   }
 
-  for (const { x, y, w, h, skylight } of buildings) {
-    found.push({ kind: "rooftop", x: x + w / 2, y: y + h / 2 });
-    // A mural covers the roof inside its parapet, so it needs the room and no skylight under it.
-    const roomy =
-      w - 2 * PARAPET >= MURAL_SIZE.w && h - 2 * PARAPET >= MURAL_SIZE.h;
-    if (roomy && !skylight)
-      found.push({ kind: "mural", x: x + w / 2, y: y + h / 2 });
+  for (const roof of buildings) {
+    const { x, y, w, h, skylight } = roof;
+    const center = { x: x + w / 2, y: y + h / 2 };
+    found.push({ kind: "rooftop", ...center });
+    // A mural or a telescreen covers the roof inside its parapet, so it needs the room and no
+    // skylight under it.
+    if (!skylight && roofFits(roof, MURAL_SIZE))
+      found.push({ kind: "mural", ...center });
+    if (!skylight && roofFits(roof, TELESCREEN_SIZE))
+      found.push({ kind: "telescreen", ...center });
     if (skylight)
       found.push({
         kind: "skylight",
@@ -342,6 +346,10 @@ function anchors(
       });
   }
   return found;
+}
+
+function roofFits(roof: Rect, size: { w: number; h: number }): boolean {
+  return roof.w - 2 * PARAPET >= size.w && roof.h - 2 * PARAPET >= size.h;
 }
 
 const layouts = new WeakMap<City, Map<number, ChunkLayout>>();

@@ -36,6 +36,7 @@ import { Eye } from "../entities/Eye";
 import { GroundSlogan } from "../entities/GroundSlogan";
 import { Mural } from "../entities/Mural";
 import { Pickup } from "../entities/Pickup";
+import { Telescreen } from "../entities/Telescreen";
 import { Player } from "../entities/Player";
 import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
@@ -90,8 +91,8 @@ export class GameScene implements Scene {
   private explosions: Explosion[] = [];
   private pickups: Pickup[] = [];
   private diary: Diary | null = null;
-  // Painted on the city: murals on its roofs, slogans on its plazas.
-  private paintings: (Mural | GroundSlogan)[] = [];
+  // On the city for the sky to read: murals and telescreens on its roofs, slogans on its plazas.
+  private paintings: (Mural | Telescreen | GroundSlogan)[] = [];
   private blimps: Blimp[] = [];
   private gameOverIn = 0;
   private paused = false;
@@ -206,7 +207,7 @@ export class GameScene implements Scene {
   }
 
   private createSpawner(assets: Assets): Spawner {
-    const { murals, ground, banners } = currentStrings().slogans;
+    const { murals, telescreens, ground, banners } = currentStrings().slogans;
 
     return new Spawner(this.level, {
       enemy: (kind, pos, { drops, camo }) => {
@@ -225,6 +226,15 @@ export class GameScene implements Scene {
       diary: (pos) => (this.diary = new Diary(pos, assets.image)),
       mural: (pos, index) =>
         this.paintings.push(new Mural(pos, inTurn(murals, index), assets)),
+      telescreen: (pos, index) =>
+        this.paintings.push(
+          new Telescreen(
+            pos,
+            inTurn(telescreens, index),
+            this.font,
+            this.arena.target,
+          ),
+        ),
       groundSlogan: (pos, index) =>
         this.paintings.push(
           new GroundSlogan(pos, inTurn(ground, index), this.font),
@@ -615,7 +625,7 @@ export class GameScene implements Scene {
     const { p } = this;
 
     this.background.draw(this.flight.scroll);
-    // Painted on the roofs and plazas, under anything that stands on them.
+    // On the roofs and plazas, under anything that stands on them.
     for (const painting of this.paintings) painting.draw(p);
     this.diary?.draw(p);
     for (const turret of this.turrets) turret.draw(p);
@@ -661,7 +671,7 @@ export class GameScene implements Scene {
   }
 }
 
-// A level's murals, ground slogans, and banners each take their slogans in turn, each level
+// A level's murals, telescreens, ground slogans, and banners each take their slogans in turn, each level
 // starting one further along.
 function inTurn<T>(list: readonly T[], index: number): T {
   return list[(state.level - 1 + index) % list.length];

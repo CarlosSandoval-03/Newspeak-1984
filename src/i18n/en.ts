@@ -148,7 +148,12 @@ export const en = {
       ["NO ONE IS WATCHING", "EVERYONE IS WATCHING"],
       ["TRUST YOUR EYES", "TRUST THE PARTY"],
     ],
-    telescreens: ["STAND BY", "THE LEADER IS WATCHING", "REMAIN IN YOUR SEAT"],
+    // On a roof's telescreen: two lines of 12 characters at most.
+    telescreens: [
+      "STAND BY",
+      "THE LEADER\nIS WATCHING",
+      "REMAIN IN\nYOUR SEAT",
+    ],
   },
 
   pause: {

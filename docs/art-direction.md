@@ -44,6 +44,7 @@ Wall posters would be invisible from above, so the regime writes for the sky ([m
 1. **Rooftop murals:** the Leader's portrait in a red frame with a slogan band.
 2. **Ground slogans:** huge letters painted on plazas, like road markings.
 3. **Towed banners:** pulled across the screen by a propaganda blimp. They move, so they carry the slogans that flip and contradict each other.
+4. **Telescreens:** mounted on roofs, facing the sky, in red-lit frames. They show static, the regime's eye, which follows the plane, and a line, in turn.
 
 What they say: [text-and-language.md › Channels](text-and-language.md#channels).
 

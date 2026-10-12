@@ -68,10 +68,16 @@ export interface TerrainDef {
 }
 
 // Where a ground element can stand; later steps add bridge and railway. A `mural` is the middle of a
-// roof with no skylight and room for a whole mural; a `slogan`, of an open plaza with room for a
-// painted slogan.
+// roof with no skylight and room for a whole mural, a `telescreen` the same with room for a
+// telescreen; a `slogan`, of an open plaza with room for a painted slogan.
 export type AnchorKind =
-  "street" | "plaza" | "rooftop" | "skylight" | "mural" | "slogan";
+  | "street"
+  | "plaza"
+  | "rooftop"
+  | "skylight"
+  | "mural"
+  | "telescreen"
+  | "slogan";
 
 export type EyeType = "tower" | "drone";
 
@@ -148,6 +154,8 @@ export interface LevelDef {
   diary: { at: number };
   // The Leader's portrait painted on the roof nearest `at` with room for it.
   murals: { at: number; x?: number }[];
+  // Mounted on the roof nearest `at` with room for one.
+  telescreens: { at: number; x?: number }[];
   // Painted on the open plaza nearest `at` with room for it.
   groundSlogans: { at: number; x?: number }[];
   // Each crosses the sky once, towing a banner whose slogan the record rewrites halfway through.

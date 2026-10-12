@@ -9,6 +9,7 @@ import {
   MURAL_SIZE,
   PICKUP_RADIUS,
   REINFORCEMENT_GAP,
+  TELESCREEN_SIZE,
   TURRET_STATS,
 } from "../config";
 import { anchorNear } from "../levels/layout";
@@ -30,6 +31,7 @@ const level: LevelDef = {
   length: 100_000,
   boss: "fortress",
   murals: [{ at: 500 }, { at: 2000 }],
+  telescreens: [{ at: 1200 }],
   groundSlogans: [{ at: 700 }],
   blimps: [{ at: 350, y: 120, from: "right" }],
   waves: [
@@ -54,6 +56,7 @@ describe("Spawner", () => {
   let diaries: Vec[];
   let murals: { pos: Vec; index: number }[];
   let slogans: { pos: Vec; index: number }[];
+  let telescreens: { pos: Vec; index: number }[];
   let blimps: { def: BlimpDef; index: number }[];
   let spawner: Spawner;
 
@@ -65,6 +68,7 @@ describe("Spawner", () => {
     diaries = [];
     murals = [];
     slogans = [];
+    telescreens = [];
     blimps = [];
     spawner = new Spawner(level, {
       enemy: (kind, pos, { drops }) => spawned.push({ kind, pos, drops }),
@@ -73,6 +77,7 @@ describe("Spawner", () => {
       pickup: (word, pos) => pickups.push({ word, pos }),
       diary: (pos) => diaries.push(pos),
       mural: (pos, index) => murals.push({ pos, index }),
+      telescreen: (pos, index) => telescreens.push({ pos, index }),
       groundSlogan: (pos, index) => slogans.push({ pos, index }),
       blimp: (def, index) => blimps.push({ def, index }),
     });
@@ -86,6 +91,18 @@ describe("Spawner", () => {
     expect(murals).toEqual([]);
     spawner.update(due, ALERT.normal);
     expect(murals).toEqual([
+      { pos: { x: anchor.x, y: due - anchor.y }, index: 0 },
+    ]);
+  });
+
+  it("mounts each telescreen on the roof with room for it nearest its distance", () => {
+    const anchor = anchorNear(level, "telescreen", 1200);
+    const due = anchor.y - TELESCREEN_SIZE.h / 2;
+
+    spawner.update(due - 1, ALERT.normal);
+    expect(telescreens).toEqual([]);
+    spawner.update(due, ALERT.normal);
+    expect(telescreens).toEqual([
       { pos: { x: anchor.x, y: due - anchor.y }, index: 0 },
     ]);
   });
@@ -243,6 +260,7 @@ describe("Spawner", () => {
           pickup: () => {},
           diary: () => {},
           mural: () => {},
+          telescreen: () => {},
           groundSlogan: () => {},
           blimp: () => {},
         }).update(0, ALERT.thoughtPolice);
@@ -289,6 +307,7 @@ describe("Spawner", () => {
         pickup: () => {},
         diary: () => {},
         mural: () => {},
+        telescreen: () => {},
         groundSlogan: () => {},
         blimp: () => {},
       },

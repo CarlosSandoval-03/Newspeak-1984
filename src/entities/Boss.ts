@@ -8,12 +8,12 @@ import {
   PAPER,
   RED,
 } from "../config";
-import { angleTo, fan, radians, velocity } from "../core/math";
+import { angleTo, fan, lookToward, radians, velocity } from "../core/math";
 import type { BossDef, BossKind, Vec, VolleyDef } from "../types";
 import type { BossDamage } from "./BossDamage";
 import { Bullet } from "./Bullet";
 import { Destructible } from "./Destructible";
-import type { Arena } from "./Entity";
+import { type Arena, drawPixelDisc } from "./Entity";
 
 type BossStats = Pick<BossDef, "halfSize" | "radius" | "hp" | "score">;
 
@@ -106,11 +106,8 @@ export class LevelBoss extends Boss {
       x: Math.round(this.pos.x) + LENS.x,
       y: Math.round(this.pos.y) + LENS.y,
     };
-    const look = velocity(angleTo(lens, this.arena.target()), PUPIL_TRAVEL);
-    const pupil = {
-      x: lens.x + Math.round(look.x),
-      y: lens.y + Math.round(look.y),
-    };
+    const look = lookToward(lens, this.arena.target(), PUPIL_TRAVEL);
+    const pupil = { x: lens.x + look.x, y: lens.y + look.y };
 
     p.noStroke();
     p.rectMode(p.CORNER);
@@ -153,14 +150,5 @@ export class LevelBoss extends Boss {
       this.arena.fire(
         new Bullet(owner, this.pos, velocity(angle, ENEMY_BULLET_SPEED)),
       );
-  }
-}
-
-// A filled circle in whole pixels, a row at a time: canvas circles blur their edges, and the
-// sprite under it is crisp pixel art.
-function drawPixelDisc(p: p5, center: Vec, radius: number): void {
-  for (let dy = -radius; dy <= radius; dy++) {
-    const half = Math.floor(Math.sqrt(radius * radius - dy * dy));
-    p.rect(center.x - half, center.y + dy, half * 2 + 1, 1);
   }
 }

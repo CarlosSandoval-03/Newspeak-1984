@@ -57,9 +57,12 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
       expect(() => anchorNear(level, "skylight", level.diary.at)).not.toThrow();
     });
 
-    it("paints each mural and ground slogan on a spot of its own", () => {
+    it("puts each mural, telescreen, and ground slogan on a spot of its own", () => {
       const spots = [
         ...level.murals.map(({ at, x }) => anchorNear(level, "mural", at, x)),
+        ...level.telescreens.map(({ at, x }) =>
+          anchorNear(level, "telescreen", at, x),
+        ),
         ...level.groundSlogans.map(({ at, x }) =>
           anchorNear(level, "slogan", at, x),
         ),

@@ -134,6 +134,11 @@ export const MURAL_SIZE = { w: 96, h: 100 };
 // A slogan painted on a plaza, one word a line in the machine's face at 40 px: two words of up to
 // 8 characters. It needs this much open plaza inside the curb.
 export const GROUND_SLOGAN_SIZE = { w: 128, h: 96 };
+// A telescreen mounted on a roof, facing the sky: a red-lit frame around a screen that cycles
+// through static, the watching eye, static, and its slogan.
+export const TELESCREEN_SIZE = { w: 128, h: 72 };
+export const TELESCREEN_STATIC_FRAMES = 20;
+export const TELESCREEN_SHOW_FRAMES = 150;
 // The propaganda blimp drifts across the screen, and slowly down it, as the plane flies on.
 export const BLIMP_SPEED = 1;
 export const BLIMP_DRIFT = 0.25;

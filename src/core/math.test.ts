@@ -3,6 +3,7 @@ import {
   angleTo,
   clamp,
   fan,
+  lookToward,
   radians,
   smoothstep,
   velocity,
@@ -38,6 +39,17 @@ describe("math", () => {
 
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(3);
+  });
+
+  it("shifts a look toward a point by whole pixels, never past its reach", () => {
+    expect(lookToward({ x: 0, y: 0 }, { x: 100, y: 0 }, 3)).toEqual({
+      x: 3,
+      y: 0,
+    });
+    expect(lookToward({ x: 0, y: 0 }, { x: -50, y: -50 }, 3)).toEqual({
+      x: -2,
+      y: -2,
+    });
   });
 
   it("spreads a fan evenly around its center", () => {

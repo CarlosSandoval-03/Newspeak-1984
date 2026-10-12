@@ -9,6 +9,7 @@ import {
   MURAL_SIZE,
   PICKUP_RADIUS,
   REINFORCEMENT_GAP,
+  TELESCREEN_SIZE,
   TURRET_STATS,
 } from "../config";
 import { anchorNear } from "../levels/layout";
@@ -36,8 +37,9 @@ type Spawn = {
   turret: (pos: Vec) => void;
   pickup: (word: Word, pos: Vec) => void;
   diary: (pos: Vec) => void;
-  // `index` is a mural's, ground slogan's, or blimp's place in its level list, which picks its slogan.
+  // `index` is the element's place in its level list, which picks its slogan.
   mural: (pos: Vec, index: number) => void;
+  telescreen: (pos: Vec, index: number) => void;
   groundSlogan: (pos: Vec, index: number) => void;
   blimp: (def: BlimpDef, index: number) => void;
 };
@@ -128,8 +130,16 @@ export class Spawner {
 
   // Everything that comes by distance rather than in waves, in the order it is due.
   private plan(): Placement[] {
-    const { eyes, turrets, pickups, diary, murals, groundSlogans, blimps } =
-      this.level;
+    const {
+      eyes,
+      turrets,
+      pickups,
+      diary,
+      murals,
+      telescreens,
+      groundSlogans,
+      blimps,
+    } = this.level;
 
     return [
       // Drones fly in above the top edge; towers stand on the ground.
@@ -162,6 +172,13 @@ export class Spawner {
       ...murals.map((def, index) =>
         this.onGround({ ...def, on: "mural" }, MURAL_SIZE.h / 2, (pos) =>
           this.spawn.mural(pos, index),
+        ),
+      ),
+      ...telescreens.map((def, index) =>
+        this.onGround(
+          { ...def, on: "telescreen" },
+          TELESCREEN_SIZE.h / 2,
+          (pos) => this.spawn.telescreen(pos, index),
         ),
       ),
       ...groundSlogans.map((def, index) =>

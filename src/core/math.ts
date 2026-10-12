@@ -26,6 +26,12 @@ export function velocity(angle: number, speed: number): Vec {
   return { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed };
 }
 
+// How far, in whole pixels, a pupil at `from` shifts to look at `to`, up to `reach`.
+export function lookToward(from: Vec, to: Vec, reach: number): Vec {
+  const look = velocity(angleTo(from, to), reach);
+  return { x: Math.round(look.x), y: Math.round(look.y) };
+}
+
 // `count` angles spread evenly over `width` radians, centered on `center`; one alone points at it.
 export function fan(center: number, count: number, width: number): number[] {
   if (count === 1) return [center];

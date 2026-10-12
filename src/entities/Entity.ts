@@ -76,6 +76,15 @@ export abstract class Entity {
   }
 }
 
+// A filled circle in whole pixels, a row at a time: canvas circles blur their edges, and the
+// pixel art around it is crisp.
+export function drawPixelDisc(p: p5, center: Vec, radius: number): void {
+  for (let dy = -radius; dy <= radius; dy++) {
+    const half = Math.floor(Math.sqrt(radius * radius - dy * dy));
+    p.rect(center.x - half, center.y + dy, half * 2 + 1, 1);
+  }
+}
+
 function blit(
   p: p5,
   image: p5.Image | p5.Graphics,
