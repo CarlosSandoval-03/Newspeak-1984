@@ -127,22 +127,30 @@ describe("EndingScene", () => {
       );
     });
 
-    it("sets the run beside the Ministry's record, and notes the officers it filed as enemies", () => {
+    it("sets each row of the run over the Ministry's version, and notes the officers it filed as enemies", () => {
       const record = pages(open("rebel"))[1];
 
       for (const row of [
-        ["Score", "52000", "31000"],
-        ["Aircraft destroyed", "120", "90"],
-        ["Towers destroyed", "4", "0"],
-        ["Thought Police downed", "2", "0"],
-        ["Seconds observed", "30", "0"],
-        ["Diary pages read", "3", "0"],
+        ["Score", "52000", "Official: 31000"],
+        ["Aircraft destroyed", "120", "Official: 90"],
+        ["Towers destroyed", "4", "Official: No towers were lost."],
+        ["Thought Police downed", "2", "Official: No officer was lost."],
+        ["Seconds observed", "30", "Official: The pilot was never observed."],
+        ["Diary pages read", "3", "Official: No such document exists."],
       ])
         expect(record.join("|")).toContain(row.join("|"));
       expect(record.join(" ")).toContain("as a Eurasian aircraft.");
 
       state.runStats.policeDestroyed = 0;
       expect(pages(open("rebel"))[1].join(" ")).not.toContain("Eurasian");
+    });
+
+    it("denies the kills of a pilot the Ministry credited with none", () => {
+      state.runStats.officialKills = 0;
+
+      expect(pages(open("rebel"))[1].join("|")).toContain(
+        "Aircraft destroyed|120|Official: No sorties flown.",
+      );
     });
 
     it("gives every diary page read a page of its own, on leather, in order", () => {
@@ -167,18 +175,19 @@ describe("EndingScene", () => {
       expect(change).toHaveBeenCalledWith(expect.any(MenuScene));
     });
 
-    it("fits its labels before the numbers, and its pages on their leather, in every language", () => {
+    it("fits its labels before the numbers, the Ministry's versions inside the margin, and its pages on their leather, in every language", () => {
       // Courier Prime's advance is 0.6 of its size.
       const width = (text: string, size: number) => text.length * size * 0.6;
 
       for (const language of LANGUAGES) {
         setLanguage(language);
         const scene = open("rebel");
-        const labels = scene["pages"][1].lines.filter(
-          ({ x, y }) => x === 24 && y > 100,
-        );
-        for (const { text, size } of labels.slice(0, 7))
-          expect(width(text, size)).toBeLessThan(296 - 24);
+        const record = scene["pages"][1].lines.filter(({ y }) => y > 100);
+        const labels = record.filter(({ x }) => x === 24);
+        for (const { text, size } of labels.slice(0, 6))
+          expect(width(text, size)).toBeLessThan(384 - 24);
+        for (const { text, x, size } of record)
+          expect(x + width(text, size)).toBeLessThanOrEqual(480 - 24);
 
         for (const { lines } of scene["pages"].slice(2))
           expect(lines.at(-1)!.y).toBeLessThanOrEqual(24 + 568 - 8);

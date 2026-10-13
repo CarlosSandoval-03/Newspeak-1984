@@ -255,11 +255,6 @@ export const en = {
         "Past the last telescreen, the sky is pale and empty.",
         "This is what really happened.",
       ],
-      columns: {
-        item: "",
-        real: "Real",
-        official: "Official",
-      },
       rows: {
         score: "Score",
         kills: "Aircraft destroyed",
@@ -267,6 +262,15 @@ export const en = {
         policeDestroyed: "Thought Police downed",
         secondsSeen: "Seconds observed",
         diaries: "Diary pages read",
+      },
+      // Under each row: the Ministry's figure, or its denial where it admits none.
+      official: "Official: {value}",
+      denials: {
+        kills: "No sorties flown.",
+        eyesDestroyed: "No towers were lost.",
+        policeDestroyed: "No officer was lost.",
+        secondsSeen: "The pilot was never observed.",
+        diaries: "No such document exists.",
       },
       policeNote:
         "The Ministry filed every officer you shot down as a Eurasian aircraft.",

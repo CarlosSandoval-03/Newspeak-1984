@@ -579,11 +579,12 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 Already on `main` for `0.6.0`, from playing step 4:
 - The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with its standing score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
 - The ending's condition lives once, in `earnedEnding()`.
+- The rebel ending's record sets each figure over the Ministry's version of it, `Official: …`: its figure for the score and the kills, or its denial where it admits nothing (`No towers were lost.`, and `No sorties flown.` for a pilot credited with no kills). A column of zeros read as an empty table, not as a lie.
 - The debug tools ([debug.md](debug.md)): on the dev server with `?debug=true`, start any flow from the URL, steer the run (lives, boss, suspicion, words, diary pages, ending), see the hidden state in a panel, all in a storage sandbox that never touches the real honor roll.
 
 ### Files
 
-`systems/Propaganda.ts` (the real version), `ui/Ticker.ts`, `ui/effects.ts`, and updates to `ui/HUD.ts`, `levels/layout.ts`, `levels/Background.ts`, `levels/levels.ts`, and `config.ts`.
+`systems/Propaganda.ts` (the real version), `ui/Ticker.ts`, `ui/effects.ts`, `ui/pause.ts`, `entities/Mural.ts`, `entities/GroundSlogan.ts`, `entities/Blimp.ts`, `entities/Telescreen.ts`, and updates to `ui/HUD.ts`, `levels/layout.ts`, `levels/Background.ts`, `levels/levels.ts`, `systems/Spawner.ts`, `scenes/GameScene.ts`, and `config.ts`.
 
 ### Specification
 
@@ -596,6 +597,7 @@ displayedSuspicion(): number
 enemy: Enemy                              // whose war it is now
 displayedEnemy(written: Enemy): Enemy     // the enemy a ticker line names
 disguise(): Disguise | null               // a fighter's ally colors, or none
+displayedSlogan(pair: string[]): string   // a banner: the second of the pair once the record changes
 isLying(field: "ticker" | "score" | "lives"): boolean
 ```
 

@@ -242,11 +242,6 @@ export const es: Strings = {
         "Más allá de la última telepantalla, el cielo es pálido y está vacío.",
         "Esto es lo que pasó de verdad.",
       ],
-      columns: {
-        item: "",
-        real: "Real",
-        official: "Oficial",
-      },
       rows: {
         score: "Puntuación",
         kills: "Aviones derribados",
@@ -254,6 +249,14 @@ export const es: Strings = {
         policeDestroyed: "Policías derribados",
         secondsSeen: "Segundos observado",
         diaries: "Páginas del diario leídas",
+      },
+      official: "Oficial: {value}",
+      denials: {
+        kills: "Ninguna salida realizada.",
+        eyesDestroyed: "No se perdió ninguna torre.",
+        policeDestroyed: "No se perdió ningún agente.",
+        secondsSeen: "El piloto nunca fue observado.",
+        diaries: "Tal documento no existe.",
       },
       policeNote:
         "El Ministerio registró a cada agente que derribaste como un avión eurasiático.",

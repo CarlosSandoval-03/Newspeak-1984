@@ -40,12 +40,14 @@ const PARAGRAPH_GAP = 8;
 const SCORE_Y = 584;
 const NUMBER_X = 312;
 const HONOR_ROLL_Y = 356;
-// The record: the run beside what the Ministry made of it, in three columns.
+// The record: each row of the run as it happened, with what the Ministry made of it beneath.
 const TABLE_TITLE_Y = 64;
 const TABLE_Y = 120;
-const TABLE_ROW_STEP = 28;
-const COLUMN_X = [MARGIN, 296, 384];
-const NOTE_Y = 336;
+const ENTRY_STEP = 48;
+const REAL_X = 384;
+const OFFICIAL_INDENT = 16;
+const OFFICIAL_DROP = 20;
+const NOTE_Y = 424;
 // A diary page is shown on its own leather, like the line read in flight.
 const SHEET = { x: 12, y: 24, w: 456, h: 568 };
 const DIARY_TITLE_Y = 64;
@@ -232,31 +234,37 @@ function rebelPages(): EndingPage[] {
   ];
 }
 
-// The run as it happened beside the run as the Ministry recorded it, which stops before the last
-// level; the officers it filed as enemy aircraft are noted below.
+// The run as it happened, each row with the Ministry's version beneath it: its figures, which stop
+// before the last level, or its denial where it admits nothing. The officers it filed as enemy
+// aircraft are noted below.
 function record(): PageLine[] {
-  const { title, columns, rows, policeNote } = currentStrings().endings.rebel;
+  const { title, rows, official, denials, policeNote } =
+    currentStrings().endings.rebel;
   const { realScore, officialScore, runStats } = state;
-  const table = [
-    [columns.item, columns.real, columns.official],
+  const entries: [string, number, string | number][] = [
     [rows.score, realScore, officialScore],
-    [rows.kills, runStats.kills, runStats.officialKills],
-    [rows.eyesDestroyed, runStats.eyesDestroyed, 0],
-    [rows.policeDestroyed, runStats.policeDestroyed, 0],
-    [rows.secondsSeen, toSeconds(runStats.framesSeen), 0],
-    [rows.diaries, runStats.diaries, 0],
+    [rows.kills, runStats.kills, runStats.officialKills || denials.kills],
+    [rows.eyesDestroyed, runStats.eyesDestroyed, denials.eyesDestroyed],
+    [rows.policeDestroyed, runStats.policeDestroyed, denials.policeDestroyed],
+    [rows.secondsSeen, toSeconds(runStats.framesSeen), denials.secondsSeen],
+    [rows.diaries, runStats.diaries, denials.diaries],
   ];
 
   return [
     ...stack([title], { x: MARGIN, y: TABLE_TITLE_Y, size: TITLE_SIZE }),
-    ...table.flatMap((cells, row) =>
-      cells.map((cell, column) => ({
-        text: String(cell),
-        x: COLUMN_X[column],
-        y: TABLE_Y + row * TABLE_ROW_STEP,
-        size: PROSE_SIZE,
-      })),
-    ),
+    ...entries.flatMap(([item, real, recorded], i) => {
+      const y = TABLE_Y + i * ENTRY_STEP;
+      return [
+        { text: item, x: MARGIN, y, size: PROSE_SIZE },
+        { text: String(real), x: REAL_X, y, size: PROSE_SIZE },
+        {
+          text: format(official, { value: recorded }),
+          x: MARGIN + OFFICIAL_INDENT,
+          y: y + OFFICIAL_DROP,
+          size: PROSE_SIZE,
+        },
+      ];
+    }),
     ...(runStats.policeDestroyed > 0 ? paragraphs([policeNote], NOTE_Y) : []),
   ];
 }
