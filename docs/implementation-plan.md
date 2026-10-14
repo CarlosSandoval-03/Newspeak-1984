@@ -12,6 +12,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Done |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0`, `0.5.1`, `0.5.2` | Done |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
+| 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | Not started |
 | — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
 
 ---
@@ -574,7 +575,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** the HUD lies, and the screen itself shows the strain of being watched.
 
-**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. From level 2 the HUD's score is inflated by a factor drawn per level in [`SCORE_INFLATION_MIN`, `SCORE_INFLATION_MAX`], and shifts a pixel for a frame every `SCORE_TELL_PERIOD`; from level 3 an extra life shows for `FAKE_LIFE_FRAMES` at random intervals, and blinks out for a frame every `LIVES_TELL_PERIOD`; from level 4, `ALLIED_SHARE` of the fighters fly disguised as allies and still fire, each showing its own sprite for a frame every `ALLIED_TELL_PERIOD`, at its own moment. Each lie starts at its level in `LIE_FROM`. The screen shows the strain: permanent scanlines (one dark row every `SCANLINE_STEP`), a glitch that tears horizontal bands as often and as far as suspicion is high, and a red vignette whose base grows with suspicion (up to `VIGNETTE_BASE_MAX`) and beats like a pulse in pursuit, besides beating while the pilot is seen. `P` or `Escape` pauses: the stopped game dims under `pause-telescreen.png` at 2×, with `PAUSED`, the reminder that the telescreen remains on, and how to resume; suspicion creeps up meanwhile (`PAUSE_SUSPICION_RISE`), never past the alert threshold. Each level's ministry stands on its own plaza in the city (rule 6 of the layout): the Ministry of Truth, Plenty, and Love where the city stops for the boss, the Ministry of Peace halfway through level 3, and none in level 4's ruined prole district. Rooftop murals (`murals: [{ at }]` in the level data) paint the Leader's portrait on a red field over a slogan band, on the roof with room for one nearest `at`; a level's murals take its slogans in turn, each level starting one further along. Ground slogans (`groundSlogans: [{ at }]`) are painted one word a line on the open plaza with room for one nearest `at`. The propaganda blimp (`blimps: [{ at, y, from }]`) crosses the sky once, towing a banner trimmed in red; when the war changes sides its slogan swaps to its opposite and the banner goes blank for a frame, and TRUTH shows it as first written. Telescreens (`telescreens: [{ at }]`) stand on the roof with room for one nearest `at`: a red frame around a dark screen that switches on to static, then shows the regime's eye, its pupil turned toward the plane, and its slogan in two lines, in turn, each change passing through static. The debug panel shows what is lying. Levels 3 to 5 are still the level 2 stand-in, and every level the same stand-in city, until the content is written. **Step 5 is done** and released as `0.6.0`. Next: the content and balance toward `1.0.0`.
+**Progress:** `Propaganda` is real: it knows the enemy Oceania is at war with, which changes sides once a level, halfway through it (`ALLIANCE_FLIP_AT`), and `isLying("ticker")`. The ticker scrolls the level's news along a dark-red strip at the bottom; every line names the enemy of the moment, so when the war changes sides the lines already out are rewritten in place, the strip goes blank for `TELL_FLICKER_FRAMES` as the tell, and the flip line follows. TRUTH shows each line with the enemy it was written with. A downed Thought Police patrol is announced as an enemy raider. From level 2 the HUD's score is inflated by a factor drawn per level in [`SCORE_INFLATION_MIN`, `SCORE_INFLATION_MAX`], and shifts a pixel for a frame every `SCORE_TELL_PERIOD`; from level 3 an extra life shows for `FAKE_LIFE_FRAMES` at random intervals, and blinks out for a frame every `LIVES_TELL_PERIOD`; from level 4, `ALLIED_SHARE` of the fighters fly disguised as allies and still fire, each showing its own sprite for a frame every `ALLIED_TELL_PERIOD`, at its own moment. Each lie starts at its level in `LIE_FROM`. The screen shows the strain: permanent scanlines (one dark row every `SCANLINE_STEP`), a glitch that tears horizontal bands as often and as far as suspicion is high, and a red vignette whose base grows with suspicion (up to `VIGNETTE_BASE_MAX`) and beats like a pulse in pursuit, besides beating while the pilot is seen. `P` or `Escape` pauses: the stopped game dims under `pause-telescreen.png` at 2×, with `PAUSED`, the reminder that the telescreen remains on, and how to resume; suspicion creeps up meanwhile (`PAUSE_SUSPICION_RISE`), never past the alert threshold. Each level's ministry stands on its own plaza in the city (rule 6 of the layout): the Ministry of Truth, Plenty, and Love where the city stops for the boss, the Ministry of Peace halfway through level 3, and none in level 4's ruined prole district. Rooftop murals (`murals: [{ at }]` in the level data) paint the Leader's portrait on a red field over a slogan band, on the roof with room for one nearest `at`; a level's murals take its slogans in turn, each level starting one further along. Ground slogans (`groundSlogans: [{ at }]`) are painted one word a line on the open plaza with room for one nearest `at`. The propaganda blimp (`blimps: [{ at, y, from }]`) crosses the sky once, towing a banner trimmed in red; when the war changes sides its slogan swaps to its opposite and the banner goes blank for a frame, and TRUTH shows it as first written. Telescreens (`telescreens: [{ at }]`) stand on the roof with room for one nearest `at`: a red frame around a dark screen that switches on to static, then shows the regime's eye, its pupil turned toward the plane, and its slogan in two lines, in turn, each change passing through static. The debug panel shows what is lying. Levels 3 to 5 are still the level 2 stand-in, and every level the same stand-in city, until the content is written. **Step 5 is done** and released as `0.6.0`. Next: step 6.
 
 Already on `main` for `0.6.0`, from playing step 4:
 - The honor roll: a run is recorded once, when it ends, under its pilot if finished or as an `[UNPERSON]` with its standing score if lost; an abandoned run never is. The Ministry's honor roll page shows on every visit, with the run being flown at its place among the archive, unstored; an empty archive says every pilot is entered there in the end.
@@ -664,9 +665,61 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 ---
 
+## Step 6: The city's terrain (`0.7.0`)
+
+**Goal:** each level looks like its own place. The river splits level 2, the railway runs through level 3's rubble, and level 4 is ruins.
+
+### Files
+
+`levels/layout.ts` (rules 4 and 5, the `bridge` and `railway` anchors), `levels/Background.ts` (water from `river-tileset`, bridges and the railway baked into their chunks), `levels/levels.ts` (each level's seed and recipe), `scenes/GameScene.ts` (the land battleship on the railway), `types.ts`, `config.ts`, and their tests.
+
+### Specification
+
+**River (rule 4 of the layout).** `terrain.river: { at, bridges }`.
+
+- **The band:** `RIVER_ROWS` (3) cell rows of water across the full width, 96 px, the length of `bridge.png`. In corners, the two corner rows inside the band are water. The band's top and bottom cell rows are `river-tileset` transitions, so the water meets the asphalt along its stone embankment.
+- **The banks:** a horizontal street runs right outside the band on each side, so no block ever touches water. The Wang tilesets need that: a cell mixes asphalt with only one other terrain.
+- **Where:** the band is centered on the cell row nearest `at`, in the chunk that holds it. If the band and its two bank streets would cross that chunk's edge, they move inside it, so a river never spans two chunks. The chunk's other streets are drawn around the river as usual, with blocks at least `MIN_BLOCK_CELLS` tall.
+- **Bridges:** the `bridges` vertical streets nearest the middle of the screen continue over the river on `bridge.png`, centered on the street, its 96 px over the band. The other vertical streets end at the bank. A level that asks for more bridges than it has vertical streets is a mistake in its data, and its test fails.
+- **Anchors:** a `bridge` anchor at the middle of each bridge, where level data stands the AA guns that hold the crossings. No anchor lies on the water, and no crater either: a crater needs asphalt all around.
+
+**Railway (rule 5 of the layout).** `terrain.railway: { from, to }`, scroll distances.
+
+- **The corridor:** the vertical street nearest the middle of the screen widens into a two-cell corridor from `from` to `to`. It takes the column beside it on the side of the wider block, so the narrower block keeps its width. When both are `MIN_BLOCK_CELLS` wide, one is left a cell narrower, still wide enough for a roof.
+- **The track:** `railway.png` (48×32) tiles along the middle of the corridor, baked into each chunk it crosses. The rest of the corridor is asphalt.
+- **Anchors:** a `railway` anchor at the middle of the corridor on each cell row it spans. No `street` anchor lies on the corridor.
+- **The land battleship** rides the railway when its level has one, instead of the street nearest the middle. The railway must reach `length`, where the city stops for the boss.
+
+**Recipes.** Each level gets a seed of its own, chosen so its city holds what its data asks for (enough vertical streets for its bridges, roofs for its murals and telescreens, an open plaza for its ground slogan):
+
+| Level | Blocks | Features |
+| ----- | ------ | -------- |
+| 1 | Plaza, as now | Craters on open asphalt |
+| 2 | Plaza | The river halfway through, with two bridges |
+| 3 | Rubble and plaza | The railway from halfway to `length` |
+| 4 | Mostly rubble | The most ruined: rubble and craters, no ministry |
+| 5 | Plaza | The Ministry of Love at the end |
+
+The stand-in level data (murals, telescreens, slogans, towers on plazas) moves to the anchors the new cities have; the levels' test checks every anchor it asks for exists.
+
+- **Decision:** the river is three rows of water, the length of `bridge.png`, between two bank streets, and never crosses a chunk's edge. Its bridges go on the vertical streets nearest the middle, where the player flies.
+- **Decision:** the railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it. The land battleship rides it.
+- **Decision:** the Ministry of Peace stays halfway through level 3, so the railway at the end runs clear of it.
+
+### Done when
+
+- [ ] Level 2 has a river across the screen, with its embankment, two bridges, and AA guns on them; chunks join seamlessly above and below it.
+- [ ] Level 3 has rubble and the railway, and the land battleship rides the railway.
+- [ ] Level 4 reads as ruins: rubble, craters, no ministry.
+- [ ] Each level looks distinct at a glance (`?debug=true&start=level:N`).
+- [ ] No anchor stands on water; no plaza or rubble touches water; the tests cover both.
+- [ ] `pnpm bench` stays within budget, `fast-scroll` included.
+
+---
+
 ## Toward `1.0.0`
 
-- Write the content for levels 1–5 in `levels.ts`: waves, eyes, turrets, pickups, diary, boss, and terrain recipe (rubble in levels 3–4, the river and bridges in level 2, the railway in level 3, a landmark in every level but 4; see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
+- Write the content for levels 1–5 in `levels.ts`, on the cities step 6 builds: each level's length, the density of the messages from the sky, waves, eyes, turrets, pickups, diary, and boss (see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
 - Balance the obedience weights, suspicion rates, and alert multipliers.
 - The officer's postscript: when the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
 - Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
@@ -730,3 +783,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 41 | The rebel's departure flies itself, with no control, as the takeoff and landing do | 4 | Confirmed |
 | 42 | Debug tools (start flows from the URL, a panel with commands) exist only on the dev server with `?debug=true`, in a storage sandbox of their own; the build drops them | — | Confirmed |
 | 43 | The war changes sides once a level, halfway through; ticker lines keep the enemy they were written with, which only TRUTH shows | 5 | Confirmed |
+| 44 | The river is three rows of water (the bridge's length) between two bank streets, inside one chunk; its bridges go on the vertical streets nearest the middle | 6 | Open |
+| 45 | The railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it; the land battleship rides it | 6 | Open |
+| 46 | The Ministry of Peace stays halfway through level 3, clear of the railway at the end | 6 | Open |
+| 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Open |
