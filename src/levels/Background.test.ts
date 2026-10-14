@@ -50,13 +50,18 @@ describe("cellTile", () => {
     const sheets = {
       "ground-tileset": keysOf("ground-tileset"),
       "rubble-tileset": keysOf("rubble-tileset"),
+      "river-tileset": keysOf("river-tileset"),
     };
 
     for (let seed = 0; seed < 20; seed++)
       for (let index = -1; index < 6; index++) {
         const { corners } = chunkLayout(
           {
-            terrain: { seed, blocks: { plaza: 0.4, rubble: 0.4 } },
+            terrain: {
+              seed,
+              blocks: { plaza: 0.4, rubble: 0.4 },
+              river: { at: CHUNK_HEIGHT * 2.5, bridges: 1 },
+            },
             length: 3000,
           },
           index,
@@ -69,7 +74,7 @@ describe("cellTile", () => {
       }
   });
 
-  it("uses the rubble sheet for rubble, and the ground sheet otherwise", () => {
+  it("uses the rubble sheet for rubble, the river sheet for water, and the ground sheet otherwise", () => {
     const cell = (other: Terrain) =>
       cellTile(
         [
@@ -82,6 +87,10 @@ describe("cellTile", () => {
 
     expect(cell("rubble")).toEqual({
       tileset: "rubble-tileset",
+      key: "lower,upper,lower,lower",
+    });
+    expect(cell("water")).toEqual({
+      tileset: "river-tileset",
       key: "lower,upper,lower,lower",
     });
     expect(cell("plaza")).toEqual({

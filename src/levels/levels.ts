@@ -121,18 +121,24 @@ const LEVEL_1: LevelDef = {
   boss: "fortress",
 };
 
-// A stand-in until the real level 2 is written: level 1 again with three fighter waves camouflaged,
-// so TRUTH has something to show, and its FREE pickups now tempt instead of help.
+// A stand-in until the real level 2 is written: level 1's data with three fighter waves
+// camouflaged, so TRUTH has something to show, and its FREE pickups now tempt instead of help. Its
+// own city is split by the river, crossed by a single bridge in the middle, where an AA gun holds
+// the crossing; a city with more vertical streets has blocks too narrow for murals.
 const CAMOUFLAGED = new Set([660, 1560, 2280]);
+const RIVER_AT = LENGTH / 2;
 const LEVEL_2: LevelDef = {
   ...LEVEL_1,
   terrain: {
     ...CITY,
+    seed: 71,
+    river: { at: RIVER_AT, bridges: 1 },
     landmark: { at: MINISTRY_AT_THE_END, ministry: "plenty" },
   },
   waves: LEVEL_1.waves.map((wave) =>
     CAMOUFLAGED.has(wave.at) ? { ...wave, camo: true } : wave,
   ),
+  turrets: [...LEVEL_1.turrets, { at: RIVER_AT, on: "bridge" }],
   boss: "airship",
 };
 
@@ -140,26 +146,28 @@ const LEVEL_2: LevelDef = {
 // every boss can be played until the real levels are written. The land battleship rides the middle
 // street at the end, so the Ministry of Peace stands halfway; the ruined prole district has none.
 // A ministry reshapes the city around it, so these cities have fewer roofs with room for a mural
-// or a telescreen.
+// or a telescreen. They have no river, so no AA gun on a bridge.
+const STAND_IN: LevelDef = { ...LEVEL_2, turrets: LEVEL_1.turrets };
+
 export const LEVELS: LevelDef[] = [
   LEVEL_1,
   LEVEL_2,
   {
-    ...LEVEL_2,
+    ...STAND_IN,
     terrain: { ...CITY, landmark: { at: 1500, ministry: "peace" } },
     murals: [{ at: 400 }],
     telescreens: [],
     boss: "landship",
   },
   {
-    ...LEVEL_2,
+    ...STAND_IN,
     terrain: CITY,
     murals: [{ at: 400 }],
     telescreens: [{ at: 1250 }],
     boss: "wing",
   },
   {
-    ...LEVEL_2,
+    ...STAND_IN,
     terrain: {
       ...CITY,
       landmark: { at: MINISTRY_AT_THE_END, ministry: "love" },

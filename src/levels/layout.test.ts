@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AIRFIELD_AT,
+  BRIDGE_SIZE,
   CANVAS_WIDTH,
   CELL_SIZE,
   CHUNK_HEIGHT,
@@ -21,8 +22,10 @@ import {
   COLUMNS,
   type ChunkLayout,
   landmarkPlaza,
+  middleStreets,
   PARAPET,
   type Rect,
+  RIVER_ROWS,
   ROWS,
   streetColumns,
   type Terrain,
@@ -30,9 +33,14 @@ import {
 
 // Long enough that the landing platform lies far past every chunk checked.
 const LENGTH = 100_000;
-// Mixed recipes push every rule: plaza, rubble, and open asphalt side by side.
+// Mixed recipes push every rule: plaza, rubble, open asphalt, and a river side by side.
+const RIVER_AT = CHUNK_HEIGHT * 3.5;
 const recipes: City[] = Array.from({ length: 30 }, (_, i) => ({
-  terrain: { seed: 1000 + i * 7919, blocks: { plaza: 0.4, rubble: 0.4 } },
+  terrain: {
+    seed: 1000 + i * 7919,
+    blocks: { plaza: 0.4, rubble: 0.4 },
+    river: { at: RIVER_AT, bridges: 2 },
+  },
   length: LENGTH,
 }));
 const CHUNKS = 8;
@@ -80,11 +88,13 @@ describe("chunkLayout", () => {
         const lower = chunkLayout(recipe, index);
         const upper = chunkLayout(recipe, index + 1);
 
-        // The upper chunk's bottom edge lies on the lower chunk's top edge.
+        // The upper chunk's bottom edge lies on the lower chunk's top edge, and the vertical streets
+        // run unbroken but across the river, where bridges carry them.
         expect(upper.corners[ROWS]).toEqual(lower.corners[0]);
         for (const column of columns)
           for (const row of [lower.corners, upper.corners].flat())
-            expect(row[column]).toBe("asphalt");
+            if (!row.every((terrain) => terrain === "water"))
+              expect(row[column]).toBe("asphalt");
       }
     }
   });
@@ -241,12 +251,103 @@ describe("chunkLayout", () => {
   });
 });
 
+describe("the river", () => {
+  // The corner rows that are water all the way across.
+  const waterRows = (corners: Terrain[][]) =>
+    corners.flatMap((row, i) => (row.every((t) => t === "water") ? [i] : []));
+
+  it("runs as a band of water across its chunk alone, between two bank streets", () => {
+    for (const at of [RIVER_AT, CHUNK_HEIGHT * 3 + 10, CHUNK_HEIGHT * 4 - 10])
+      for (const recipe of recipes) {
+        const city = {
+          ...recipe,
+          terrain: { ...recipe.terrain, river: { at, bridges: 2 } },
+        };
+        const index = Math.floor(at / CHUNK_HEIGHT);
+        const { corners, buildings } = chunkLayout(city, index);
+        const water = waterRows(corners);
+        const top = water[0] - 1;
+
+        // Water on the band's inner corners only, nowhere else.
+        expect(water).toEqual(
+          Array.from({ length: RIVER_ROWS - 1 }, (_, i) => top + 1 + i),
+        );
+        expect(corners.flat().filter((t) => t === "water").length).toBe(
+          water.length * (COLUMNS + 1),
+        );
+        // A bank street on each side, and a whole block between it and the chunk's edge.
+        for (const row of [
+          top - 1,
+          top,
+          top + RIVER_ROWS,
+          top + RIVER_ROWS + 1,
+        ])
+          expect(new Set(corners[row])).toEqual(new Set(["asphalt"]));
+        expect(top - 1).toBeGreaterThanOrEqual(1 + MIN_BLOCK_CELLS);
+        expect(top + RIVER_ROWS).toBeLessThanOrEqual(
+          ROWS - 1 - MIN_BLOCK_CELLS,
+        );
+        const banks = {
+          x: 0,
+          y: (top - 1) * CELL_SIZE,
+          w: CANVAS_WIDTH,
+          h: (RIVER_ROWS + 2) * CELL_SIZE,
+        };
+        expect(buildings.some((building) => touches(building, banks))).toBe(
+          false,
+        );
+
+        for (const other of [index - 1, index + 1])
+          expect(waterRows(chunkLayout(city, other).corners)).toEqual([]);
+      }
+  });
+
+  it("is centered on the row nearest its distance when the chunk has room", () => {
+    for (const recipe of recipes) {
+      const { corners } = chunkLayout(
+        recipe,
+        Math.floor(RIVER_AT / CHUNK_HEIGHT),
+      );
+      const middle = (waterRows(corners)[0] - 1 + RIVER_ROWS / 2) * CELL_SIZE;
+
+      expect(
+        Math.abs(
+          Math.ceil(RIVER_AT / CHUNK_HEIGHT) * CHUNK_HEIGHT - middle - RIVER_AT,
+        ),
+      ).toBeLessThanOrEqual(CELL_SIZE);
+    }
+  });
+
+  it("carries the vertical streets nearest the middle over it, and only those", () => {
+    for (const recipe of recipes) {
+      const { corners, bridges } = chunkLayout(
+        recipe,
+        Math.floor(RIVER_AT / CHUNK_HEIGHT),
+      );
+      const top = waterRows(corners)[0] - 1;
+      const streets = middleStreets(recipe.terrain.seed);
+
+      expect(bridges).toEqual(
+        streets.slice(0, 2).map((x) => ({
+          x: x - BRIDGE_SIZE.w / 2,
+          y: top * CELL_SIZE,
+          ...BRIDGE_SIZE,
+        })),
+      );
+    }
+    everyChunk(({ bridges, corners }) => {
+      if (waterRows(corners).length === 0) expect(bridges).toEqual([]);
+    });
+  });
+});
+
 describe("anchors", () => {
   const kinds: AnchorKind[] = [
     "street",
     "plaza",
     "rooftop",
     "skylight",
+    "bridge",
     "mural",
     "telescreen",
     "slogan",
@@ -258,7 +359,7 @@ describe("anchors", () => {
   it("stands every anchor on its own ground", () => {
     const seen = new Set<AnchorKind>();
 
-    everyChunk(({ corners, buildings, craters, anchors }) => {
+    everyChunk(({ corners, buildings, craters, anchors, bridges }) => {
       const roofed = (x: number, y: number) =>
         buildings.some((building) => inside(x, y, building));
 
@@ -305,6 +406,10 @@ describe("anchors", () => {
             x: roof!.x + roof!.w / 2,
             y: roof!.y + roof!.h / 2,
           });
+        } else if (kind === "bridge") {
+          expect(
+            bridges.map((b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 })),
+          ).toContainEqual({ x, y });
         } else {
           const skylights = buildings.flatMap((b) => b.skylight ?? []);
           expect(skylights.some((s) => inside(x, y, s))).toBe(true);

@@ -136,7 +136,7 @@ flowchart TD
 | Level | Word removed | New lie | Boss | Terrain and landmark |
 | ----- | ------------ | ------- | ---- | -------------------- |
 | 1 | — | Ticker alliance flips | Flying fortress | City plazas; the Ministry of Truth |
-| 2 | FREE | Inflated score | War zeppelin | The river and its bridges (bottlenecks); the Ministry of Plenty |
+| 2 | FREE | Inflated score | War zeppelin | The river and its bridge (a bottleneck); the Ministry of Plenty |
 | 3 | ESCAPE | Fake extra life | Land battleship, a ground boss on the railway | Rubble and railway; the Ministry of Peace |
 | 4 | REMEMBER | "Allied" enemies | Flying wing | The ruined prole district: no ministry, only rubble |
 | 5 | TRUTH | All of them, with no TRUTH | **The Eye**, the Party's own fortress | The Ministry of Love |

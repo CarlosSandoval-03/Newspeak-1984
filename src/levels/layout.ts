@@ -1,6 +1,7 @@
 import {
   AIRFIELD_AT,
   BANNER_CHANCE,
+  BRIDGE_SIZE,
   BUILDING_CHANCE,
   CANVAS_WIDTH,
   CELL_SIZE,
@@ -19,12 +20,13 @@ import {
   SKYLIGHT_CHANCE,
   TELESCREEN_SIZE,
 } from "../config";
+import { clamp } from "../core/math";
 import type { AnchorKind, LevelDef, Ministry, TerrainDef, Vec } from "../types";
 
 // What the city needs from a level: its recipe, and where it ends, for the landing platform.
 export type City = Pick<LevelDef, "terrain" | "length">;
 
-export type Terrain = "asphalt" | "plaza" | "rubble";
+export type Terrain = "asphalt" | "plaza" | "rubble" | "water";
 
 export interface Rect {
   x: number;
@@ -66,6 +68,8 @@ export interface ChunkLayout {
   buildings: Building[];
   craters: Vec[];
   anchors: Anchor[];
+  // Over the river, baked into the chunk like the craters.
+  bridges: Rect[];
   // Launch platforms and the level's ministry, which may run past the chunk's edges.
   airfields: Airfield[];
   landmarks: Landmark[];
@@ -73,6 +77,8 @@ export interface ChunkLayout {
 
 export const COLUMNS = CANVAS_WIDTH / CELL_SIZE;
 export const ROWS = CHUNK_HEIGHT / CELL_SIZE;
+// Cell rows of water: the river is as tall as a bridge is long.
+export const RIVER_ROWS = BRIDGE_SIZE.h / CELL_SIZE;
 
 // The roof's ink rim; everything on the roof keeps clear of it.
 export const PARAPET = 2;
@@ -120,28 +126,42 @@ export function streetColumns(seed: number): number[] {
   return streets(random(seed), 0, COLUMNS);
 }
 
-// The cell spans between streets, as [first, end) pairs.
-function spans(streetCells: number[], first: number, length: number) {
-  const edges = [first - 1, ...streetCells, length];
-  return edges.slice(1).map((end, i) => [edges[i] + 1, end] as const);
+// The middle of each vertical street, nearest the middle of the screen first: where the player
+// flies, so where bridges cross and the land battleship rides.
+export function middleStreets(seed: number): number[] {
+  const middle = CANVAS_WIDTH / 2;
+  return streetColumns(seed)
+    .map((column) => (column + 0.5) * CELL_SIZE)
+    .sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
 }
 
-// A chunk of the city, built in rule order from its own seed: the streets, the blocks between them
-// (open plaza under any airfield or ministry), the craters on open asphalt, and the anchors ground
-// elements stand on. The order of the random draws is part of the map: changing it changes every
-// city.
+// The cell spans between streets, as [first, end) pairs; streets side by side, like a river's
+// band, leave none between them.
+function spans(streetCells: number[], first: number, length: number) {
+  const edges = [first - 1, ...streetCells, length];
+  return edges
+    .slice(1)
+    .map((end, i) => [edges[i] + 1, end] as const)
+    .filter(([start, end]) => end > start);
+}
+
+// A chunk of the city, built in rule order from its own seed: the streets (around the river, if it
+// runs here), the blocks between them (open plaza under any airfield or ministry), the river's
+// water, the craters on open asphalt, and the anchors ground elements stand on. The order of the
+// random draws is part of the map: changing it changes every city.
 export function chunkLayout(city: City, index: number): ChunkLayout {
   const { terrain } = city;
   const rng = random(terrain.seed + index);
   const airfields = chunkAirfields(city, index);
   const landmarks = chunkLandmarks(terrain, index);
+  const river = chunkRiver(terrain, index);
   // Ground nothing may build on or stand on.
   const cleared = [...airfields, ...landmarks.map(landmarkPlaza)];
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
   const streetCells = {
-    rows: [0, ...streets(rng, 1, ROWS)],
+    rows: [0, ...streetRows(rng, river)],
     columns: streetColumns(terrain.seed),
   };
 
@@ -151,19 +171,91 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     streetCells,
     cleared,
   );
+  if (river) flood(corners, river);
   const found = craters(rng, corners);
+  const bridges = river?.bridges ?? [];
 
   return {
     corners,
     buildings,
     craters: found,
-    // Nothing stands on a runway or a ministry.
-    anchors: anchors(streetCells, plazas, buildings, found).filter(
-      (anchor) => !cleared.some((rect) => inside(anchor, rect)),
-    ),
+    // Nothing stands on the water but on a bridge, nor on a runway or a ministry.
+    anchors: [
+      ...anchors(streetCells, plazas, buildings, found).filter(
+        (anchor) => !wet(corners, anchor),
+      ),
+      ...bridges.map(({ x, y, w, h }) => ({
+        kind: "bridge" as const,
+        x: x + w / 2,
+        y: y + h / 2,
+      })),
+    ].filter((anchor) => !cleared.some((rect) => inside(anchor, rect))),
+    bridges,
     airfields,
     landmarks,
   };
+}
+
+// The river's band in the chunk it runs through: its first cell row, and the bridges over it.
+interface River {
+  top: number;
+  bridges: Rect[];
+}
+
+// Centered on the cell row nearest the river's distance, but kept inside the chunk with room for a
+// whole block between each bank street and the chunk's edges, so a river never spans two chunks.
+// The vertical streets nearest the middle cross it on bridges.
+function chunkRiver(terrain: TerrainDef, index: number): River | null {
+  const { river, seed } = terrain;
+  if (!river || Math.floor(river.at / CHUNK_HEIGHT) !== index) return null;
+
+  const middle = Math.floor(
+    ((index + 1) * CHUNK_HEIGHT - river.at) / CELL_SIZE,
+  );
+  const top = clamp(
+    middle - Math.floor(RIVER_ROWS / 2),
+    MIN_BLOCK_CELLS + 2,
+    ROWS - 1 - MIN_BLOCK_CELLS - RIVER_ROWS,
+  );
+  const bridges = middleStreets(seed)
+    .slice(0, river.bridges)
+    .map((x) => ({
+      x: x - BRIDGE_SIZE.w / 2,
+      y: top * CELL_SIZE,
+      ...BRIDGE_SIZE,
+    }));
+  return { top, bridges };
+}
+
+// The horizontal streets after row 0. Around a river, a street runs along each bank, and the band
+// between them counts as street rows too, so no block reaches the water.
+function streetRows(rng: () => number, river: River | null): number[] {
+  if (!river) return streets(rng, 1, ROWS);
+
+  const bankAbove = river.top - 1;
+  const bankBelow = river.top + RIVER_ROWS;
+  return [
+    ...streets(rng, 1, bankAbove),
+    ...Array.from({ length: RIVER_ROWS + 2 }, (_, i) => bankAbove + i),
+    ...streets(rng, bankBelow + 1, ROWS),
+  ];
+}
+
+// Water on the corners inside the band, so its first and last cell rows are the embankment.
+function flood(corners: Terrain[][], { top }: River): void {
+  for (let row = top + 1; row < top + RIVER_ROWS; row++)
+    corners[row].fill("water");
+}
+
+function wet(corners: Terrain[][], { x, y }: Vec): boolean {
+  const row = Math.floor(y / CELL_SIZE);
+  const column = Math.floor(x / CELL_SIZE);
+  return [
+    corners[row][column],
+    corners[row][column + 1],
+    corners[row + 1][column],
+    corners[row + 1][column + 1],
+  ].includes("water");
 }
 
 // The start and landing platforms that reach into this chunk, if any.

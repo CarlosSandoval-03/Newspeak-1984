@@ -36,12 +36,13 @@ const LAMP_SIZE = 2;
 const SKYLIGHT_PANE = 6;
 const PLAZA_CURB = 2;
 
-type TilesetName = "ground-tileset" | "rubble-tileset";
+type TilesetName = "ground-tileset" | "rubble-tileset" | "river-tileset";
 
 // Asphalt is every tileset's lower terrain, so the other corner decides which sheet a cell uses.
 const TILESETS: Record<Exclude<Terrain, "asphalt">, TilesetName> = {
   plaza: "ground-tileset",
   rubble: "rubble-tileset",
+  water: "river-tileset",
 };
 
 // The screen's top edge sits at level distance `scroll` and its bottom at `scroll - CANVAS_HEIGHT`;
@@ -189,8 +190,8 @@ export class Background {
     return chunk;
   }
 
-  // Layer by layer, from the ground up: the tiles, the craters, the rooftops, the launch platforms,
-  // and the ministry on its plaza.
+  // Layer by layer, from the ground up: the tiles, the craters and the bridges, the rooftops, the
+  // launch platforms, and the ministry on its plaza.
   private paint(graphics: p5.Graphics, layout: ChunkLayout): void {
     const { image } = this.assets;
 
@@ -199,11 +200,12 @@ export class Background {
     graphics.imageMode(graphics.CENTER);
     for (const crater of layout.craters)
       graphics.image(image.crater, crater.x, crater.y);
+    graphics.imageMode(graphics.CORNER);
+    for (const { x, y } of layout.bridges) graphics.image(image.bridge, x, y);
 
     graphics.noStroke();
     for (const building of layout.buildings) roof(graphics, building);
 
-    graphics.imageMode(graphics.CORNER);
     for (const { x, y } of layout.airfields)
       graphics.image(image["launch-platform"], x, y);
     for (const landmark of layout.landmarks) {
@@ -254,6 +256,7 @@ export class Background {
       this.tiles = {
         "ground-tileset": lookup("ground-tileset"),
         "rubble-tileset": lookup("rubble-tileset"),
+        "river-tileset": lookup("river-tileset"),
       };
     }
     return this.tiles;

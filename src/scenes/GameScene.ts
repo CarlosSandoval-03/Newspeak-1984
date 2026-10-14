@@ -8,7 +8,6 @@ import {
   BOSS_STATS,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
-  CELL_SIZE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
   EYE_STATS,
@@ -42,7 +41,7 @@ import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { currentStrings } from "../i18n";
 import { Background } from "../levels/Background";
-import { streetColumns } from "../levels/layout";
+import { middleStreets } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { record, resetLevelState, state } from "../state";
 import { Flight } from "../systems/Flight";
@@ -423,14 +422,9 @@ export class GameScene implements Scene {
   // A ground boss rides the vertical street nearest the middle of the screen.
   private summonBoss(): void {
     const { boss: kind, terrain } = this.level;
-    const middle = CANVAS_WIDTH / 2;
     const x = BOSS_STATS[kind].ground
-      ? streetColumns(terrain.seed)
-          .map((column) => (column + 0.5) * CELL_SIZE)
-          .reduce((best, x) =>
-            Math.abs(x - middle) < Math.abs(best - middle) ? x : best,
-          )
-      : middle;
+      ? middleStreets(terrain.seed)[0]
+      : CANVAS_WIDTH / 2;
 
     this.boss = new LevelBoss(kind, x, this.arena, this.bossDamage);
   }

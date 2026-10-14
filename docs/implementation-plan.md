@@ -12,7 +12,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 3 | Newspeak: words, pickups, diaries, Dictionary scene | `0.4.0` | Done |
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0`, `0.5.1`, `0.5.2` | Done |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
-| 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | Not started |
+| 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | In progress |
 | — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
 
 ---
@@ -669,6 +669,8 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** each level looks like its own place. The river splits level 2, the railway runs through level 3's rubble, and level 4 is ruins.
 
+**Progress:** the river (rule 4) runs through level 2's own city (seed 71) halfway through: three rows of water between two bank streets, crossed by one bridge in the middle of the screen, with an AA gun on it. The land battleship's street comes from `middleStreets()`, which the railway will use too. A level's test now builds its `Spawner`, so any ground its data asks for and its city lacks fails it.
+
 ### Files
 
 `levels/layout.ts` (rules 4 and 5, the `bridge` and `railway` anchors), `levels/Background.ts` (water from `river-tileset`, bridges and the railway baked into their chunks), `levels/levels.ts` (each level's seed and recipe), `scenes/GameScene.ts` (the land battleship on the railway), `types.ts`, `config.ts`, and their tests.
@@ -695,7 +697,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 | Level | Blocks | Features |
 | ----- | ------ | -------- |
 | 1 | Plaza, as now | Craters on open asphalt |
-| 2 | Plaza | The river halfway through, with two bridges |
+| 2 | Plaza | The river halfway through, with one bridge |
 | 3 | Rubble and plaza | The railway from halfway to `length` |
 | 4 | Mostly rubble | The most ruined: rubble and craters, no ministry |
 | 5 | Plaza | The Ministry of Love at the end |
@@ -703,12 +705,13 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 The stand-in level data (murals, telescreens, slogans, towers on plazas) moves to the anchors the new cities have; the levels' test checks every anchor it asks for exists.
 
 - **Decision:** the river is three rows of water, the length of `bridge.png`, between two bank streets, and never crosses a chunk's edge. Its bridges go on the vertical streets nearest the middle, where the player flies.
+- **Decision:** level 2's river has one bridge. A city needs a vertical street per bridge, and with two of them its 15 columns split into blocks of at most 5 cells, too narrow for a mural, a telescreen, or a ground slogan. Its seed puts the one street in the middle column, so the bridge lies where the player flies.
 - **Decision:** the railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it. The land battleship rides it.
 - **Decision:** the Ministry of Peace stays halfway through level 3, so the railway at the end runs clear of it.
 
 ### Done when
 
-- [ ] Level 2 has a river across the screen, with its embankment, two bridges, and AA guns on them; chunks join seamlessly above and below it.
+- [ ] Level 2 has a river across the screen, with its embankment and its bridge, and an AA gun on it; chunks join seamlessly above and below it.
 - [ ] Level 3 has rubble and the railway, and the land battleship rides the railway.
 - [ ] Level 4 reads as ruins: rubble, craters, no ministry.
 - [ ] Each level looks distinct at a glance (`?debug=true&start=level:N`).
@@ -783,7 +786,7 @@ These are the gaps this plan filled in. An open decision can still change before
 | 41 | The rebel's departure flies itself, with no control, as the takeoff and landing do | 4 | Confirmed |
 | 42 | Debug tools (start flows from the URL, a panel with commands) exist only on the dev server with `?debug=true`, in a storage sandbox of their own; the build drops them | — | Confirmed |
 | 43 | The war changes sides once a level, halfway through; ticker lines keep the enemy they were written with, which only TRUTH shows | 5 | Confirmed |
-| 44 | The river is three rows of water (the bridge's length) between two bank streets, inside one chunk; its bridges go on the vertical streets nearest the middle | 6 | Open |
-| 45 | The railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it; the land battleship rides it | 6 | Open |
-| 46 | The Ministry of Peace stays halfway through level 3, clear of the railway at the end | 6 | Open |
-| 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Open |
+| 44 | The river is three rows of water (the bridge's length) between two bank streets, inside one chunk; its bridges go on the vertical streets nearest the middle, and level 2 has one | 6 | Confirmed |
+| 45 | The railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it; the land battleship rides it | 6 | Confirmed |
+| 46 | The Ministry of Peace stays halfway through level 3, clear of the railway at the end | 6 | Confirmed |
+| 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Confirmed |

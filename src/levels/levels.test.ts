@@ -6,7 +6,8 @@ import {
   SINE_AMPLITUDE,
 } from "../config";
 import { removedAt } from "../systems/Newspeak";
-import { anchorNear } from "./layout";
+import { Spawner } from "../systems/Spawner";
+import { anchorNear, middleStreets } from "./layout";
 import { LEVELS } from "./levels";
 
 describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
@@ -51,6 +52,32 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
 
       if (number === 1) expect(camouflaged).toEqual([]);
       else expect(camouflaged.length).toBeGreaterThan(0);
+    });
+
+    it("finds in its city the ground every element of its data stands on", () => {
+      const spawn = () => {};
+      expect(
+        () =>
+          new Spawner(level, {
+            enemy: spawn,
+            eye: spawn,
+            turret: spawn,
+            pickup: spawn,
+            diary: spawn,
+            mural: spawn,
+            telescreen: spawn,
+            groundSlogan: spawn,
+            blimp: spawn,
+          }),
+      ).not.toThrow();
+    });
+
+    it("has a vertical street for every bridge its river asks for", () => {
+      const { river, seed } = level.terrain;
+      if (river)
+        expect(middleStreets(seed).length).toBeGreaterThanOrEqual(
+          river.bridges,
+        );
     });
 
     it("has a skylight for its diary to lie on", () => {
