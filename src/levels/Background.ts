@@ -190,8 +190,8 @@ export class Background {
     return chunk;
   }
 
-  // Layer by layer, from the ground up: the tiles, the craters and the bridges, the rooftops, the
-  // launch platforms, and the ministry on its plaza.
+  // Layer by layer, from the ground up: the tiles, the craters, the bridges, and the railway's
+  // track, the rooftops, the launch platforms, and the ministry on its plaza.
   private paint(graphics: p5.Graphics, layout: ChunkLayout): void {
     const { image } = this.assets;
 
@@ -202,6 +202,7 @@ export class Background {
       graphics.image(image.crater, crater.x, crater.y);
     graphics.imageMode(graphics.CORNER);
     for (const { x, y } of layout.bridges) graphics.image(image.bridge, x, y);
+    for (const { x, y } of layout.tracks) graphics.image(image.railway, x, y);
 
     graphics.noStroke();
     for (const building of layout.buildings) roof(graphics, building);

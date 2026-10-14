@@ -58,7 +58,7 @@ export interface PickupDef {
 
 export type Ministry = "truth" | "plenty" | "peace" | "love";
 
-// The recipe describes intent, not tiles; a later step adds the railway.
+// The recipe describes intent, not tiles.
 export interface TerrainDef {
   seed: number;
   // Shares of the city blocks; the rest stay open asphalt.
@@ -66,12 +66,14 @@ export interface TerrainDef {
   // A band of water across the city at this scroll distance, with `bridges` of its vertical
   // streets carried over it.
   river?: { at: number; bridges: number };
+  // The street nearest the middle widens into a railway between these scroll distances.
+  railway?: { from: number; to: number };
   // The level's ministry, centered across the screen at this scroll distance.
   landmark?: { at: number; ministry: Ministry };
 }
 
-// Where a ground element can stand; a later step adds railway. A `bridge` is the middle of a bridge
-// over the river. A `mural` is the middle of a roof with no skylight and room for a whole mural, a
+// Where a ground element can stand. A `bridge` is the middle of a bridge over the river, a `railway`
+// the middle of the railway on a cell row it spans. A `mural` is the middle of a roof with no skylight and room for a whole mural, a
 // `telescreen` the same with room for a telescreen; a `slogan`, of an open plaza with room for a
 // painted slogan.
 export type AnchorKind =
@@ -80,6 +82,7 @@ export type AnchorKind =
   | "rooftop"
   | "skylight"
   | "bridge"
+  | "railway"
   | "mural"
   | "telescreen"
   | "slogan";

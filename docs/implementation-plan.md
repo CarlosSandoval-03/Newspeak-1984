@@ -669,7 +669,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** each level looks like its own place. The river splits level 2, the railway runs through level 3's rubble, and level 4 is ruins.
 
-**Progress:** the river (rule 4) runs through level 2's own city (seed 71) halfway through: three rows of water between two bank streets, crossed by one bridge in the middle of the screen, with an AA gun on it. The land battleship's street comes from `middleStreets()`, which the railway will use too. A level's test now builds its `Spawner`, so any ground its data asks for and its city lacks fails it.
+**Progress:** the river (rule 4) runs through level 2's own city (seed 71) halfway through: three rows of water between two bank streets, crossed by one bridge in the middle of the screen, with an AA gun on it. The railway (rule 5) runs through level 3's own city (seed 1064), in rubble, from just past the Ministry of Peace to `length`: the street nearest the middle widens into a two-cell corridor, its track baked down the middle, and the land battleship rides it at the end. A level's test now builds its `Spawner`, so any ground its data asks for and its city lacks fails it, and checks that no two ground elements share a spot: towers stood on murals and slogans in levels 1, 2, and 5, and now stand beside them.
 
 ### Files
 
@@ -687,7 +687,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Railway (rule 5 of the layout).** `terrain.railway: { from, to }`, scroll distances.
 
-- **The corridor:** the vertical street nearest the middle of the screen widens into a two-cell corridor from `from` to `to`. It takes the column beside it on the side of the wider block, so the narrower block keeps its width. When both are `MIN_BLOCK_CELLS` wide, one is left a cell narrower, still wide enough for a roof.
+- **The corridor:** the vertical street nearest the middle of the screen widens into a two-cell corridor. It takes the column beside it on the side of the wider block, so the narrower block keeps its width. When both are `MIN_BLOCK_CELLS` wide, one is left a cell narrower, still wide enough for a roof. The corridor widens for the whole of each chunk the railway reaches, so no block is cut halfway; the track alone keeps to `from` and `to`.
 - **The track:** `railway.png` (48×32) tiles along the middle of the corridor, baked into each chunk it crosses. The rest of the corridor is asphalt.
 - **Anchors:** a `railway` anchor at the middle of the corridor on each cell row it spans. No `street` anchor lies on the corridor.
 - **The land battleship** rides the railway when its level has one, instead of the street nearest the middle. The railway must reach `length`, where the city stops for the boss.
@@ -698,7 +698,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 | ----- | ------ | -------- |
 | 1 | Plaza, as now | Craters on open asphalt |
 | 2 | Plaza | The river halfway through, with one bridge |
-| 3 | Rubble and plaza | The railway from halfway to `length` |
+| 3 | Rubble and plaza | The railway from past the Ministry of Peace to `length` |
 | 4 | Mostly rubble | The most ruined: rubble and craters, no ministry |
 | 5 | Plaza | The Ministry of Love at the end |
 

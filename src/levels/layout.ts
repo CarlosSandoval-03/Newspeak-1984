@@ -19,6 +19,7 @@ import {
   PLATFORM_SIZE,
   SKYLIGHT_CHANCE,
   TELESCREEN_SIZE,
+  TRACK_SIZE,
 } from "../config";
 import { clamp } from "../core/math";
 import type { AnchorKind, LevelDef, Ministry, TerrainDef, Vec } from "../types";
@@ -68,8 +69,9 @@ export interface ChunkLayout {
   buildings: Building[];
   craters: Vec[];
   anchors: Anchor[];
-  // Over the river, baked into the chunk like the craters.
+  // Over the river, and along the railway a cell row at a time, baked into the chunk like the craters.
   bridges: Rect[];
+  tracks: Rect[];
   // Launch platforms and the level's ministry, which may run past the chunk's edges.
   airfields: Airfield[];
   landmarks: Landmark[];
@@ -126,13 +128,38 @@ export function streetColumns(seed: number): number[] {
   return streets(random(seed), 0, COLUMNS);
 }
 
-// The middle of each vertical street, nearest the middle of the screen first: where the player
-// flies, so where bridges cross and the land battleship rides.
-export function middleStreets(seed: number): number[] {
+// The middle of a cell row or column, in pixels.
+const cellMiddle = (cell: number) => (cell + 0.5) * CELL_SIZE;
+
+// The vertical streets nearest the middle of the screen first: where the player flies, so where
+// bridges cross, the railway runs, and the land battleship rides.
+function columnsByMiddle(seed: number): number[] {
   const middle = CANVAS_WIDTH / 2;
-  return streetColumns(seed)
-    .map((column) => (column + 0.5) * CELL_SIZE)
-    .sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
+  return streetColumns(seed).sort(
+    (a, b) =>
+      Math.abs(cellMiddle(a) - middle) - Math.abs(cellMiddle(b) - middle),
+  );
+}
+
+// The middle of each vertical street, nearest the middle of the screen first.
+export function middleStreets(seed: number): number[] {
+  return columnsByMiddle(seed).map(cellMiddle);
+}
+
+// The street nearest the middle and the column beside it on the side of the wider block, so the
+// narrower block keeps its width.
+function railwayColumns(seed: number): [number, number] {
+  const columns = streetColumns(seed);
+  const [street] = columnsByMiddle(seed);
+  const i = columns.indexOf(street);
+  const left = street - (i > 0 ? columns[i - 1] + 1 : 0);
+  const right = (columns[i + 1] ?? COLUMNS) - street - 1;
+  return right >= left ? [street, street + 1] : [street - 1, street];
+}
+
+// Where the railway's two columns meet, down the middle of its track.
+export function railwayMiddle(seed: number): number {
+  return railwayColumns(seed)[1] * CELL_SIZE;
 }
 
 // The cell spans between streets, as [first, end) pairs; streets side by side, like a river's
@@ -146,23 +173,29 @@ function spans(streetCells: number[], first: number, length: number) {
 }
 
 // A chunk of the city, built in rule order from its own seed: the streets (around the river, if it
-// runs here), the blocks between them (open plaza under any airfield or ministry), the river's
-// water, the craters on open asphalt, and the anchors ground elements stand on. The order of the
-// random draws is part of the map: changing it changes every city.
+// runs here, and widened for the railway, if it reaches here), the blocks between them (open plaza
+// under any airfield or ministry), the river's water, the craters on open asphalt off the railway,
+// and the anchors ground elements stand on. The order of the random draws is part of the map:
+// changing it changes every city.
 export function chunkLayout(city: City, index: number): ChunkLayout {
   const { terrain } = city;
   const rng = random(terrain.seed + index);
   const airfields = chunkAirfields(city, index);
   const landmarks = chunkLandmarks(terrain, index);
   const river = chunkRiver(terrain, index);
+  const railway = chunkRailway(terrain, index);
   // Ground nothing may build on or stand on.
   const cleared = [...airfields, ...landmarks.map(landmarkPlaza)];
+  const onRailway = (point: Vec) =>
+    !!railway?.columns.includes(Math.floor(point.x / CELL_SIZE));
 
   // Row 0 is always a street, and every block stays clear of the bottom edge's corners,
   // so chunks join on asphalt whatever their neighbors hold.
   const streetCells = {
     rows: [0, ...streetRows(rng, river)],
-    columns: streetColumns(terrain.seed),
+    columns: [
+      ...new Set([...streetColumns(terrain.seed), ...(railway?.columns ?? [])]),
+    ].sort((a, b) => a - b),
   };
 
   const { corners, buildings, plazas } = blocks(
@@ -172,28 +205,55 @@ export function chunkLayout(city: City, index: number): ChunkLayout {
     cleared,
   );
   if (river) flood(corners, river);
-  const found = craters(rng, corners);
+  const found = craters(rng, corners).filter((crater) => !onRailway(crater));
   const bridges = river?.bridges ?? [];
+  const tracks = railway?.tracks ?? [];
 
   return {
     corners,
     buildings,
     craters: found,
-    // Nothing stands on the water but on a bridge, nor on a runway or a ministry.
+    // Nothing stands on the water but on a bridge, on the railway but on its track, nor on a
+    // runway or a ministry.
     anchors: [
       ...anchors(streetCells, plazas, buildings, found).filter(
-        (anchor) => !wet(corners, anchor),
+        (anchor) => !wet(corners, anchor) && !onRailway(anchor),
       ),
-      ...bridges.map(({ x, y, w, h }) => ({
-        kind: "bridge" as const,
-        x: x + w / 2,
-        y: y + h / 2,
-      })),
+      ...bridges.map(middleOf("bridge")),
+      ...tracks.map(middleOf("railway")),
     ].filter((anchor) => !cleared.some((rect) => inside(anchor, rect))),
     bridges,
+    tracks,
     airfields,
     landmarks,
   };
+}
+
+const middleOf =
+  (kind: AnchorKind) =>
+  ({ x, y, w, h }: Rect): Anchor => ({ kind, x: x + w / 2, y: y + h / 2 });
+
+// The railway in a chunk it reaches: its two columns, widened for the whole chunk so no block is
+// cut halfway, and its track on the cell rows between its two distances.
+interface Railway {
+  columns: [number, number];
+  tracks: Rect[];
+}
+
+function chunkRailway(terrain: TerrainDef, index: number): Railway | null {
+  const { railway, seed } = terrain;
+  const bottom = index * CHUNK_HEIGHT;
+  if (!railway || railway.from >= bottom + CHUNK_HEIGHT || railway.to < bottom)
+    return null;
+
+  const x = railwayMiddle(seed) - TRACK_SIZE.w / 2;
+  const tracks: Rect[] = [];
+  for (let row = 0; row < ROWS; row++) {
+    const at = bottom + CHUNK_HEIGHT - cellMiddle(row);
+    if (at >= railway.from && at <= railway.to)
+      tracks.push({ x, y: row * CELL_SIZE, ...TRACK_SIZE });
+  }
+  return { columns: railwayColumns(seed), tracks };
 }
 
 // The river's band in the chunk it runs through: its first cell row, and the bridges over it.

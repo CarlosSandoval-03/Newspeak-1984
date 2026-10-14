@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AIRFIELD_AT,
   BRIDGE_SIZE,
+  TRACK_SIZE,
   CANVAS_WIDTH,
   CELL_SIZE,
   CHUNK_HEIGHT,
@@ -23,6 +24,7 @@ import {
   type ChunkLayout,
   landmarkPlaza,
   middleStreets,
+  railwayMiddle,
   PARAPET,
   type Rect,
   RIVER_ROWS,
@@ -33,13 +35,15 @@ import {
 
 // Long enough that the landing platform lies far past every chunk checked.
 const LENGTH = 100_000;
-// Mixed recipes push every rule: plaza, rubble, open asphalt, and a river side by side.
+// Mixed recipes push every rule: plaza, rubble, open asphalt, a river, and a railway side by side.
 const RIVER_AT = CHUNK_HEIGHT * 3.5;
+const RAILWAY = { from: CHUNK_HEIGHT * 5.3, to: CHUNK_HEIGHT * 6.6 };
 const recipes: City[] = Array.from({ length: 30 }, (_, i) => ({
   terrain: {
     seed: 1000 + i * 7919,
     blocks: { plaza: 0.4, rubble: 0.4 },
     river: { at: RIVER_AT, bridges: 2 },
+    railway: RAILWAY,
   },
   length: LENGTH,
 }));
@@ -341,6 +345,73 @@ describe("the river", () => {
   });
 });
 
+describe("the railway", () => {
+  const reached = [5, 6];
+  const columnsOf = (seed: number) => {
+    const right = railwayMiddle(seed) / CELL_SIZE;
+    return [right - 1, right];
+  };
+
+  it("widens the street nearest the middle into two columns, taking one from the wider block", () => {
+    for (const { terrain } of recipes) {
+      const columns = columnsOf(terrain.seed);
+      const streets = streetColumns(terrain.seed);
+      const [street] = middleStreets(terrain.seed).map(
+        (x) => x / CELL_SIZE - 0.5,
+      );
+      const i = streets.indexOf(street);
+      const left = street - (i > 0 ? streets[i - 1] + 1 : 0);
+      const right = (streets[i + 1] ?? COLUMNS) - street - 1;
+
+      expect(columns).toContain(street);
+      expect(columns).toContain(right >= left ? street + 1 : street - 1);
+      for (const index of reached) {
+        const { corners } = chunkLayout({ terrain, length: LENGTH }, index);
+        for (let row = 0; row < ROWS; row++)
+          for (const column of columns)
+            expect(cellCorners(corners, row, column)).toEqual(
+              Array(4).fill("asphalt"),
+            );
+      }
+    }
+  });
+
+  it("lays its track down the middle, on every row between its two distances", () => {
+    for (const recipe of recipes) {
+      const distances: number[] = [];
+      for (let index = 0; index < CHUNKS; index++)
+        for (const track of chunkLayout(recipe, index).tracks) {
+          expect(track.x + track.w / 2).toBe(
+            railwayMiddle(recipe.terrain.seed),
+          );
+          expect(track.h).toBe(TRACK_SIZE.h);
+          distances.push((index + 1) * CHUNK_HEIGHT - (track.y + track.h / 2));
+        }
+
+      const rows = [];
+      for (let at = CELL_SIZE / 2; at < CHUNKS * CHUNK_HEIGHT; at += CELL_SIZE)
+        if (at >= RAILWAY.from && at <= RAILWAY.to) rows.push(at);
+      expect(distances.sort((a, b) => a - b)).toEqual(rows);
+    }
+  });
+
+  it("keeps craters and other anchors off its columns", () => {
+    for (const recipe of recipes) {
+      const columns = columnsOf(recipe.terrain.seed);
+      for (const index of reached) {
+        const { craters, anchors } = chunkLayout(recipe, index);
+        const onIt = ({ x }: { x: number }) =>
+          columns.includes(Math.floor(x / CELL_SIZE));
+
+        expect(craters.filter(onIt)).toEqual([]);
+        expect(anchors.filter((a) => a.kind === "street" && onIt(a))).toEqual(
+          [],
+        );
+      }
+    }
+  });
+});
+
 describe("anchors", () => {
   const kinds: AnchorKind[] = [
     "street",
@@ -348,6 +419,7 @@ describe("anchors", () => {
     "rooftop",
     "skylight",
     "bridge",
+    "railway",
     "mural",
     "telescreen",
     "slogan",
@@ -359,7 +431,7 @@ describe("anchors", () => {
   it("stands every anchor on its own ground", () => {
     const seen = new Set<AnchorKind>();
 
-    everyChunk(({ corners, buildings, craters, anchors, bridges }) => {
+    everyChunk(({ corners, buildings, craters, anchors, bridges, tracks }) => {
       const roofed = (x: number, y: number) =>
         buildings.some((building) => inside(x, y, building));
 
@@ -406,6 +478,10 @@ describe("anchors", () => {
             x: roof!.x + roof!.w / 2,
             y: roof!.y + roof!.h / 2,
           });
+        } else if (kind === "railway") {
+          expect(
+            tracks.map((t) => ({ x: t.x + t.w / 2, y: t.y + t.h / 2 })),
+          ).toContainEqual({ x, y });
         } else if (kind === "bridge") {
           expect(
             bridges.map((b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 })),
@@ -514,9 +590,9 @@ describe("anchors", () => {
 describe("anchorNear", () => {
   const recipe = recipes[0];
 
-  // Every anchor of a kind in level space, from far more chunks than anchorNear looks at.
+  // Every anchor of a kind in level space, from every chunk anchorNear can reach: four either side.
   const allAnchors = (kind: AnchorKind) =>
-    Array.from({ length: CHUNKS + 4 }, (_, i) => i - 2).flatMap((index) =>
+    Array.from({ length: CHUNKS + 8 }, (_, i) => i - 4).flatMap((index) =>
       chunkLayout(recipe, index)
         .anchors.filter((anchor) => anchor.kind === kind)
         .map(({ x, y }) => ({ x, y: (index + 1) * CHUNK_HEIGHT - y })),

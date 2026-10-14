@@ -1,4 +1,4 @@
-import { CANVAS_HEIGHT } from "../config";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../config";
 import type { LevelDef } from "../types";
 
 // The stand-in city every level shares until the real ones are written.
@@ -78,6 +78,8 @@ const LEVEL_1: LevelDef = {
       type: "tower",
       at: 2100,
       on: "rooftop",
+      // The roof left of the last mural's.
+      x: 0,
       facing: -45,
       range: 200,
       sweepAmp: 30,
@@ -138,15 +140,23 @@ const LEVEL_2: LevelDef = {
   waves: LEVEL_1.waves.map((wave) =>
     CAMOUFLAGED.has(wave.at) ? { ...wave, camo: true } : wave,
   ),
+  // The towers that would stand on its murals, telescreen, and slogan move to free ground.
+  eyes: LEVEL_1.eyes.map((eye) => {
+    if (eye.type !== "tower") return eye;
+    if (eye.at === 450) return { ...eye, x: CANVAS_WIDTH };
+    if (eye.at === 900 || eye.at === 2100) return { ...eye, on: "street" };
+    return eye;
+  }),
   turrets: [...LEVEL_1.turrets, { at: RIVER_AT, on: "bridge" }],
   boss: "airship",
 };
 
 // Levels 3 to 5 replay the stand-in with their own bosses and ministries, so every removal and
-// every boss can be played until the real levels are written. The land battleship rides the middle
-// street at the end, so the Ministry of Peace stands halfway; the ruined prole district has none.
+// every boss can be played until the real levels are written. Level 3 has a city of its own, in
+// rubble, where the land battleship rides the railway at the end, so the Ministry of Peace stands
+// halfway, before the railway begins; the ruined prole district has no ministry.
 // A ministry reshapes the city around it, so these cities have fewer roofs with room for a mural
-// or a telescreen. They have no river, so no AA gun on a bridge.
+// or a telescreen. They keep level 2's towers, but have no river for its AA gun on the bridge.
 const STAND_IN: LevelDef = { ...LEVEL_2, turrets: LEVEL_1.turrets };
 
 export const LEVELS: LevelDef[] = [
@@ -154,7 +164,12 @@ export const LEVELS: LevelDef[] = [
   LEVEL_2,
   {
     ...STAND_IN,
-    terrain: { ...CITY, landmark: { at: 1500, ministry: "peace" } },
+    terrain: {
+      seed: 1064,
+      blocks: { plaza: 0.3, rubble: 0.4 },
+      railway: { from: 1800, to: LENGTH },
+      landmark: { at: 1500, ministry: "peace" },
+    },
     murals: [{ at: 400 }],
     telescreens: [],
     boss: "landship",

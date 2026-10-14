@@ -84,7 +84,7 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
       expect(() => anchorNear(level, "skylight", level.diary.at)).not.toThrow();
     });
 
-    it("puts each mural, telescreen, and ground slogan on a spot of its own", () => {
+    it("stands every ground element on a spot of its own", () => {
       const spots = [
         ...level.murals.map(({ at, x }) => anchorNear(level, "mural", at, x)),
         ...level.telescreens.map(({ at, x }) =>
@@ -93,6 +93,13 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
         ...level.groundSlogans.map(({ at, x }) =>
           anchorNear(level, "slogan", at, x),
         ),
+        ...level.eyes.flatMap((eye) =>
+          eye.type === "tower"
+            ? [anchorNear(level, eye.on, eye.at, eye.x)]
+            : [],
+        ),
+        ...level.turrets.map(({ at, on, x }) => anchorNear(level, on, at, x)),
+        anchorNear(level, "skylight", level.diary.at),
       ].map(({ x, y }) => `${x},${y}`);
 
       expect(new Set(spots).size).toBe(spots.length);

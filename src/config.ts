@@ -130,6 +130,8 @@ export const AIRFIELD_AT = -800;
 export const PLATFORM_SIZE = { w: 112, h: 256 };
 // bridge.png's size: a bridge spans the whole river, so the river is as tall as a bridge is long.
 export const BRIDGE_SIZE = { w: 48, h: 96 };
+// railway.png's size, tiled a cell row at a time along the railway.
+export const TRACK_SIZE = { w: 48, h: 32 };
 // A rooftop mural: the Leader's portrait in a red frame over a slogan band of two lines, at half
 // the machine's usual size so 22 characters fit a roof.
 export const MURAL_SIZE = { w: 96, h: 100 };

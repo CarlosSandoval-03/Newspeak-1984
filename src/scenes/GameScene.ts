@@ -41,7 +41,7 @@ import { ThoughtPolice } from "../entities/ThoughtPolice";
 import { Turret } from "../entities/Turret";
 import { currentStrings } from "../i18n";
 import { Background } from "../levels/Background";
-import { middleStreets } from "../levels/layout";
+import { middleStreets, railwayMiddle } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { record, resetLevelState, state } from "../state";
 import { Flight } from "../systems/Flight";
@@ -419,12 +419,13 @@ export class GameScene implements Scene {
         this.kill(giant);
   }
 
-  // A ground boss rides the vertical street nearest the middle of the screen.
+  // A ground boss rides the railway, or with none, the vertical street nearest the middle.
   private summonBoss(): void {
     const { boss: kind, terrain } = this.level;
-    const x = BOSS_STATS[kind].ground
-      ? middleStreets(terrain.seed)[0]
-      : CANVAS_WIDTH / 2;
+    const ground = terrain.railway
+      ? railwayMiddle(terrain.seed)
+      : middleStreets(terrain.seed)[0];
+    const x = BOSS_STATS[kind].ground ? ground : CANVAS_WIDTH / 2;
 
     this.boss = new LevelBoss(kind, x, this.arena, this.bossDamage);
   }

@@ -6,8 +6,6 @@ import {
   ALERT_THRESHOLDS,
   BOMB_BOSS_DAMAGE,
   BOSS_STATS,
-  CANVAS_WIDTH,
-  CELL_SIZE,
   DIARY_BONUS_SCORE,
   ENEMY_STATS,
   EYE_DESTROYED_SUSPICION,
@@ -36,7 +34,7 @@ import { Diary } from "../entities/Diary";
 import { Eye } from "../entities/Eye";
 import { Pickup } from "../entities/Pickup";
 import { Turret } from "../entities/Turret";
-import { anchorNear, streetColumns } from "../levels/layout";
+import { anchorNear, railwayMiddle } from "../levels/layout";
 import { LEVELS } from "../levels/levels";
 import { resetGame, state } from "../state";
 import { ALERT, type EnemyKind, type Vec } from "../types";
@@ -323,7 +321,7 @@ describe("GameScene collisions", () => {
       expect(scene["police"]).toBeNull();
     });
 
-    it("rides a ground boss in on the street nearest the middle", () => {
+    it("rides the land battleship in down the middle of level 3's railway", () => {
       state.level = 3;
       const level3 = new GameScene(
         { get: () => ({}) } as unknown as p5,
@@ -337,12 +335,8 @@ describe("GameScene collisions", () => {
 
       const boss = level3["boss"]!;
       expect(boss.def.ground).toBe(true);
-      const streets = streetColumns(LEVELS[2].terrain.seed).map(
-        (column) => (column + 0.5) * CELL_SIZE,
-      );
-      const off = (x: number) => Math.abs(x - CANVAS_WIDTH / 2);
-      expect(streets).toContain(boss.pos.x);
-      expect(off(boss.pos.x)).toBe(Math.min(...streets.map(off)));
+      expect(LEVELS[2].terrain.railway).toBeDefined();
+      expect(boss.pos.x).toBe(railwayMiddle(LEVELS[2].terrain.seed));
 
       // The plane flies over it, as over any ground.
       while (boss.pos.y < 0) level3.update();
