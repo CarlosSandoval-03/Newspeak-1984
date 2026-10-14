@@ -669,7 +669,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 
 **Goal:** each level looks like its own place. The river splits level 2, the railway runs through level 3's rubble, and level 4 is ruins.
 
-**Progress:** the river (rule 4) runs through level 2's own city (seed 71) halfway through: three rows of water between two bank streets, crossed by one bridge in the middle of the screen, with an AA gun on it. The railway (rule 5) runs through level 3's own city (seed 1064), in rubble, from just past the Ministry of Peace to `length`: the street nearest the middle widens into a two-cell corridor, its track baked down the middle, and the land battleship rides it at the end. A level's test now builds its `Spawner`, so any ground its data asks for and its city lacks fails it, and checks that no two ground elements share a spot: towers stood on murals and slogans in levels 1, 2, and 5, and now stand beside them.
+**Progress:** the river (rule 4) runs through level 2's own city (seed 71) halfway through: three rows of water between two bank streets, crossed by one bridge in the middle of the screen, with an AA gun on it. The railway (rule 5) runs through level 3's own city (seed 1064), in rubble, from just past the Ministry of Peace to `length`: the street nearest the middle widens into a two-cell corridor, its track baked down the middle, and the land battleship rides it at the end. A level's test now builds its `Spawner`, so any ground its data asks for and its city lacks fails it, and checks that no two ground elements share a spot: towers stood on murals and slogans in levels 1, 2, and 5, and now stand beside them. Level 4 is the ruins (seed 1396): rubble on most blocks, and no ministry. Level 5 has a concrete city of its own (seed 104) under the Ministry of Love, and a test keeps every level's seed its own. `pnpm bench` stays within budget: the river and the railway add a few images to the chunks that hold them, built once.
 
 ### Files
 
@@ -699,7 +699,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 | 1 | Plaza, as now | Craters on open asphalt |
 | 2 | Plaza | The river halfway through, with one bridge |
 | 3 | Rubble and plaza | The railway from past the Ministry of Peace to `length` |
-| 4 | Mostly rubble | The most ruined: rubble and craters, no ministry |
+| 4 | Mostly rubble | The most ruined: rubble on most blocks, no ministry |
 | 5 | Plaza | The Ministry of Love at the end |
 
 The stand-in level data (murals, telescreens, slogans, towers on plazas) moves to the anchors the new cities have; the levels' test checks every anchor it asks for exists.
@@ -713,7 +713,7 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 
 - [ ] Level 2 has a river across the screen, with its embankment and its bridge, and an AA gun on it; chunks join seamlessly above and below it.
 - [ ] Level 3 has rubble and the railway, and the land battleship rides the railway.
-- [ ] Level 4 reads as ruins: rubble, craters, no ministry.
+- [ ] Level 4 reads as ruins: rubble on most blocks, no ministry.
 - [ ] Each level looks distinct at a glance (`?debug=true&start=level:N`).
 - [ ] No anchor stands on water; no plaza or rubble touches water; the tests cover both.
 - [ ] `pnpm bench` stays within budget, `fast-scroll` included.

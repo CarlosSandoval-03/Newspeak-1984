@@ -124,3 +124,9 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
     });
   },
 );
+
+it("gives every level a city of its own", () => {
+  const seeds = LEVELS.map(({ terrain }) => terrain.seed);
+
+  expect(new Set(seeds).size).toBe(LEVELS.length);
+});

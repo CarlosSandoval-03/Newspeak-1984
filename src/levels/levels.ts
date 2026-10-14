@@ -154,7 +154,8 @@ const LEVEL_2: LevelDef = {
 // Levels 3 to 5 replay the stand-in with their own bosses and ministries, so every removal and
 // every boss can be played until the real levels are written. Level 3 has a city of its own, in
 // rubble, where the land battleship rides the railway at the end, so the Ministry of Peace stands
-// halfway, before the railway begins; the ruined prole district has no ministry.
+// halfway, before the railway begins; the ruined prole district has no ministry. Each has a city
+// of its own.
 // A ministry reshapes the city around it, so these cities have fewer roofs with room for a mural
 // or a telescreen. They keep level 2's towers, but have no river for its AA gun on the bridge.
 const STAND_IN: LevelDef = { ...LEVEL_2, turrets: LEVEL_1.turrets };
@@ -176,7 +177,8 @@ export const LEVELS: LevelDef[] = [
   },
   {
     ...STAND_IN,
-    terrain: CITY,
+    // The ruins: rubble on most blocks, and no ministry.
+    terrain: { seed: 1396, blocks: { plaza: 0.2, rubble: 0.6 } },
     murals: [{ at: 400 }],
     telescreens: [{ at: 1250 }],
     boss: "wing",
@@ -185,6 +187,7 @@ export const LEVELS: LevelDef[] = [
     ...STAND_IN,
     terrain: {
       ...CITY,
+      seed: 104,
       landmark: { at: MINISTRY_AT_THE_END, ministry: "love" },
     },
     boss: "eye",
