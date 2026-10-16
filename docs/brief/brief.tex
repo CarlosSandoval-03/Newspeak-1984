@@ -52,6 +52,9 @@
 \renewcommand{\arraystretch}{1.25}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
+% Donde se juega el juego.
+\newcommand{\playurl}{https://carlossandoval-03.github.io/Newspeak-1984/}
+
 % Texto del juego tal como se muestra, en la fuente de la máquina.
 \newcommand{\game}[1]{{\machine\large #1}}
 \newcommand{\swatch}[2]{\tikz[baseline=0.1cm]\fill[#1,draw=ink,line width=0.3pt] (0,0) rectangle (0.9,0.45);\,\texttt{#2}}
@@ -72,6 +75,10 @@
   \pixelart{width=0.8\textwidth}{menu-city.png}\par
   \vspace{1.2cm}
   {\Large Un shmup vertical en la tradición de \emph{1942},\\ ambientado en \emph{1984} de George Orwell\par}
+  \vspace{0.9cm}
+  {\machine\LARGE JUEGA EN LÍNEA\par}
+  \vspace{0.15cm}
+  {\machine\Large\href{\playurl}{\color{redlight}carlossandoval-03.github.io/Newspeak-1984}\par}
   \vfill
   {\large Documento de evaluación: historia, mecánicas, arte y arquitectura técnica\par}
   \vspace{0.5cm}
@@ -92,6 +99,7 @@
   \toprule
   Género & Shmup vertical (\emph{shoot 'em up}) con capa narrativa \\
   Plataforma & Navegador web; se publica en GitHub Pages y como zip para jugar sin conexión \\
+  Jugar en línea & \href{\playurl}{\color{red}\texttt{\playurl}} \\
   Resolución & 480~×~640 píxeles lógicos, escalados por enteros para que el pixel art se vea nítido \\
   Idiomas & Inglés y español, elegibles desde el menú \\
   Duración & Cinco niveles, unos 12~minutos y medio de vuelo, más jefes, despegues, aterrizajes y escenas \\
