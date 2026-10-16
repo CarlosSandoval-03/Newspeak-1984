@@ -723,7 +723,17 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 
 **Goal:** five real levels replace the stand-in. Each lasts a few minutes, grows harder than the last, and is built around the word the Party has just taken.
 
-**Progress:** level 1 is written (seed 2, 7200 px, 22 waves, 6 eyes, 2 AA guns), as a lesson in order, and level 2 (seed 34, 8400 px, 31 waves, 8 eyes, 4 AA guns), as precise single targets across the river. Levels 3 to 5 stand in on the old level 1, the prototype, until each is written. The levels' test checks the written ones for the messages from the sky (never two on screen at once, the blimp in the sky when the war changes sides, a telescreen over the boss fight) and for the pace: per minute, level 1 has 11 waves, 49 hp to shoot down, and 3 eyes; level 2, 13.3, 61.7, and 3.4.
+**Progress:** all five levels are written, each on a city of its own: level 1 as a lesson in order, level 2 as precise single targets across the river, level 3 as fans and crossings to read without a dash, level 4 as swarms no bomb can clear, and level 5 as everything at once. The levels' test checks every level for the messages from the sky (never two on screen at once, the blimp in the sky when the war changes sides, a telescreen over the boss fight) and for the pace, which rises from each level to the next:
+
+| Level | Seed | Waves a minute | Enemy hp a minute | Eyes a minute |
+| ----- | ---- | -------------- | ----------------- | ------------- |
+| 1 | 2 | 11.0 | 49.0 | 3.0 |
+| 2 | 34 | 13.3 | 61.7 | 3.4 |
+| 3 | 11 | 15.2 | 68.4 | 3.6 |
+| 4 | 13 | 17.2 | 75.8 | 3.8 |
+| 5 | 36 | 21.3 | 103.0 | 4.7 |
+
+Each diary but level 1's lies under a tower 82 px away, sweeping across it. What remains is playing them: a first run through level 1, and level 5 hard but fair.
 
 ### Files
 
@@ -735,11 +745,11 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 
 | Level | `length` | Flight | Waves | Eyes | AA guns |
 | ----- | -------- | ------ | ----- | ---- | ------- |
-| 1 | 7200 | 2:00 | ~20, one every ~6 s | 6, slow sweeps | 2 |
-| 2 | 8400 | 2:20 | ~26 | 8 | 4, two on the bridge's approach |
-| 3 | 9000 | 2:30 | ~30 | 8 | 4 |
-| 4 | 9600 | 2:40 | ~34, smaller and denser | 10, mostly drones | 4 |
-| 5 | 10800 | 3:00 | ~40, one every ~4.5 s | 14, fast sweeps | 6 |
+| 1 | 7200 | 2:00 | 22, one every ~6 s | 6, slow sweeps | 2 |
+| 2 | 8400 | 2:20 | 31, small and spread wide | 8 | 4, two on the bridge's approach |
+| 3 | 9000 | 2:30 | 38, fans and crossings | 9 | 4 |
+| 4 | 9600 | 2:40 | 46, smaller and denser | 10, mostly drones | 4 |
+| 5 | 10800 | 3:00 | 64, every ~4.7 s | 14, fast sweeps | 6 |
 
 A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings, and the paperwork between levels. Each level has more waves, more enemy hp to shoot down, and more eyes per minute than the one before. Enemy hp, not enemy count: a level of fewer, tougher enemies, like level 2's, is still harder.
 
@@ -772,8 +782,8 @@ A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings,
 
 ### Done when
 
-- [ ] Every level has its length, waves, eyes, AA guns, pickups, diary, and messages from the sky as specified.
-- [ ] The levels' test checks the pace: waves, enemy hp, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
+- [x] Every level has its length, waves, eyes, AA guns, pickups, diary, and messages from the sky as specified.
+- [x] The levels' test checks the pace: waves, enemy hp, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
 - [ ] A first run can clear level 1; level 5 is hard but fair.
 - [ ] Each level feels like its missing word: played with the word, it would be easier.
 - [ ] Both endings can still be reached (`?debug=true&start=boss:5&ending=rebel`, then `obedient`).

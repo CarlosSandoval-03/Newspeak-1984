@@ -130,6 +130,55 @@ describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
 
       if (next) expect(offered).toContain(next);
     });
+
+    const blimpSky = (at: number) => [
+      at,
+      at + BLIMP_CROSSING_FRAMES * SCROLL_SPEED,
+    ];
+    // The scroll distances over which a ground message is on screen.
+    const onScreen = (
+      kind: "mural" | "telescreen" | "slogan",
+      defs: { at: number; x?: number }[],
+      height: number,
+    ) =>
+      defs.map(({ at, x }) => {
+        const { y } = anchorNear(level, kind, at, x);
+        return [y - height / 2, y + CANVAS_HEIGHT + height / 2];
+      });
+
+    it("never shows two messages from the sky at once", () => {
+      const spans = [
+        ...onScreen("mural", level.murals, MURAL_SIZE.h),
+        ...onScreen("telescreen", level.telescreens, TELESCREEN_SIZE.h),
+        ...onScreen("slogan", level.groundSlogans, GROUND_SLOGAN_SIZE.h),
+        ...level.blimps.map(({ at }) => blimpSky(at)),
+      ].sort((a, b) => a[0] - b[0]);
+
+      for (let i = 1; i < spans.length; i++)
+        expect(spans[i][0]).toBeGreaterThan(spans[i - 1][1]);
+    });
+
+    it("has a blimp in the sky when the war changes sides", () => {
+      const flip = level.length * ALLIANCE_FLIP_AT;
+
+      expect(
+        level.blimps.some(({ at }) => {
+          const [from, to] = blimpSky(at);
+          return from <= flip && flip <= to;
+        }),
+      ).toBe(true);
+    });
+
+    it("mounts a telescreen over the boss fight, where the city stops", () => {
+      const [[from, to]] = onScreen(
+        "telescreen",
+        level.telescreens.slice(-1),
+        TELESCREEN_SIZE.h,
+      );
+
+      expect(from).toBeLessThanOrEqual(level.length);
+      expect(to).toBeGreaterThanOrEqual(level.length);
+    });
   },
 );
 
@@ -139,64 +188,7 @@ it("gives every level a city of its own", () => {
   expect(new Set(seeds).size).toBe(LEVELS.length);
 });
 
-// Step 7 writes the levels one at a time; each joins these checks once it is written, while the
-// rest still stand in on the prototype.
-const WRITTEN = 2;
-
-describe.each(
-  LEVELS.slice(0, WRITTEN).map((level, i) => [i + 1, level] as const),
-)("level %i, as designed", (_number, level) => {
-  const blimpSky = (at: number) => [
-    at,
-    at + BLIMP_CROSSING_FRAMES * SCROLL_SPEED,
-  ];
-  // The scroll distances over which a ground message is on screen.
-  const onScreen = (
-    kind: "mural" | "telescreen" | "slogan",
-    defs: { at: number; x?: number }[],
-    height: number,
-  ) =>
-    defs.map(({ at, x }) => {
-      const { y } = anchorNear(level, kind, at, x);
-      return [y - height / 2, y + CANVAS_HEIGHT + height / 2];
-    });
-
-  it("never shows two messages from the sky at once", () => {
-    const spans = [
-      ...onScreen("mural", level.murals, MURAL_SIZE.h),
-      ...onScreen("telescreen", level.telescreens, TELESCREEN_SIZE.h),
-      ...onScreen("slogan", level.groundSlogans, GROUND_SLOGAN_SIZE.h),
-      ...level.blimps.map(({ at }) => blimpSky(at)),
-    ].sort((a, b) => a[0] - b[0]);
-
-    for (let i = 1; i < spans.length; i++)
-      expect(spans[i][0]).toBeGreaterThan(spans[i - 1][1]);
-  });
-
-  it("has a blimp in the sky when the war changes sides", () => {
-    const flip = level.length * ALLIANCE_FLIP_AT;
-
-    expect(
-      level.blimps.some(({ at }) => {
-        const [from, to] = blimpSky(at);
-        return from <= flip && flip <= to;
-      }),
-    ).toBe(true);
-  });
-
-  it("mounts a telescreen over the boss fight, where the city stops", () => {
-    const [[from, to]] = onScreen(
-      "telescreen",
-      level.telescreens.slice(-1),
-      TELESCREEN_SIZE.h,
-    );
-
-    expect(from).toBeLessThanOrEqual(level.length);
-    expect(to).toBeGreaterThanOrEqual(level.length);
-  });
-});
-
-it("makes each written level denser than the one before", () => {
+it("makes each level denser than the one before", () => {
   // Per minute of flight: the waves, the hp to shoot down, and the eyes watching.
   const pace = (level: LevelDef) => {
     const minutes = level.length / (SCROLL_SPEED * 60 * 60);
@@ -209,7 +201,7 @@ it("makes each written level denser than the one before", () => {
     );
   };
 
-  const paces = LEVELS.slice(0, WRITTEN).map(pace);
+  const paces = LEVELS.map(pace);
   for (let i = 1; i < paces.length; i++)
     paces[i].forEach((value, measure) =>
       expect(value).toBeGreaterThan(paces[i - 1][measure]),
