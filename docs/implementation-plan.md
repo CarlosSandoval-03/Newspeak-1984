@@ -13,7 +13,8 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0`, `0.5.1`, `0.5.2` | Done |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
 | 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | In progress |
-| — | Content and balance for all 5 levels, polish | `1.0.0` | Not started |
+| 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | Not started |
+| — | Balance, the officer's postscript, polish | `1.0.0` | Not started |
 
 ---
 
@@ -718,11 +719,67 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 - [ ] No anchor stands on water; no plaza or rubble touches water; the tests cover both.
 - [ ] `pnpm bench` stays within budget, `fast-scroll` included.
 
+## Step 7: The five levels (`0.8.0`)
+
+**Goal:** five real levels replace the stand-in. Each lasts a few minutes, grows harder than the last, and is built around the word the Party has just taken.
+
+### Files
+
+`levels/levels.ts` (each level's data, written out in full), `levels/levels.test.ts` (the design rules below as checks), and [gameplay.md](gameplay.md) (each level's design, in player terms). No new mechanics: the levels are made from what steps 1 to 6 built. If a level needs something new (a formation, an enemy), it is proposed here first.
+
+### Specification
+
+**Length and pace.** At `SCROLL_SPEED` 1 px a frame, 3600 px is a minute of flight before the boss.
+
+| Level | `length` | Flight | Waves | Eyes | AA guns |
+| ----- | -------- | ------ | ----- | ---- | ------- |
+| 1 | 7200 | 2:00 | ~20, one every ~6 s | 6, slow sweeps | 2 |
+| 2 | 8400 | 2:20 | ~26 | 8 | 4, two on the bridge's approach |
+| 3 | 9000 | 2:30 | ~30 | 8 | 4 |
+| 4 | 9600 | 2:40 | ~34, smaller and denser | 10, mostly drones | 4 |
+| 5 | 10800 | 3:00 | ~40, one every ~4.5 s | 14, fast sweeps | 6 |
+
+A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings, and the paperwork between levels. Each level has more waves, enemies, and eyes per minute than the one before.
+
+**Messages from the sky.** One every 25 to 30 seconds, never two on screen at once, beside the ticker that never stops:
+
+- 2 or 3 murals spread through the level, and 1 ground slogan;
+- 1 telescreen on the last roof before the city stops, watching the boss fight;
+- 1 blimp, timed to be in the sky when the war changes sides halfway through, so its banner flips in view;
+- level 5, every lie at once: 2 blimps and a mural more.
+
+**Each level around its word.**
+
+| Level | Word taken | Design |
+| ----- | ---------- | ------ |
+| 1 | — | **A lesson in order.** Each thing is met alone before it is met with others: fighters, then weaving fighters, a tower, a drone, a bomber, an AA gun. FREE is found early, to be enjoyed before it is taken; ESCAPE, TRUTH, and REMEMBER follow. The diary lies on an unwatched roof, the easiest to read. |
+| 2 | FREE | **Precise single targets.** With one straight shot, fewer and tougher enemies: bombers and spaced fighters that reward aim over spray. The first camouflaged waves, for TRUTH. Eyes and AA guns watch the river, and the bridge is the only crossing they cover. |
+| 3 | ESCAPE | **Patterns to read, with no dash.** Bombers' fans and crossing waves leave narrow gaps the plane must find by moving. The railway runs through the rubble to the battleship. |
+| 4 | REMEMBER | **Swarms no bomb can clear.** Many small waves of weaving fighters, some in the ally's colors. The ruins have few roofs, so drones and towers on the streets watch them. |
+| 5 | TRUTH | **Everything at once.** The densest waves and the most eyes, at the Ministry of Love. Camouflaged waves return, now with no TRUTH to see them; the pickups of the taken words tempt for suspicion. |
+
+**Diaries.** One a level, on a skylight, each harder to reach than the last: an unwatched roof in level 1, a roof inside a tower's sweep by level 5.
+
+**Pickups.** Each level offers the word the next level takes, while it can still be had (already tested), plus upgrades of the words still known. The pickups of taken words appear in later levels as temptations.
+
+- **Decision:** level lengths rise from 7200 to 10800 px, two to three minutes of flight, about twelve minutes a run.
+- **Decision:** one message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides.
+- **Decision:** difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed, so a level's look tells what it asks.
+- **Decision:** each level is designed around the word it has just lost, as in the table above.
+- **Decision:** no new mechanics; the levels use what exists.
+
+### Done when
+
+- [ ] Every level has its length, waves, eyes, AA guns, pickups, diary, and messages from the sky as specified.
+- [ ] The levels' test checks the pace: waves, enemies, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
+- [ ] A first run can clear level 1; level 5 is hard but fair.
+- [ ] Each level feels like its missing word: played with the word, it would be easier.
+- [ ] Both endings can still be reached (`?debug=true&start=boss:5&ending=rebel`, then `obedient`).
+
 ---
 
 ## Toward `1.0.0`
 
-- Write the content for levels 1–5 in `levels.ts`, on the cities step 6 builds: each level's length, the density of the messages from the sky, waves, eyes, turrets, pickups, diary, and boss (see [gameplay.md › Structure](gameplay.md#structure)). Make the difficulty rise, and lean the level design on the word being removed. For example, level 2 (no FREE) favors precise single targets, and level 3 (no ESCAPE) has tighter bullet patterns.
 - Balance the obedience weights, suspicion rates, and alert multipliers.
 - The officer's postscript: when the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
 - Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
@@ -790,3 +847,8 @@ These are the gaps this plan filled in. An open decision can still change before
 | 45 | The railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it; the land battleship rides it | 6 | Confirmed |
 | 46 | The Ministry of Peace stays halfway through level 3, clear of the railway at the end | 6 | Confirmed |
 | 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Confirmed |
+| 48 | Level lengths rise from 7200 to 10800 px: two to three minutes of flight each, about twelve a run | 7 | Open |
+| 49 | One message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides | 7 | Open |
+| 50 | Difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed | 7 | Open |
+| 51 | Each level is designed around the word it has just lost | 7 | Open |
+| 52 | The levels use only the mechanics steps 1 to 6 built | 7 | Open |
