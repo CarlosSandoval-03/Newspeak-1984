@@ -1,0 +1,644 @@
+% Brief del juego para su evaluación. Compilar con XeLaTeX desde esta carpeta:
+%   latexmk -xelatex brief.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage[margin=2.4cm,headheight=14pt]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\usepackage[hidelinks]{hyperref}
+
+% Las fuentes del propio juego: VT323 es la voz de la máquina, Courier Prime la del papeleo.
+\newfontfamily\machine[Path=../../public/assets/fonts/]{VT323-Regular.ttf}
+\setmonofont[Path=../../public/assets/fonts/,Scale=0.95,BoldFont=CourierPrime-Regular.ttf,BoldFeatures={FakeBold=2}]{CourierPrime-Regular.ttf}
+
+\graphicspath{{../art/}{../../public/assets/illustrations/}}
+
+% La paleta del juego.
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{concrete}{HTML}{3A3A3A}
+\definecolor{steel}{HTML}{7A7A7A}
+\definecolor{paper}{HTML}{E8E4D8}
+\definecolor{reddark}{HTML}{6E1712}
+\definecolor{red}{HTML}{B3261E}
+\definecolor{redlight}{HTML}{E0503A}
+\definecolor{water}{HTML}{2B3B45}
+\definecolor{brick}{HTML}{5A3C2E}
+\definecolor{wood}{HTML}{4A3426}
+
+\titleformat{\section}{\machine\Huge\color{ink}}{\color{red}\thesection}{0.6em}{\MakeUppercase}
+\titleformat{\subsection}{\machine\LARGE\color{concrete}}{\thesubsection}{0.6em}{\MakeUppercase}
+\titleformat{\subsubsection}{\bfseries\color{concrete}}{}{0em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\machine\large NEWSPEAK 1984}
+\fancyhead[R]{\machine\large\color{steel}BRIEF DEL JUEGO}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% Texto del juego tal como se muestra, en la fuente de la máquina.
+\newcommand{\game}[1]{{\machine\large #1}}
+\newcommand{\swatch}[2]{\tikz[baseline=0.1cm]\fill[#1,draw=ink,line width=0.3pt] (0,0) rectangle (0.9,0.45);\,\texttt{#2}}
+% Imágenes de pixel art: sin interpolación, para que escaladas sigan nítidas.
+\newcommand{\pixelart}[2]{\includegraphics[interpolate=false,#1]{#2}}
+
+\begin{document}
+
+% ---------------------------------------------------------------- Portada
+\begin{titlepage}
+  \pagecolor{ink}\color{paper}
+  \centering
+  \vspace*{2cm}
+  {\machine\fontsize{64}{64}\selectfont NEWSPEAK 1984\par}
+  \vspace{0.4cm}
+  {\machine\Huge\color{redlight} BRIEF DEL JUEGO\par}
+  \vspace{1.2cm}
+  \pixelart{width=0.8\textwidth}{menu-city.png}\par
+  \vspace{1.2cm}
+  {\Large Un shmup vertical en la tradición de \emph{1942},\\ ambientado en \emph{1984} de George Orwell\par}
+  \vfill
+  {\large Documento de evaluación: historia, mecánicas, arte y arquitectura técnica\par}
+  \vspace{0.5cm}
+  {\large Carlos Sandoval \quad·\quad Versión \texttt{0.8.0} \quad·\quad 15 de octubre de 2026\par}
+\end{titlepage}
+\pagecolor{white}\color{black}
+
+{\small\setlength{\parskip}{0pt}\tableofcontents}
+\newpage
+
+% ---------------------------------------------------------------- 1
+\section{Resumen}
+
+\emph{Newspeak 1984} es un shmup vertical: el jugador pilota un avión del Partido sobre una ciudad vista desde arriba, dispara a los enemigos y esquiva sus balas, como en el clásico \emph{1942} de Capcom. Lo distinto es que el juego ocurre dentro de la Franja Aérea Uno de Orwell, y que los temas de la novela no son decorado sino reglas: el juego vigila al jugador, le quita sus habilidades palabra por palabra y le miente sobre cómo le va. Al final, el piloto ama al Partido o lo abandona.
+
+\begin{center}
+\begin{tabularx}{0.92\textwidth}{>{\bfseries}l L}
+  \toprule
+  Género & Shmup vertical (\emph{shoot 'em up}) con capa narrativa \\
+  Plataforma & Navegador web; se publica en GitHub Pages y como zip para jugar sin conexión \\
+  Resolución & 480~×~640 píxeles lógicos, escalados por enteros para que el pixel art se vea nítido \\
+  Idiomas & Inglés y español, elegibles desde el menú \\
+  Duración & Cinco niveles, unos 12~minutos y medio de vuelo, más jefes, despegues, aterrizajes y escenas \\
+  Finales & Dos: obediente o rebelde, según las páginas del diario leídas \\
+  Tecnología & TypeScript estricto, p5.js~2, Vite, Vitest, pnpm \\
+  Estado & Versión \texttt{0.8.0}: el juego completo, jugable de principio a fin; queda el balance hacia \texttt{1.0.0} \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Una partida}
+
+Antes de cada nivel, el Oficial da las órdenes y el Diccionario de Neolengua tacha una palabra. En el aire, el piloto derriba enemigos mientras evita los conos de vigilancia: ser visto atrae más enemigos, después cazadores y al final a la Policía del Pensamiento. Tras cada jefe, el Ministerio de la Verdad tacha el puntaje real y escribe uno oficial. Después del nivel~5, el final depende de las páginas del diario que el piloto se atrevió a leer.
+
+% ---------------------------------------------------------------- 2
+\section{Concepto y pilares}
+
+\subsection{Pilares de diseño}
+
+\begin{enumerate}
+  \item \textbf{El tema está en las mecánicas.} La vigilancia, la censura y el doblepensar son sistemas contra los que se juega, no decoración.
+  \item \textbf{Injusto en la ficción, justo en el juego.} Cada mentira tiene una señal que se puede aprender; perder es siempre culpa del jugador.
+  \item \textbf{Legible a velocidad arcade.} Lo que se mueve es más claro que el suelo; el rojo siempre significa el régimen.
+  \item \textbf{Pequeño y completo.} Cinco niveles, cada uno con una pérdida nueva y una mentira nueva.
+\end{enumerate}
+
+\subsection{De Orwell a la mecánica}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.6cm} L}
+  \toprule
+  \textbf{Idea de \emph{1984}} & \textbf{En qué se convierte en el juego} \\
+  \midrule
+  La telepantalla y la Policía del Pensamiento & Conos de visión y una barra de sospecha; al llegar a 100 aparece la Policía del Pensamiento. \\
+  La neolengua & Las habilidades son palabras, y el Partido retira una por nivel. \\
+  El doblepensar & El HUD miente; cada mentira tiene su señal, y la palabra TRUTH la revela, hasta que también la retiran. \\
+  El Ministerio de la Verdad & El puntaje real se tacha y se escribe uno oficial; los récords antiguos cambian. \\
+  Las no-personas & Al perder, el piloto es borrado de la foto del escuadrón; los récords se vuelven \game{[NO-PERSONA]}. \\
+  El diario de Winston & Páginas ocultas de un diario: la única voz humana del juego y la única salida. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+% ---------------------------------------------------------------- 3
+\section{Mundo y narrativa}
+
+\subsection{Ambientación}
+
+Franja Aérea Uno, 1984: una ciudad gris bajo los cuatro Ministerios, en guerra permanente. Quién es el enemigo depende del día: el ticker de noticias dice Eurasia, después Estasia, e insiste en que siempre fue así. El jugador nunca ve a un civil; solo azoteas, ruinas, vigilancia y los mensajes que el régimen escribe para ser leídos desde el cielo.
+
+\subsection{Personajes}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{3.1cm} L}
+  \toprule
+  El piloto & El jugador: un piloto hábil del Partido que empieza leal. Solo se lo conoce por un número de cuatro cifras sorteado en cada partida (\game{PILOTO 6079}). Nunca habla. \\
+  El Líder & El rostro del Partido. Nunca habla; solo mira, desde los murales de las azoteas, las telepantallas y el final obediente. \\
+  El Oficial & Un oficial del Partido Interior que da las órdenes antes de cada nivel. Es la voz humana del régimen, y se vuelve más frío a medida que empeora el veredicto del Ministerio sobre el piloto. \\
+  El piloto borrado & Un antiguo miembro del escuadrón, vaporizado antes de que empiece el juego. Escribió el diario. \\
+  El funcionario & Un empleado de archivos del Ministerio de la Verdad que reescribe el pasado frente a su máquina de escribir. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{center}
+  \pixelart{height=2.6cm}{pilot-portrait.png}\qquad
+  \pixelart{height=2.6cm}{officer-portrait.png}\qquad
+  \pixelart{height=2.6cm}{dictionary-cover.png}\\[2pt]
+  {\small El piloto, el Oficial y la portada del Diccionario de Neolengua.}
+\end{center}
+
+\subsection{La historia oficial y la historia real}
+
+Cada nivel termina junto a uno de los Ministerios y le quita al piloto una palabra. La historia oficial llega por el ticker y por las órdenes del Oficial; la real, por el diario.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.7cm} L L L}
+  \toprule
+  \textbf{Nivel} & \textbf{Historia oficial} & \textbf{Lo que pasa de verdad} & \textbf{Página del diario} \\
+  \midrule
+  1 · Ministerio de la Verdad & Defender la capital de los ataques eurasiáticos. & A mitad del nivel el enemigo pasa a ser Estasia, y el registro se reescribe para decir que siempre lo fue. & Nota el cambio en los periódicos. \\
+  2 · Ministerio de la Abundancia & La producción sube; aumentan las raciones. & Ya no existe FREE. El puntaje que se muestra está inflado, como las cifras de producción. & Recuerda una palabra que el Diccionario ya no tiene. \\
+  3 · Ministerio de la Paz & La guerra va bien; llegan refuerzos. & Ya no existe ESCAPE. La vida extra del HUD a veces no está. & Descubre que el acorazado terrestre bombardea los barrios propios. \\
+  4 · El barrio prole & Cohetes enemigos destruyeron el barrio. & Ya no existe REMEMBER, sobre las ruinas que el Partido quiere olvidar. Algunos «aliados» disparan. & Escribe que las ruinas las hizo el Partido. \\
+  5 · Ministerio del Amor & Proteger el corazón del Partido. & Ya no existe TRUTH; todas las mentiras a la vez. El último jefe es el Ojo del propio Partido. & Su última página: vienen por él. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{La historia oculta: el diario}
+
+En cada nivel hay escondida una página del diario del piloto borrado, sobre la claraboya de una azotea. Leídas en orden, las cinco páginas cuentan lo que el Partido le quitó: recordó las palabras, llevó un diario, fue visto y fue vaporizado. Recoger una página escribe una línea al pie de la pantalla, sin pausar el juego; la página completa solo se lee en el final rebelde.
+
+Cada página es opcional y arriesgada: sube la sospecha en 25 puntos y empeora el veredicto del Ministerio. Por eso el final rebelde se gana arriesgando, no solo con habilidad. Desde el nivel~2, cada diario está bajo el barrido de una torre de vigilancia.
+
+\subsection{Los finales}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.7cm,
+    box/.style={draw=ink,fill=paper,rounded corners=2pt,align=center,font=\small,minimum height=0.9cm,text width=2.6cm},
+    regime/.style={box,draw=red,fill=red!8},
+    free/.style={box,draw=steel,fill=white},
+    arrow/.style={-{Latex[length=2mm]},draw=concrete}]
+  \node[box] (run) {Partida:\\ una página por nivel};
+  \node[box,right=of run,shape=diamond,aspect=2,text width=1.6cm] (pages) {Páginas leídas};
+  \node[regime,above right=0.2cm and 0.9cm of pages] (lands) {Aterriza en el Ministerio del Amor};
+  \node[regime,right=of lands] (obedient) {Final obediente};
+  \node[free,below right=0.2cm and 0.9cm of pages] (leaves) {Nunca aterriza: se va volando};
+  \node[free,right=of leaves] (rebel) {Final rebelde};
+  \node[regime,below=1.1cm of run] (vaporized) {\game{VAPORIZADO}\\ sin final};
+  \draw[arrow] (run) -- (pages);
+  \draw[arrow] (pages) |- node[pos=0.25,left,font=\scriptsize] {0 a 2} (lands);
+  \draw[arrow] (pages) |- node[pos=0.25,left,font=\scriptsize] {3 o más} (leaves);
+  \draw[arrow] (lands) -- (obedient);
+  \draw[arrow] (leaves) -- (rebel);
+  \draw[arrow,dashed] (run) -- node[right,font=\scriptsize] {última vida perdida} (vaporized);
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{Obediente:} el piloto aterriza en el Ministerio del Amor como siempre y es corregido una última vez. Después, el puntaje oficial, un mensaje del Partido y el cuadro de honor «corregido». El piloto termina solo en un café, bajo la telepantalla del Líder: la derrota disfrazada de paz.
+  \item \textbf{Rebelde:} el piloto nunca aterriza. Cuando cae el Ojo no llega ninguna plataforma: el avión se eleva fuera de la pantalla y el Ministerio nunca llega a corregir el último nivel. Es la primera vez que el juego dice la verdad: cada cifra real junto a la versión del Ministerio (\game{OFICIAL: NO SE PERDIÓ NINGUNA TORRE.}) y las páginas del diario completas. Es la única escena luminosa, y no tiene rojo.
+  \item \textbf{Vaporizado:} al perder la última vida, la telepantalla corta la transmisión y aparece la foto del escuadrón con un piloto borrado, sellada \game{VAPORIZADO}: \game{EL PILOTO 6079 NUNCA EXISTIÓ.} Quien leyó el diario sabe de quién es el lugar que acaba de ocupar.
+\end{itemize}
+
+\begin{center}
+  \pixelart{width=0.31\textwidth}{ending-obedient.png}\hfill
+  \pixelart{width=0.31\textwidth}{ending-rebel.png}\hfill
+  \pixelart{width=0.31\textwidth}{vaporized.png}\\[2pt]
+  {\small El final obediente, el final rebelde y la foto del escuadrón de \game{VAPORIZADO}.}
+\end{center}
+
+\subsection{Escenas}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.1cm} L L}
+  \toprule
+  \textbf{Escena} & \textbf{Qué ve el jugador} & \textbf{Propósito narrativo} \\
+  \midrule
+  Menú & La pirámide del Ministerio sobre la ciudad de noche; empezar, cuadro de honor, idioma. & El régimen domina el horizonte antes de jugar. \\
+  Diccionario y órdenes & La edición del Diccionario de este nivel, con su palabra tachada en rojo, y las órdenes del Oficial. & La censura como ritual, anunciada de antemano por una voz humana. \\
+  Despegue y aterrizaje & El avión rueda desde el ojo pintado en la plataforma del Partido y se eleva; tras el jefe, aterriza en otra. & El régimen lanza a su piloto y lo recupera para juzgarlo. \\
+  Juego & La ciudad desde arriba, los enemigos, el HUD, el ticker y los mensajes del régimen. & La guerra, y la vigilancia dentro de ella. \\
+  Pausa & El ojo de una telepantalla con el iris rojo: \game{LA TELEPANTALLA SIGUE ENCENDIDA}. & Incluso detenerse es observado: la sospecha sigue subiendo. \\
+  Ministerio & El puntaje real tachado, el oficial y las correcciones escritos a máquina, el real enviado al agujero de la memoria y el sello. & El pasado se reescribe frente al jugador. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+% ---------------------------------------------------------------- 4
+\section{Mecánicas}
+
+\subsection{Combate y controles}
+
+El piloto tiene tres vidas reales; un impacto cuesta una y lo hace reaparecer parpadeando, invulnerable por un momento. Los enemigos parpadean en blanco al recibir un disparo y explotan al caer. Cada nivel termina con un jefe que se va rompiendo a la vista: agujeros, quemaduras y grietas aparecen uno a uno según su daño, hasta quedar hecho chatarra al 20~\% de su vida.
+
+\begin{center}
+\begin{tabularx}{0.8\textwidth}{L l}
+  \toprule
+  \textbf{Acción} & \textbf{Teclas} \\
+  \midrule
+  Mover & Flechas o WASD \\
+  Disparar (mantener) & \texttt{Espacio} o \texttt{Z} \\
+  Esquiva (ESCAPE) & \texttt{X} o \texttt{Shift} \\
+  Bomba (REMEMBER) & \texttt{C} \\
+  Verdad (TRUTH) & \texttt{V} \\
+  Pausa & \texttt{P} o \texttt{Escape} \\
+  Confirmar o saltar texto & \texttt{Enter} \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Vigilancia y sospecha}
+
+Torres y drones barren conos de visión. Ser visto sube la \textbf{sospecha}, más rápido de cerca; fuera de la vista, baja. Es el dial principal de tensión del juego:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l >{\bfseries}l L}
+  \toprule
+  \textbf{Sospecha} & \textbf{Estado} & \textbf{Efecto} \\
+  \midrule
+  0–33 & Normal & Un shmup estándar. \\
+  34–66 & Alerta & Más enemigos y disparos más frecuentes. \\
+  67–99 & Persecución & Autogiros que cazan al piloto. \\
+  100 & Policía del Pensamiento & Un minijefe en rojo; mientras está, no llegan oleadas. Derribado o superado, la sospecha baja a 50. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+Destruir un ojo está permitido, pero suma 15: se puede pelear contra el sistema, pero el sistema lo nota. Recoger una palabra retirada suma 10 y leer el diario, 25. La sospecha también se siente sin mirar la barra: la pantalla tiembla con más fuerza y una viñeta roja se cierra desde los bordes, latiendo durante la persecución.
+
+\subsection{Neolengua: las palabras como poderes}
+
+Las habilidades son palabras. La partida empieza con las cuatro conocidas pero \emph{dormidas}: no dan poder hasta que el primer pickup de cada una la despierta, y los siguientes la mejoran hasta el nivel~3.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\machine\large}l L l}
+  \toprule
+  \textbf{Palabra} & \textbf{Poder} & \textbf{Retirada} \\
+  \midrule
+  FREE (LIBRE) & El disparo se abre en abanico. & Antes del nivel 2 \\
+  ESCAPE (ESCAPAR) & Una esquiva corta con medio segundo de invulnerabilidad. & Antes del nivel 3 \\
+  REMEMBER (RECORDAR) & Una bomba que limpia enemigos y balas y daña a los jefes; una por nivel por cada mejora. & Antes del nivel 4 \\
+  TRUTH (VERDAD) & Durante unos segundos muestra los valores reales y a los enemigos camuflados. & Antes del nivel 5 \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+Las mejoras duran toda la partida, así que cada retirada quita algo que el jugador construyó. El pickup de una palabra retirada aparece tachado, no da nada y sube la sospecha: el jugador aprende a dejar de buscar lo que le quitaron. Una página del diario devuelve la última palabra retirada durante el resto de ese nivel.
+
+\subsection{Doblepensar: el HUD que miente}
+
+El HUD muestra lo que el Partido quiere que se crea, nunca el estado real: todo lo que muestra pasa por un sistema único, \texttt{Propaganda}. Cada nivel agrega una mentira, y cada mentira tiene una señal que se puede aprender:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}p{4cm} L}
+  \toprule
+  \textbf{Desde} & \textbf{Mentira} & \textbf{Señal} \\
+  \midrule
+  1 & A mitad de cada nivel la guerra cambia de bando, y el ticker reescribe las noticias pasadas con el nuevo enemigo. & El ticker queda en blanco un instante al reescribirse. \\
+  2 & El puntaje se infla por un factor de 1,15 a 1,4 sorteado en cada nivel. & El puntaje se desplaza un píxel por un instante, cada tanto. \\
+  3 & Una vida extra que no existe aparece por momentos. & Esa vida parpadea un instante. \\
+  4 & Algunos cazas enemigos vuelan con los colores aliados, y aun así disparan. & Cada uno muestra su verdadero aspecto un instante, cada tanto. \\
+  5 & Todas a la vez, y ya no hay TRUTH. & Solo la atención del jugador. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+TRUTH muestra los valores reales, los colores verdaderos de los enemigos y cada noticia tal como se escribió por primera vez. En el nivel~5 TRUTH ya no existe, salvo que el diario la devuelva.
+
+\subsection{El Ministerio de la Verdad}
+
+Tras cada nivel, el puntaje real se tacha y se escribe uno «oficial», escalado por la \textbf{obediencia} del piloto en ese nivel:
+\[
+  \text{obediencia} = \operatorname{clamp}_{[0{,}1;\;2]}\Bigl(1 + 0{,}01\,k - 0{,}1\,o - 0{,}5\,p - \tfrac{0{,}5}{600}\,f - 0{,}3\,d\Bigr)
+\]
+donde $k$ son los derribos, $o$ los ojos destruidos, $p$ los agentes de la Policía del Pensamiento derribados, $f$ los fotogramas en que el piloto fue visto (600 son diez segundos) y $d$ las páginas del diario leídas. El puntaje oficial es el puntaje real del nivel por la obediencia. La obediencia decide además un \textbf{veredicto}:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}l l L l l}
+  \toprule
+  \textbf{Veredicto} & \textbf{Obediencia} & \textbf{Derribos oficiales} & \textbf{Sello} & \textbf{Sospecha siguiente} \\
+  \midrule
+  Héroe & $\geq 1{,}2$ & Redondeados hacia arriba, a la decena & \game{\color{red}APROBADO} & 0 \\
+  En revisión & entre ambos & La mitad; el resto, «a pilotos leales» & \game{\color{red}CORREGIDO} & 20 \\
+  Sospechoso & $< 0{,}6$ & Cero: «este piloto no realizó ninguna salida» & \game{\color{red}CORREGIDO} & 40 \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+El veredicto, no lo que pasó, fija también el tono de las siguientes órdenes del Oficial: tranquilo, receloso o frío. Una lista de «correcciones» burocráticas justifica cada cambio (\emph{«Torres de vigilancia perdidas: 3, corregido a 0. No se perdió ninguna torre.»}).
+
+\paragraph{Doblepensar sobre la Policía.} Derribar a la Policía del Pensamiento nunca cuenta como derribo: es lo que más pesa contra la obediencia. Pero el régimen no puede admitir que perdió a su policía, así que el Ministerio la archiva como aviones eurasiáticos entre los derribos y registra que no se perdió ningún agente: el registro premia lo que el veredicto castiga.
+
+\begin{center}
+  \pixelart{width=0.55\textwidth}{memory-hole.png}\\[2pt]
+  {\small El funcionario del Ministerio de la Verdad, frente al agujero de la memoria.}
+\end{center}
+
+\subsection{El cuadro de honor}
+
+Los diez mejores puntajes oficiales se guardan en el navegador. Cada partida entra una sola vez, al terminar: con su número de piloto si llegó al final, y como \game{[NO-PERSONA]} si fue vaporizado, conservando el número pero borrando el nombre. Una partida abandonada nunca entra. En cada visita al Ministerio el jugador ve cómo el archivo es alterado: filas tachadas y reescritas, nombres que se vuelven no-personas.
+
+% ---------------------------------------------------------------- 5
+\section{Estructura y diseño de niveles}
+
+\subsection{Flujo}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.5cm,
+    box/.style={draw=ink,fill=paper,rounded corners=2pt,align=center,font=\small,minimum height=0.8cm,text width=2.25cm},
+    arrow/.style={-{Latex[length=2mm]},draw=concrete}]
+  \node[box] (menu) {Menú};
+  \node[box,right=of menu] (dict) {Diccionario y órdenes};
+  \node[box,right=of dict] (takeoff) {Despegue};
+  \node[box,right=of takeoff] (game) {Nivel $N$ y su jefe};
+  \node[box,below=0.9cm of game] (landing) {Aterrizaje};
+  \node[box,below=0.9cm of takeoff] (ministry) {Ministerio: veredicto};
+  \node[box,below=0.9cm of dict] (roll) {Cuadro de honor alterado};
+  \draw[arrow] (menu) -- (dict);
+  \draw[arrow] (dict) -- (takeoff);
+  \draw[arrow] (takeoff) -- (game);
+  \draw[arrow] (game) -- (landing);
+  \draw[arrow] (landing) -- (ministry);
+  \draw[arrow] (ministry) -- (roll);
+  \draw[arrow] (roll) -- node[left,font=\scriptsize] {nivel $N+1$} (dict);
+\end{tikzpicture}
+\end{center}
+
+Después del nivel~5 llega el final que corresponda; al perder la última vida, \game{VAPORIZADO} y de vuelta al menú.
+
+\subsection{Los cinco niveles}
+
+Cada nivel dura un poco más que el anterior y se vuelve más denso, no más resistente: más oleadas, más vida enemiga que derribar y más ojos por minuto. Cada uno está construido alrededor de la palabra que el Partido acaba de quitar.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}p{2.2cm} l >{\raggedright\arraybackslash}p{2.4cm} L}
+  \toprule
+  \textbf{Nivel} & \textbf{Sin} & \textbf{Vuelo} & \textbf{Jefe} & \textbf{Diseño} \\
+  \midrule
+  1 & — & 2:00 & Fortaleza volante & \textbf{Una lección en orden.} Cada amenaza aparece sola antes de mezclarse: cazas, cazas en zigzag, la primera torre, el primer bombardero, dron y antiaéreo. El diario está en un techo que ningún ojo vigila. \\
+  2 & FREE & 2:20 & Zepelín de guerra & \textbf{Blancos precisos.} Con un solo disparo recto, oleadas pequeñas y abiertas y más bombarderos. Los primeros cazas camuflados. Un río parte la ciudad, con un solo puente vigilado por antiaéreos. \\
+  3 & ESCAPE & 2:30 & Acorazado terrestre, sobre la vía & \textbf{Patrones para leer sin esquiva.} Abanicos de bombarderos cruzados por cazas dejan huecos estrechos. Escombros, el Ministerio de la Paz a mitad de nivel y la vía del tren hasta el final. \\
+  4 & REMEMBER & 2:40 & Ala volante & \textbf{Enjambres que ninguna bomba limpia.} Muchas oleadas pequeñas de cazas en zigzag, algunos con colores aliados, sobre las ruinas sin ministerio, vigiladas por drones. \\
+  5 & TRUTH & 3:00 & El Ojo, la fortaleza del Partido & \textbf{Todo a la vez.} Las oleadas más densas y los ojos más rápidos. Vuelven los camuflados, sin TRUTH para verlos; tientan las palabras retiradas. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{center}
+\begin{tabular}{c r r r r r}
+  \toprule
+  \textbf{Nivel} & \textbf{Oleadas} & \textbf{Ojos} & \textbf{Oleadas/min} & \textbf{Vida enemiga/min} & \textbf{Ojos/min} \\
+  \midrule
+  1 & 22 & 6 & 11,0 & 49,0 & 3,0 \\
+  2 & 31 & 8 & 13,3 & 61,7 & 3,4 \\
+  3 & 38 & 9 & 15,2 & 68,4 & 3,6 \\
+  4 & 46 & 10 & 17,2 & 75,8 & 3,8 \\
+  5 & 64 & 14 & 21,3 & 103,0 & 4,7 \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+La dificultad se mide en vida enemiga por minuto y no en cantidad de enemigos: un nivel de enemigos más escasos pero más resistentes, como el~2, sigue siendo más difícil. Un test automático exige que las tres medidas suban de cada nivel al siguiente.
+
+\subsection{Enemigos}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}l >{\raggedright\arraybackslash}p{2.5cm} L}
+  \toprule
+  \textbf{Enemigo} & \textbf{Rol} & \textbf{Comportamiento} \\
+  \midrule
+  Caza & Básico & Recto o en zigzag, con disparos apuntados. Puede ir camuflado o disfrazado de aliado. \\
+  Bombardero & Pesado & Más lento y resistente; dispara en abanico. \\
+  Autogiro & Persecución & Solo aparece con sospecha alta, nunca en las oleadas: siempre significa que te cazan. \\
+  Antiaéreo & Torreta en tierra & Apunta sus cañones gemelos al piloto. \\
+  Torre y dron & Vigilancia & No disparan ni chocan; ser visto sube la sospecha. \\
+  Policía del Pensamiento & Minijefe & Llega con la sospecha en 100; alterna una ráfaga triple apuntada con un abanico amplio. Balas rojas. \\
+  Jefes & Uno por nivel & Atacan por fases; el Ojo dispara balas rojas. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+Los enemigos extranjeros disparan balas claras; solo las fuerzas del propio régimen disparan en rojo, así que una bala roja siempre significa que el Partido te está disparando.
+
+\begin{center}
+  \pixelart{width=\textwidth}{boss-lineup.png}\\[2pt]
+  {\small Los cinco jefes: fortaleza volante, zepelín de guerra, acorazado terrestre, ala volante y el Ojo.}
+\end{center}
+
+\subsection{La ciudad}
+
+La ciudad no se dibuja a mano: se genera por reglas a partir de una receta en los datos de cada nivel, siempre igual para la misma semilla. Cada nivel tiene su propia ciudad:
+
+\begin{itemize}
+  \item \textbf{Nivel 1 y 5:} plazas de concreto y edificios, con cráteres en el asfalto abierto.
+  \item \textbf{Nivel 2:} un río de lado a lado con su terraplén de piedra, cruzado por un único puente.
+  \item \textbf{Nivel 3:} escombros, y una calle que se ensancha en una vía de tren por la que avanza el acorazado.
+  \item \textbf{Nivel 4:} el barrio prole en ruinas: escombros en casi todas las manzanas y ningún ministerio.
+\end{itemize}
+
+Cada nivel, salvo el 4, termina frente a su ministerio, y el jefe se pelea sobre el edificio que el nivel defiende.
+
+\subsection{Mensajes desde el cielo}
+
+Los carteles en las paredes serían invisibles desde arriba, así que el régimen escribe para el cielo. Aparece uno cada 25 a 30 segundos, nunca dos a la vez, además del ticker que no se detiene:
+
+\begin{itemize}
+  \item \textbf{Murales} en las azoteas: el retrato del Líder sobre un campo rojo con una consigna (\game{ÉL TE VE CON CLARIDAD}).
+  \item \textbf{Consignas en el suelo}, pintadas en las plazas como marcas viales (\game{MIRA ARRIBA}).
+  \item \textbf{Pancartas} remolcadas por un dirigible de propaganda, que cambian a su contraria cuando cambia la guerra (\game{SIEMPRE ALIADOS} $\rightarrow$ \game{NUNCA ALIADOS}).
+  \item \textbf{Telepantallas} en las azoteas, que alternan estática, el ojo del régimen siguiendo al avión y una consigna; una vigila cada pelea con el jefe.
+\end{itemize}
+
+\begin{center}
+  \pixelart{width=0.62\textwidth}{poster-mockup.png}\\[2pt]
+  {\small Maqueta de los mensajes vistos desde el cielo, de cuando se diseñaron.}
+\end{center}
+
+% ---------------------------------------------------------------- 6
+\section{Dirección de arte}
+
+\subsection{Estilo y paleta}
+
+Pixel art visto directamente desde arriba, en el espíritu de \emph{1942}. Las formas reconocibles (aviones, torres, ministerios, retratos) son sprites; todo lo geométrico, animado o hecho de texto lo dibuja el código. La paleta tiene tres grupos:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{2.9cm} p{6.2cm} L}
+  \toprule
+  Base & \swatch{ink}{tinta}\quad \swatch{concrete}{concreto}\par \swatch{steel}{acero}\quad \swatch{paper}{papel} & Todo: sprites, interfaz, texto e ilustraciones. \\
+  Rojo del régimen & \swatch{reddark}{oscuro}\quad \swatch{red}{base}\par \swatch{redlight}{claro} & Solo lo que pertenece al Partido. \\
+  Materiales & \swatch{water}{agua}\quad \swatch{brick}{ladrillo}\par \swatch{wood}{madera} & Materiales reales, oscuros a propósito: el suelo, lo que está fijo en él, y el cuero del diario. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{El rojo es del régimen.} Nada de lo que pertenece al jugador es rojo: el rojo marca las banderas de las azoteas, las lámparas de alarma, los conos que detectan, la viñeta de sospecha, las balas del Partido y los sellos del Ministerio. El final rebelde no tiene nada de rojo.
+
+\textbf{Jerarquía de valores.} Suelo oscuro, enemigos grises, el jugador lo más claro de la pantalla, igualado solo por las tarjetas de papel de las palabras que caen. La legibilidad viene del brillo, no del color.
+
+\subsection{Tipografía}
+
+Dos fuentes con licencia OFL, cada una con su voz:
+\begin{itemize}
+  \item \game{VT323}, \textbf{la máquina}: todo lo que se muestra en vivo, como el HUD, el ticker, las telepantallas, las consignas y los récords.
+  \item \texttt{Courier Prime}, \textbf{el papeleo}: el Diccionario, las órdenes del Oficial, las correcciones del Ministerio y los finales.
+\end{itemize}
+El diario es la única voz humana: la misma letra de máquina de escribir, pero sobre cuero.
+
+\subsection{El HUD}
+
+\begin{center}
+  \pixelart{width=0.3\textwidth}{hud-layout.png}\hfill
+  \pixelart{width=0.3\textwidth}{hud-pursuit.png}\hfill
+  \pixelart{width=0.3\textwidth}{hud-truth.png}\\[2pt]
+  {\small La disposición del HUD; una persecución con la viñeta roja y la pantalla temblando; TRUTH activa con una línea del diario.}
+\end{center}
+
+La pantalla misma muestra la tensión de ser vigilado: líneas de barrido permanentes, como una telepantalla; un temblor que desgarra franjas horizontales tanto más a menudo y más lejos cuanto mayor es la sospecha; y la viñeta roja.
+
+% ---------------------------------------------------------------- 7
+\section{Arquitectura técnica}
+
+\subsection{Stack}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l L}
+  \toprule
+  Herramienta & Versión & Uso \\
+  \midrule
+  TypeScript & 6.0.3 & Modo \texttt{strict}; sin \texttt{any} ni aserciones salvo justificadas. \\
+  p5.js & 2.3.4 & Dibujo en canvas, solo en \emph{instance mode}: la instancia se pasa explícitamente, nunca es global. \\
+  Vite & 8.3.2 & Servidor de desarrollo y build estático con base relativa. \\
+  Vitest & 5.0.3 & Tests unitarios junto a cada módulo. \\
+  pnpm & 12.3.4 & Gestor de paquetes, con versiones exactas. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+El juego no tiene más dependencias de ejecución que p5.js.
+
+\subsection{Organización del código}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\ttfamily}l L}
+  \toprule
+  core/ & Escenas, gestor de escenas con tick fijo, entrada, colisiones, matemática compartida y escalado del canvas. No sabe nada de 1984. \\
+  entities/ & Jugador, enemigos, balas, ojos, torretas, jefes y su daño progresivo, Policía del Pensamiento, pickups, diario, murales, telepantallas, consignas, dirigible. \\
+  systems/ & Sospecha, Neolengua, Propaganda, Ministerio, cuadro de honor, aparición de oleadas y vuelo (despegue, aterrizaje y partida del rebelde). \\
+  levels/ & Los datos de los cinco niveles, el generador de la ciudad y el fondo que la dibuja. \\
+  ui/ & HUD, ticker, efectos (viñeta, líneas, temblor, máquina de escribir, tachados, sellos), pausa y la tabla del cuadro de honor. \\
+  scenes/ & Menú, Diccionario, Juego, Vaporizado, Ministerio y Finales. \\
+  i18n/ & Todo el texto del jugador, en inglés y español; el español se tipa contra el inglés. \\
+  debug/ & Herramientas de depuración, que solo existen en el servidor de desarrollo. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Principios de arquitectura}
+
+\begin{itemize}
+  \item \textbf{Escenas} con un ciclo común (\texttt{enter}, \texttt{update}, \texttt{draw}, \texttt{exit}) y \textbf{entidades} que heredan de una clase base; lo que se puede derribar hereda además vida y parpadeo de impacto.
+  \item \textbf{Simulación a 60~Hz fija.} La lógica cuenta fotogramas y nunca lee el tiempo real; un acumulador decide cuántos ticks correr por dibujo, como máximo dos, así que la velocidad no depende del monitor y una máquina lenta se ralentiza en vez de saltar.
+  \item \textbf{El estado en \texttt{update}, los píxeles en \texttt{draw}.} El dibujo nunca cambia el estado, así que la lógica se prueba sin p5.
+  \item \textbf{El HUD nunca lee el estado real.} Todo lo que muestra (vidas, puntaje, palabras, enemigo de la guerra, colores de los cazas) pasa por \texttt{Propaganda}, que activa cada mentira según el nivel y dice la verdad mientras TRUTH está activa. El tema del juego es también una regla de arquitectura.
+  \item \textbf{Los niveles son datos, no código}: oleadas, ojos, torretas, pickups, diario, mensajes, jefe y la receta de la ciudad. Todo número ajustable vive en un solo archivo de configuración.
+\end{itemize}
+
+\subsection{Generación procedural de la ciudad}
+
+La ciudad se divide en tramos de 480~×~1024 píxeles, cada uno generado desde \texttt{semilla + índice} por un generador pseudoaleatorio propio, separado del de p5, para que el juego nunca cambie el mapa. Las reglas, en orden:
+
+\begin{enumerate}
+  \item Calles verticales que siguen todo el nivel, y horizontales en cada tramo.
+  \item Manzanas de plaza, escombros o asfalto según la receta; la mayoría de las plazas con un edificio, algunos con claraboya, bandera del Partido o lámpara.
+  \item Cráteres en el asfalto abierto.
+  \item El río: tres filas de agua, el largo exacto del sprite del puente, entre dos calles de orilla.
+  \item La vía: la calle central se ensancha a dos celdas, con los rieles por el medio.
+  \item El ministerio del nivel, sobre una plaza despejada.
+  \item Las plataformas de despegue y aterrizaje.
+\end{enumerate}
+
+Las mismas reglas producen \textbf{anclas}: puntos donde puede pararse algo (una calle, una plaza, una azotea, una claraboya, un puente, la vía, un techo con lugar para un mural o una telepantalla). Los datos de nivel colocan los elementos de suelo por intención («la torre en la azotea más cercana a esta distancia»), y los tests comprueban que la ciudad de cada nivel tenga todo lo que sus datos piden, sin que dos elementos compartan lugar.
+
+Cada tramo se dibuja una sola vez en un buffer cuando está por entrar en pantalla, así el fondo cuesta solo dos imágenes por fotograma; las lámparas que parpadean se dibujan encima.
+
+\subsection{Calidad y proceso}
+
+\begin{itemize}
+  \item \textbf{Tests:} 510 tests en 46 archivos (unas 7900 líneas), sobre la lógica pura: colisiones, sospecha, veredictos del Ministerio, mentiras de Propaganda, reglas de la ciudad, datos de los niveles y de los assets. Se hacen pruebas de mutación para comprobar que los tests detectan los errores.
+  \item \textbf{Rendimiento:} un benchmark propio corre escenarios reales del juego en Chromium sin interfaz, como el nivel~1, el~5, la persecución, la Policía del Pensamiento y una tormenta de balas, y compara el p95 de cada uno contra una línea base. El presupuesto es de 16,7~ms por fotograma; los escenarios rondan los 2 a 3~ms.
+  \item \textbf{Herramientas de depuración:} solo en el servidor de desarrollo y con \texttt{?debug=true}. Abren cualquier punto del juego desde la URL y ofrecen un panel que muestra el estado oculto, incluido lo que el HUD está mintiendo. Usan un almacenamiento aparte, que nunca toca el cuadro de honor real, y el build de producción las elimina.
+  \item \textbf{Convenciones:} Prettier; commits con Conventional Commits verificados por un hook; versionado semántico, con una versión menor por paso del plan; un hook de typecheck antes de cada commit.
+  \item \textbf{Integración continua:} GitHub Actions corre typecheck, tests y build en cada push. Cada tag de versión publica el juego en GitHub Pages y crea un release con un zip para jugar sin conexión.
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{l r}
+  \toprule
+  Módulos de código (sin tests) & 55 archivos, unas 9900 líneas \\
+  Tests & 46 archivos, 510 tests \\
+  Assets (sprites, ilustraciones, tilesets, fuentes) & 92 archivos \\
+  Commits & más de 150 \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+% ---------------------------------------------------------------- 8
+\section{Estado y hoja de ruta}
+
+El juego se construyó en pasos, cada uno jugable de punta a punta y publicado como una versión:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{c L l}
+  \toprule
+  \textbf{Paso} & \textbf{Entrega} & \textbf{Versión} \\
+  \midrule
+  0 & Andamiaje: Vite, TypeScript, p5, herramientas y despliegue & \texttt{0.1.0} \\
+  1 & El shmup base: escenas, jugador, enemigos, colisiones, scroll, HUD & \texttt{0.2.0} \\
+  2 & Ojos de vigilancia y sospecha & \texttt{0.3.0} \\
+  3 & Neolengua: palabras, pickups, diarios, Diccionario & \texttt{0.4.0} \\
+  4 & Flujo de niveles, jefes, Ministerio de la Verdad, cuadro de honor, finales & \texttt{0.5.0}–\texttt{0.5.2} \\
+  5 & Propaganda, ticker, efectos de pantalla, mensajes desde el cielo, pausa & \texttt{0.6.0} \\
+  6 & El terreno de cada nivel: río y puente, vía, escombros & \texttt{0.7.0} \\
+  7 & Los cinco niveles, cada uno alrededor de su palabra perdida & \texttt{0.8.0} \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Hacia la versión 1.0.0}
+
+\begin{itemize}
+  \item \textbf{Prueba de juego y balance:} que una primera partida pueda pasar el nivel~1, que el~5 sea difícil pero justo, y que cada nivel se sienta más difícil sin su palabra. Después, ajustar los pesos de obediencia, las tasas de sospecha y los multiplicadores de alerta.
+  \item \textbf{La posdata del Oficial:} si el piloto derribó a la Policía del Pensamiento, las siguientes órdenes lo mencionan, para que el régimen muestre que conoce la verdad que archivó.
+  \item \textbf{Pulido} de los agregados visuales opcionales, y sonido, también opcional.
+\end{itemize}
+
+La versión \texttt{1.0.0} será el juego completo, jugable hasta los dos finales con su balance terminado.
+
+\end{document}

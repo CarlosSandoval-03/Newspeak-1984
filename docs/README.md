@@ -41,6 +41,7 @@ A vertical shmup in the tradition of Capcom's *1942*, set in Orwell's *Nineteen 
 | [implementation-plan.md](implementation-plan.md) | What to build now: each step, when it's done, and the decisions still open. |
 | [debug.md](debug.md) | How to test without replaying the run: start flows from the URL, the debug panel and its commands (dev server only). |
 | [art/](art/) | Visual references: boss lineup, messages seen from the sky, HUD mockups. |
+| [brief/](brief/) | The game's brief for evaluators, in Spanish: story, mechanics, levels, art, and architecture, as a LaTeX document (`latexmk -xelatex brief.tex` builds the PDF). It summarizes these documents; when they change, it follows. |
 
 **Reading order:** this overview → narrative → gameplay → technical → the current step of the plan. The rest as needed.
 

@@ -7,3 +7,10 @@ coverage/
 .vscode/*
 .DS_Store
 bench/baseline.json
+# LaTeX build files of the brief; the PDF is built from brief.tex
+docs/brief/*.aux
+docs/brief/*.fdb_latexmk
+docs/brief/*.fls
+docs/brief/*.out
+docs/brief/*.toc
+docs/brief/*.xdv
