@@ -723,7 +723,7 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 
 **Goal:** five real levels replace the stand-in. Each lasts a few minutes, grows harder than the last, and is built around the word the Party has just taken.
 
-**Progress:** level 1 is written (seed 2, 7200 px, 22 waves, 6 eyes, 2 AA guns), as a lesson in order. Levels 2 to 5 stand in on the old level 1, the prototype, until each is written. The levels' test checks the written ones for the messages from the sky: never two on screen at once, the blimp in the sky when the war changes sides, and a telescreen over the boss fight.
+**Progress:** level 1 is written (seed 2, 7200 px, 22 waves, 6 eyes, 2 AA guns), as a lesson in order, and level 2 (seed 34, 8400 px, 31 waves, 8 eyes, 4 AA guns), as precise single targets across the river. Levels 3 to 5 stand in on the old level 1, the prototype, until each is written. The levels' test checks the written ones for the messages from the sky (never two on screen at once, the blimp in the sky when the war changes sides, a telescreen over the boss fight) and for the pace: per minute, level 1 has 11 waves, 49 hp to shoot down, and 3 eyes; level 2, 13.3, 61.7, and 3.4.
 
 ### Files
 
@@ -741,7 +741,7 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 | 4 | 9600 | 2:40 | ~34, smaller and denser | 10, mostly drones | 4 |
 | 5 | 10800 | 3:00 | ~40, one every ~4.5 s | 14, fast sweeps | 6 |
 
-A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings, and the paperwork between levels. Each level has more waves, enemies, and eyes per minute than the one before.
+A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings, and the paperwork between levels. Each level has more waves, more enemy hp to shoot down, and more eyes per minute than the one before. Enemy hp, not enemy count: a level of fewer, tougher enemies, like level 2's, is still harder.
 
 **Messages from the sky.** One every 25 to 30 seconds, never two on screen at once, beside the ticker that never stops:
 
@@ -766,14 +766,14 @@ A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings,
 
 - **Decision:** level lengths rise from 7200 to 10800 px, two to three minutes of flight, about twelve minutes a run.
 - **Decision:** one message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides.
-- **Decision:** difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed, so a level's look tells what it asks.
+- **Decision:** difficulty rises in density (waves, enemy hp to shoot down, and eyes per minute), not in any one enemy's hp or speed, so a level's look tells what it asks.
 - **Decision:** each level is designed around the word it has just lost, as in the table above.
 - **Decision:** no new mechanics; the levels use what exists.
 
 ### Done when
 
 - [ ] Every level has its length, waves, eyes, AA guns, pickups, diary, and messages from the sky as specified.
-- [ ] The levels' test checks the pace: waves, enemies, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
+- [ ] The levels' test checks the pace: waves, enemy hp, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
 - [ ] A first run can clear level 1; level 5 is hard but fair.
 - [ ] Each level feels like its missing word: played with the word, it would be easier.
 - [ ] Both endings can still be reached (`?debug=true&start=boss:5&ending=rebel`, then `obedient`).
@@ -851,6 +851,6 @@ These are the gaps this plan filled in. An open decision can still change before
 | 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Confirmed |
 | 48 | Level lengths rise from 7200 to 10800 px: two to three minutes of flight each, about twelve a run | 7 | Confirmed |
 | 49 | One message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides | 7 | Confirmed |
-| 50 | Difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed | 7 | Confirmed |
+| 50 | Difficulty rises in density (waves, enemy hp to shoot down, and eyes per minute), not in any one enemy's hp or speed | 7 | Confirmed |
 | 51 | Each level is designed around the word it has just lost | 7 | Confirmed |
 | 52 | The levels use only the mechanics steps 1 to 6 built | 7 | Confirmed |

@@ -15,6 +15,7 @@ import { BLIMP_CROSSING_FRAMES } from "../entities/Blimp";
 import { removedAt } from "../systems/Newspeak";
 import { Spawner } from "../systems/Spawner";
 import { anchorNear, middleStreets } from "./layout";
+import type { LevelDef } from "../types";
 import { LEVELS } from "./levels";
 
 describe.each(LEVELS.map((level, i) => [i + 1, level] as const))(
@@ -140,7 +141,7 @@ it("gives every level a city of its own", () => {
 
 // Step 7 writes the levels one at a time; each joins these checks once it is written, while the
 // rest still stand in on the prototype.
-const WRITTEN = 1;
+const WRITTEN = 2;
 
 describe.each(
   LEVELS.slice(0, WRITTEN).map((level, i) => [i + 1, level] as const),
@@ -193,4 +194,24 @@ describe.each(
     expect(from).toBeLessThanOrEqual(level.length);
     expect(to).toBeGreaterThanOrEqual(level.length);
   });
+});
+
+it("makes each written level denser than the one before", () => {
+  // Per minute of flight: the waves, the hp to shoot down, and the eyes watching.
+  const pace = (level: LevelDef) => {
+    const minutes = level.length / (SCROLL_SPEED * 60 * 60);
+    const hp = level.waves.reduce(
+      (sum, wave) => sum + wave.count * ENEMY_STATS[wave.kind].hp,
+      0,
+    );
+    return [level.waves.length, hp, level.eyes.length].map(
+      (count) => count / minutes,
+    );
+  };
+
+  const paces = LEVELS.slice(0, WRITTEN).map(pace);
+  for (let i = 1; i < paces.length; i++)
+    paces[i].forEach((value, measure) =>
+      expect(value).toBeGreaterThan(paces[i - 1][measure]),
+    );
 });

@@ -129,7 +129,170 @@ const LEVEL_1: LevelDef = {
   boss: "fortress",
 };
 
-// Levels 2 to 5 stand in on the first level as it was before step 7, until each is written.
+// Precise single targets: with FREE gone, one straight shot, so the waves are small and spread wide,
+// and bombers come more often. The first camouflaged fighters make TRUTH worth waking. The river
+// splits the city halfway, crossed by one bridge in the middle, the only crossing the AA guns
+// cover; eyes watch both banks. A tower beside the diary's roof sweeps across it. A FREE card still falls, now a
+// temptation. Waves come about every 5 s.
+const LEVEL_2_LENGTH = 8400;
+const LEVEL_2_RIVER_AT = LEVEL_2_LENGTH / 2;
+const LEVEL_2: LevelDef = {
+  terrain: {
+    seed: 34,
+    blocks: { plaza: 0.6, rubble: 0 },
+    river: { at: LEVEL_2_RIVER_AT, bridges: 1 },
+    landmark: { at: ministryAt(LEVEL_2_LENGTH), ministry: "plenty" },
+  },
+  length: LEVEL_2_LENGTH,
+  waves: [
+    { at: 60, kind: "straight", count: 2, x: 160, spacing: 160 },
+    { at: 345, kind: "straight", count: 3, x: 90, spacing: 150 },
+    { at: 630, kind: "bomber", count: 1, x: 240, spacing: 0 },
+    { at: 915, kind: "sine", count: 2, x: 120, spacing: 240 },
+    { at: 1200, kind: "straight", count: 3, x: 60, spacing: 180, camo: true },
+    { at: 1485, kind: "bomber", count: 2, x: 120, spacing: 240 },
+    { at: 1770, kind: "sine", count: 3, x: 90, spacing: 150 },
+    {
+      at: 2055,
+      kind: "straight",
+      count: 2,
+      x: 100,
+      spacing: 280,
+      drops: "ESCAPE",
+    },
+    { at: 2340, kind: "bomber", count: 1, x: 240, spacing: 0 },
+    { at: 2625, kind: "straight", count: 3, x: 90, spacing: 150, camo: true },
+    { at: 2910, kind: "sine", count: 3, x: 80, spacing: 160 },
+    { at: 3195, kind: "bomber", count: 2, x: 120, spacing: 240 },
+    { at: 3480, kind: "straight", count: 4, x: 60, spacing: 120 },
+    { at: 3765, kind: "bomber", count: 1, x: 240, spacing: 0 },
+    { at: 3765, kind: "sine", count: 2, x: 100, spacing: 280 },
+    { at: 4050, kind: "straight", count: 3, x: 90, spacing: 150 },
+    {
+      at: 4335,
+      kind: "bomber",
+      count: 1,
+      x: 240,
+      spacing: 0,
+      drops: "REMEMBER",
+    },
+    { at: 4620, kind: "sine", count: 4, x: 80, spacing: 110, camo: true },
+    { at: 4905, kind: "straight", count: 3, x: 60, spacing: 180 },
+    { at: 5190, kind: "bomber", count: 2, x: 100, spacing: 280 },
+    { at: 5475, kind: "straight", count: 2, x: 120, spacing: 240 },
+    { at: 5475, kind: "sine", count: 2, x: 200, spacing: 80 },
+    { at: 5760, kind: "straight", count: 4, x: 60, spacing: 120, camo: true },
+    { at: 6045, kind: "bomber", count: 1, x: 240, spacing: 0, drops: "TRUTH" },
+    { at: 6330, kind: "sine", count: 3, x: 90, spacing: 150 },
+    { at: 6615, kind: "bomber", count: 2, x: 120, spacing: 240 },
+    { at: 6615, kind: "straight", count: 2, x: 40, spacing: 400 },
+    { at: 6900, kind: "straight", count: 3, x: 90, spacing: 150 },
+    { at: 7185, kind: "sine", count: 4, x: 80, spacing: 110 },
+    { at: 7470, kind: "bomber", count: 1, x: 240, spacing: 0 },
+    { at: 7755, kind: "straight", count: 3, x: 60, spacing: 180 },
+  ],
+  eyes: [
+    {
+      type: "tower",
+      at: 900,
+      on: "rooftop",
+      facing: 90,
+      range: 170,
+      sweepAmp: 30,
+      sweepSpeed: 0.025,
+    },
+    {
+      type: "drone",
+      at: 2000,
+      x: 240,
+      path: "patrol",
+      facing: 90,
+      range: 150,
+      sweepAmp: 25,
+      sweepSpeed: 0.035,
+    },
+    // On the street beside the diary's roof, sweeping across it.
+    {
+      type: "tower",
+      at: 3296,
+      on: "street",
+      x: 208,
+      facing: 0,
+      range: 170,
+      sweepAmp: 35,
+      sweepSpeed: 0.03,
+    },
+    // The banks: one before the river, a drone over the bridge, one past it.
+    {
+      type: "tower",
+      at: 3900,
+      on: "street",
+      x: 0,
+      facing: 90,
+      range: 180,
+      sweepAmp: 40,
+      sweepSpeed: 0.03,
+    },
+    {
+      type: "drone",
+      at: 4300,
+      x: 240,
+      path: "patrol",
+      facing: 90,
+      range: 150,
+      sweepAmp: 25,
+      sweepSpeed: 0.04,
+    },
+    {
+      type: "tower",
+      at: 4700,
+      on: "street",
+      x: CANVAS_WIDTH,
+      facing: 135,
+      range: 180,
+      sweepAmp: 40,
+      sweepSpeed: 0.03,
+    },
+    {
+      type: "tower",
+      at: 6000,
+      on: "plaza",
+      facing: 45,
+      range: 180,
+      sweepAmp: 35,
+      sweepSpeed: 0.03,
+    },
+    {
+      type: "drone",
+      at: 7000,
+      x: 300,
+      path: "sine",
+      facing: 90,
+      range: 150,
+      sweepAmp: 20,
+      sweepSpeed: 0.045,
+    },
+  ],
+  // Two hold the crossing: one on the bridge, one on the street that leads to it.
+  turrets: [
+    { at: 2000, on: "street", x: 420 },
+    { at: LEVEL_2_RIVER_AT - 250, on: "street", x: CANVAS_WIDTH / 2 },
+    { at: LEVEL_2_RIVER_AT, on: "bridge" },
+    { at: 6500, on: "street", x: 60 },
+  ],
+  pickups: [
+    { at: 3000, x: 300, word: "FREE" },
+    { at: 5600, x: 180, word: "ESCAPE" },
+  ],
+  diary: { at: 3296 },
+  groundSlogans: [{ at: 656 }],
+  murals: [{ at: 2672 }, { at: 5840 }],
+  blimps: [{ at: 3800, y: 180, from: "right" }],
+  telescreens: [{ at: 7808 }],
+  boss: "airship",
+};
+
+// Levels 3 to 5 stand in on the first level as it was before step 7, until each is written.
 const CITY = { seed: 1984, blocks: { plaza: 0.6, rubble: 0 } };
 // Just past the last wave, so the sky is soon clear for the landing.
 const LENGTH = 3000;
@@ -246,42 +409,26 @@ const PROTOTYPE: LevelDef = {
   boss: "fortress",
 };
 
-// A stand-in until the real level 2 is written: the prototype's data with three fighter waves
-// camouflaged, so TRUTH has something to show, and its FREE pickups now tempt instead of help. Its
-// own city is split by the river, crossed by a single bridge in the middle, where an AA gun holds
-// the crossing; a city with more vertical streets has blocks too narrow for murals.
+// Levels 3 to 5 replay the prototype with their own cities, bosses, and ministries, so every
+// removal and every boss can be played until the real levels are written: three of its fighter
+// waves camouflaged, so TRUTH has something to show, and its FREE pickups now a temptation. Level 3
+// is in rubble, where the land battleship rides the railway at the end, so the Ministry of Peace
+// stands halfway, before the railway begins; the ruined prole district has no ministry. A ministry
+// reshapes the city around it, so these cities have fewer roofs with room for a mural or a
+// telescreen, and some towers move off the roofs and plazas its murals and slogans take.
 const CAMOUFLAGED = new Set([660, 1560, 2280]);
-const RIVER_AT = LENGTH / 2;
-const LEVEL_2: LevelDef = {
+const STAND_IN: LevelDef = {
   ...PROTOTYPE,
-  terrain: {
-    ...CITY,
-    seed: 71,
-    river: { at: RIVER_AT, bridges: 1 },
-    landmark: { at: MINISTRY_AT_THE_END, ministry: "plenty" },
-  },
   waves: PROTOTYPE.waves.map((wave) =>
     CAMOUFLAGED.has(wave.at) ? { ...wave, camo: true } : wave,
   ),
-  // The towers that would stand on its murals, telescreen, and slogan move to free ground.
   eyes: PROTOTYPE.eyes.map((eye) => {
     if (eye.type !== "tower") return eye;
     if (eye.at === 450) return { ...eye, x: CANVAS_WIDTH };
     if (eye.at === 900 || eye.at === 2100) return { ...eye, on: "street" };
     return eye;
   }),
-  turrets: [...PROTOTYPE.turrets, { at: RIVER_AT, on: "bridge" }],
-  boss: "airship",
 };
-
-// Levels 3 to 5 replay the stand-in with their own bosses and ministries, so every removal and
-// every boss can be played until the real levels are written. Level 3 has a city of its own, in
-// rubble, where the land battleship rides the railway at the end, so the Ministry of Peace stands
-// halfway, before the railway begins; the ruined prole district has no ministry. Each has a city
-// of its own.
-// A ministry reshapes the city around it, so these cities have fewer roofs with room for a mural
-// or a telescreen. They keep level 2's towers, but have no river for its AA gun on the bridge.
-const STAND_IN: LevelDef = { ...LEVEL_2, turrets: PROTOTYPE.turrets };
 
 export const LEVELS: LevelDef[] = [
   LEVEL_1,

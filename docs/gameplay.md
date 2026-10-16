@@ -143,9 +143,10 @@ flowchart TD
 
 ### Level design
 
-Each level lasts a little longer than the last and grows denser, not tougher: more waves, enemies, and eyes a minute. Each is built around the word the Party has just taken. A message from the sky comes every 25 to 30 seconds, never two at once, and the blimp is in the sky when the war changes sides.
+Each level lasts a little longer than the last and grows denser, not tougher: more waves, more enemy hp to shoot down, and more eyes a minute. Each is built around the word the Party has just taken. A message from the sky comes every 25 to 30 seconds, never two at once, and the blimp is in the sky when the war changes sides.
 
 - **Level 1, the Ministry of Truth** (2 minutes): a lesson in order. Fighters come first, then weaving fighters; the sky clears for the first tower, then for the first bomber, the first drone, and the first AA gun, before they start to mix. FREE falls early, to be enjoyed before the Party takes it, and once more as an upgrade; ESCAPE, TRUTH, and REMEMBER come from the waves. The diary lies on a roof no eye watches, the easiest page to read.
+- **Level 2, the Ministry of Plenty** (2 minutes 20): precise single targets. With FREE gone, the waves are small and spread wide, and bombers come more often, so every shot counts. The first camouflaged fighters make TRUTH worth waking. The river splits the city halfway, crossed by one bridge in the middle: an AA gun holds the bridge and another the street to it, and eyes watch both banks. A tower beside the diary's roof sweeps across it. A FREE card still falls, now a temptation.
 
 ## Cast
 
