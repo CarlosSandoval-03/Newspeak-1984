@@ -4,7 +4,7 @@ A vertical scrolling shoot 'em up inspired by Capcom's *1942*, set in the world 
 
 You fly for the Party. The longer you fly, the more you see, and the more you see, the more the Party sees you. The dystopia comes through in the mechanics, not just the art: the game watches you, takes your abilities away, and lies to you about how you are doing.
 
-> **Status:** early development. The project is scaffolded, the art and design documentation are complete, and the gameplay is being built step by step.
+> **Status:** version 1.0.0. The full game is playable through both endings: five levels, in English and Spanish. What may come next is in [docs/implementation-plan.md › Future plans](docs/implementation-plan.md#future-plans).
 
 ## The game
 

@@ -75,7 +75,7 @@
   \vfill
   {\large Documento de evaluación: historia, mecánicas, arte y arquitectura técnica\par}
   \vspace{0.5cm}
-  {\large Carlos Sandoval \quad·\quad Versión \texttt{0.8.0} \quad·\quad 15 de octubre de 2026\par}
+  {\large Carlos Sandoval \quad·\quad Versión \texttt{1.0.0} \quad·\quad 15 de octubre de 2026\par}
 \end{titlepage}
 \pagecolor{white}\color{black}
 
@@ -97,7 +97,7 @@
   Duración & Cinco niveles, unos 12~minutos y medio de vuelo, más jefes, despegues, aterrizajes y escenas \\
   Finales & Dos: obediente o rebelde, según las páginas del diario leídas \\
   Tecnología & TypeScript estricto, p5.js~2, Vite, Vitest, pnpm \\
-  Estado & Versión \texttt{0.8.0}: el juego completo, jugable de principio a fin; queda el balance hacia \texttt{1.0.0} \\
+  Estado & Versión \texttt{1.0.0}: el juego completo, jugable de principio a fin y hasta los dos finales \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -593,7 +593,7 @@ Cada tramo se dibuja una sola vez en un buffer cuando está por entrar en pantal
 \subsection{Calidad y proceso}
 
 \begin{itemize}
-  \item \textbf{Tests:} 510 tests en 46 archivos (unas 7900 líneas), sobre la lógica pura: colisiones, sospecha, veredictos del Ministerio, mentiras de Propaganda, reglas de la ciudad, datos de los niveles y de los assets. Se hacen pruebas de mutación para comprobar que los tests detectan los errores.
+  \item \textbf{Tests:} 513 tests en 47 archivos (unas 7900 líneas), sobre la lógica pura: colisiones, sospecha, veredictos del Ministerio, mentiras de Propaganda, reglas de la ciudad, datos de los niveles y de los assets. Con pruebas de mutación se comprobó que los tests detectan los errores que deben detectar.
   \item \textbf{Rendimiento:} un benchmark propio corre escenarios reales del juego en Chromium sin interfaz, como el nivel~1, el~5, la persecución, la Policía del Pensamiento y una tormenta de balas, y compara el p95 de cada uno contra una línea base. El presupuesto es de 16,7~ms por fotograma; los escenarios rondan los 2 a 3~ms.
   \item \textbf{Herramientas de depuración:} solo en el servidor de desarrollo y con \texttt{?debug=true}. Abren cualquier punto del juego desde la URL y ofrecen un panel que muestra el estado oculto, incluido lo que el HUD está mintiendo. Usan un almacenamiento aparte, que nunca toca el cuadro de honor real, y el build de producción las elimina.
   \item \textbf{Convenciones:} Prettier; commits con Conventional Commits verificados por un hook; versionado semántico, con una versión menor por paso del plan; un hook de typecheck antes de cada commit.
@@ -603,8 +603,8 @@ Cada tramo se dibuja una sola vez en un buffer cuando está por entrar en pantal
 \begin{center}
 \begin{tabular}{l r}
   \toprule
-  Módulos de código (sin tests) & 55 archivos, unas 9900 líneas \\
-  Tests & 46 archivos, 510 tests \\
+  Módulos de código (sin tests) & 56 archivos, unas 10\,000 líneas \\
+  Tests & 47 archivos, 513 tests \\
   Assets (sprites, ilustraciones, tilesets, fuentes) & 92 archivos \\
   Commits & más de 150 \\
   \bottomrule
@@ -612,7 +612,7 @@ Cada tramo se dibuja una sola vez en un buffer cuando está por entrar en pantal
 \end{center}
 
 % ---------------------------------------------------------------- 8
-\section{Estado y hoja de ruta}
+\section{Estado y planes futuros}
 
 El juego se construyó en pasos, cada uno jugable de punta a punta y publicado como una versión:
 
@@ -630,18 +630,22 @@ El juego se construyó en pasos, cada uno jugable de punta a punta y publicado c
   5 & Propaganda, ticker, efectos de pantalla, mensajes desde el cielo, pausa & \texttt{0.6.0} \\
   6 & El terreno de cada nivel: río y puente, vía, escombros & \texttt{0.7.0} \\
   7 & Los cinco niveles, cada uno alrededor de su palabra perdida & \texttt{0.8.0} \\
+  — & El juego completo, jugable hasta los dos finales; cada partida abre con la ficha de personal del piloto & \texttt{1.0.0} \\
   \bottomrule
 \end{tabularx}
 \end{center}
 
-\subsection{Hacia la versión 1.0.0}
+La versión \texttt{1.0.0} es el juego completo: los cinco niveles, la vigilancia, las palabras que se pierden, las mentiras del HUD con sus señales, el Ministerio y su cuadro de honor, el diario y los dos finales, en inglés y en español.
+
+\subsection{Planes futuros}
+
+Lo que puede venir después de la \texttt{1.0.0}, sin un orden fijo. Cada mejora saldría como una versión propia: menor para una novedad, de parche para una corrección.
 
 \begin{itemize}
-  \item \textbf{Prueba de juego y balance:} que una primera partida pueda pasar el nivel~1, que el~5 sea difícil pero justo, y que cada nivel se sienta más difícil sin su palabra. Después, ajustar los pesos de obediencia, las tasas de sospecha y los multiplicadores de alerta.
-  \item \textbf{La posdata del Oficial:} si el piloto derribó a la Policía del Pensamiento, las siguientes órdenes lo mencionan, para que el régimen muestre que conoce la verdad que archivó.
-  \item \textbf{Pulido} de los agregados visuales opcionales, y sonido, también opcional.
+  \item \textbf{Prueba de juego y balance:} jugar los cinco niveles para ajustar la sensación: que una primera partida pueda pasar el nivel~1, que el~5 sea difícil pero justo y que cada nivel se sienta más difícil sin su palabra. Después, afinar los pesos de obediencia, las tasas de sospecha y los multiplicadores de alerta.
+  \item \textbf{La posdata del Oficial:} si el piloto derribó a la Policía del Pensamiento, las siguientes órdenes lo mencionarían, para que el régimen muestre que conoce la verdad que archivó.
+  \item \textbf{Pulido} de los agregados visuales opcionales.
+  \item \textbf{Sonido}, con la Web Audio API del navegador, sin dependencias nuevas.
 \end{itemize}
-
-La versión \texttt{1.0.0} será el juego completo, jugable hasta los dos finales con su balance terminado.
 
 \end{document}

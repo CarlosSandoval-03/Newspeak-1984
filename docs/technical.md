@@ -317,7 +317,7 @@ On the dev server (`pnpm dev`) only, and only with `?debug=true` in the URL, `ma
   - Breaking changes: `!` after the type/scope and a `BREAKING CHANGE:` footer.
 - **One logical change per commit;** the game must typecheck and run at every commit.
 - **Hooks** (`.githooks/`, activated by `pnpm install` through the `prepare` script, which sets `core.hooksPath`): `commit-msg` validates the message, `pre-commit` runs `pnpm typecheck`. Never bypass them with `--no-verify`.
-- **Versioning:** [SemVer](https://semver.org/) in `package.json`. While in `0.x`, each completed implementation step bumps the minor version (`0.1.0` → `0.2.0`) and fixes bump the patch. Releases get their own commit (`chore(release): vX.Y.Z`) and an annotated tag `vX.Y.Z`. `1.0.0` = the full game playable through both endings.
+- **Versioning:** [SemVer](https://semver.org/) in `package.json`. While in `0.x`, each completed implementation step bumps the minor version (`0.1.0` → `0.2.0`) and fixes bump the patch. Releases get their own commit (`chore(release): vX.Y.Z`) and an annotated tag `vX.Y.Z`. `1.0.0` = the full game playable through both endings. From then on, a new feature bumps the minor version and a fix the patch.
 - Only the project owner pushes.
 
 ### CI and deploy

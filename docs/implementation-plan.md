@@ -14,7 +14,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
 | 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | Done |
 | 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | Done |
-| — | Balance, the officer's postscript, polish | `1.0.0` | Not started |
+| — | The full game, playable through both endings, opening on the pilot's personnel file | `1.0.0` | Done |
 
 ---
 
@@ -467,7 +467,7 @@ Details in [assets.md › Assets that need p5 additions](assets.md#assets-that-n
 - **Decision:** until the layout has the railway, the land battleship rides the vertical street nearest the middle of the screen, driving up and down most of its upper half (±120 px around y 190, every 12 s) and always whole on screen; a ground boss casts no shadow and can't be rammed. The stand-in levels 3–5 replay level 2 with their own bosses.
 - **Decision:** the Thought Police never come once the city has stopped at `length`; if they are already there, the boss waits for them to go.
 - **Decision:** the HUD's score is the official record plus what the current level has earned, which stays real until the Ministry judges it; so the player watches the score change between levels. The weights start as `W_KILL` 0.01, `W_EYE` 0.1, `W_SEEN` 0.5 per 10 s seen, `W_DIARY` 0.3, and a hero's kills round up to `HERO_KILLS_ROUNDING` (10).
-- **Decision:** doublethink over the Thought Police. Shooting them down is never a kill: it counts as `policeDestroyed`, the heaviest weight in obedience (`W_POLICE` 0.5). But the regime can't admit losing its police, so the Ministry files them as enemy aircraft: the kills line reports `kills + policeDestroyed`, the verdict's correction applies to that total, and the next line says no officer was lost because "the aircraft was Eurasian". The player sees the record credit what the verdict punishes. Later layers of the same lie: the ticker in step 5, the officer's postscript toward `1.0.0`, and the truth in the rebel ending.
+- **Decision:** doublethink over the Thought Police. Shooting them down is never a kill: it counts as `policeDestroyed`, the heaviest weight in obedience (`W_POLICE` 0.5). But the regime can't admit losing its police, so the Ministry files them as enemy aircraft: the kills line reports `kills + policeDestroyed`, the verdict's correction applies to that total, and the next line says no officer was lost because "the aircraft was Eurasian". The player sees the record credit what the verdict punishes. Later layers of the same lie: the ticker in step 5, the officer's postscript in the future plans, and the truth in the rebel ending.
 - **Decision:** while a boss or the Thought Police are on screen, the HUD's second line shows the giant's name (`hud.bosses`) over its hp bar instead of the suspicion meter and alert state: a battle is all that matters while it lasts, suspicion can't call the Thought Police then anyway, and it keeps counting underneath for the Ministry. The names carry no nation, since the enemy's name flips with the ticker's lie.
 - A bomb takes the same `BOMB_BOSS_DAMAGE` (10) from every giant, so its share follows their hp: a quarter of the Thought Police's 40, but 4–8% of a level boss's 120–250.
 - **Progressive damage:** the boss shows its wounds hole by hole as it loses hp, never in one swap. Its `boss-*-damage.json` lists the damage regions in reveal order. On the boss's first frame, copy the clean sprite into a `p5.Graphics` (once per level). Whenever the number of regions that should be visible (`ceil(n × (1 − hp / maxHp) / (1 − DAMAGE_END))`, capped at `n`, where `DAMAGE_END` ≈ 0.2 is the hp fraction at which all damage is shown) grows, reveal the new ones: `erase()` the rect, `noErase()`, then draw that rect from `boss-*-damaged.png`. Draw the boss from the graphics. Work happens only when a region appears, never per frame. See [technical.md › Progressive damage](technical.md#progressive-damage).
@@ -733,7 +733,7 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 | 4 | 13 | 17.2 | 75.8 | 3.8 |
 | 5 | 36 | 21.3 | 103.0 | 4.7 |
 
-Each diary but level 1's lies under a tower 82 px away, sweeping across it. `pnpm bench` times level 5 too (`level5`), the densest level, well within budget. Playing them for feel moves to the balance toward `1.0.0`. **Step 7 is done** and released as `0.8.0`. Next: the balance, the officer's postscript, and the polish toward `1.0.0`.
+Each diary but level 1's lies under a tower 82 px away, sweeping across it. `pnpm bench` times level 5 too (`level5`), the densest level, well within budget. Playing them for feel moves to the future plans. **Step 7 is done** and released as `0.8.0`. Next: `1.0.0`.
 
 ### Files
 
@@ -788,21 +788,19 @@ A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings,
 
 ---
 
-## Toward `1.0.0`
+## `1.0.0`
 
-- Done: a new run opens on the pilot's personnel file (`EnlistmentScene`), the one place the pilot's portrait shows, which introduces him by the number drawn for the run.
+The full game, playable through both endings: five levels each built around the word the Party takes, the surveillance and its Thought Police, the lying HUD and its tells, the Ministry's corrections and the honor roll it tampers with, the diary and the two endings, in English and Spanish. Since `0.8.0`, a new run opens on the pilot's personnel file (`EnlistmentScene`), the one place the pilot's portrait shows, which introduces him by the number drawn for the run.
 
-- Play the five levels and balance them: a first run can clear level 1; level 5 is hard but fair (the jump from level 4, +36% enemy hp a minute, is the first thing to lower); each level feels like its missing word, harder than it would be with it. Then balance the obedience weights, suspicion rates, and alert multipliers.
-- The officer's postscript: when the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
-- Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
-- Sound is optional. Assets go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
-- `1.0.0` = the full game can be played through both endings ([technical.md › Git](technical.md#git)).
+## Future plans
 
-## After `1.0.0`
+What may come after `1.0.0`, in no fixed order. Each ships as its own version: a minor one for a feature, a patch for a fix.
 
-Low priority, for when the game is complete:
-
-- Retake the HUD mockups in [art-direction.md](art-direction.md#the-hud) from the real game. `hud-thought-police.png` still shows the suspicion meter beside the Thought Police, which step 4 replaced with their name during a battle.
+- **Playtest and balance.** Play the five levels for feel: a first run should clear level 1; level 5 should be hard but fair (the jump from level 4, +36% enemy hp a minute, is the first thing to lower); each level should feel harder without its word than it would with it. Then balance the obedience weights, suspicion rates, and alert multipliers.
+- **The officer's postscript.** When the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
+- **Polish:** the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
+- **Sound.** Assets would go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
+- **The HUD mockups.** Retake those in [art-direction.md](art-direction.md#the-hud) from the real game: `hud-thought-police.png` still shows the suspicion meter beside the Thought Police, which step 4 replaced with their name during a battle.
 
 ---
 
