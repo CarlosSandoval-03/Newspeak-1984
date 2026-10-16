@@ -13,7 +13,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0`, `0.5.1`, `0.5.2` | Done |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
 | 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | In progress |
-| 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | Not started |
+| 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | In progress |
 | — | Balance, the officer's postscript, polish | `1.0.0` | Not started |
 
 ---
@@ -723,6 +723,8 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 
 **Goal:** five real levels replace the stand-in. Each lasts a few minutes, grows harder than the last, and is built around the word the Party has just taken.
 
+**Progress:** level 1 is written (seed 2, 7200 px, 22 waves, 6 eyes, 2 AA guns), as a lesson in order. Levels 2 to 5 stand in on the old level 1, the prototype, until each is written. The levels' test checks the written ones for the messages from the sky: never two on screen at once, the blimp in the sky when the war changes sides, and a telescreen over the boss fight.
+
 ### Files
 
 `levels/levels.ts` (each level's data, written out in full), `levels/levels.test.ts` (the design rules below as checks), and [gameplay.md](gameplay.md) (each level's design, in player terms). No new mechanics: the levels are made from what steps 1 to 6 built. If a level needs something new (a formation, an enemy), it is proposed here first.
@@ -847,8 +849,8 @@ These are the gaps this plan filled in. An open decision can still change before
 | 45 | The railway widens the vertical street nearest the middle into two cells, taking a column from the wider block beside it; the land battleship rides it | 6 | Confirmed |
 | 46 | The Ministry of Peace stays halfway through level 3, clear of the railway at the end | 6 | Confirmed |
 | 47 | Each level has a seed and recipe of its own: concrete in levels 1 and 5, the river in 2, rubble and the railway in 3, the most rubble in 4 | 6 | Confirmed |
-| 48 | Level lengths rise from 7200 to 10800 px: two to three minutes of flight each, about twelve a run | 7 | Open |
-| 49 | One message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides | 7 | Open |
-| 50 | Difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed | 7 | Open |
-| 51 | Each level is designed around the word it has just lost | 7 | Open |
-| 52 | The levels use only the mechanics steps 1 to 6 built | 7 | Open |
+| 48 | Level lengths rise from 7200 to 10800 px: two to three minutes of flight each, about twelve a run | 7 | Confirmed |
+| 49 | One message from the sky every 25 to 30 seconds, never two on screen at once; one blimp a level (two in level 5), in the sky when the war changes sides | 7 | Confirmed |
+| 50 | Difficulty rises in density (waves, enemies, and eyes per minute), not in enemy hp or speed | 7 | Confirmed |
+| 51 | Each level is designed around the word it has just lost | 7 | Confirmed |
+| 52 | The levels use only the mechanics steps 1 to 6 built | 7 | Confirmed |

@@ -26,6 +26,9 @@ const SWAY = 2;
 const SWAY_FRAMES = 120;
 // From the hull's middle to the far end of its banner.
 const TRAIN_LENGTH = HULL_LENGTH / 2 + TOW_LENGTH + BANNER.w;
+// From entering nose first to its banner's far end leaving the other side.
+export const BLIMP_CROSSING_FRAMES =
+  (CANVAS_WIDTH + HULL_LENGTH / 2 + TRAIN_LENGTH) / BLIMP_SPEED;
 
 // The regime's voice in the sky: it crosses the screen once, towing a banner that says what
 // Propaganda allows. It can't be shot and touches nothing.

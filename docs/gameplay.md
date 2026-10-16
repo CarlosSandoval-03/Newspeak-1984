@@ -141,6 +141,12 @@ flowchart TD
 | 4 | REMEMBER | "Allied" enemies | Flying wing | The ruined prole district: no ministry, only rubble |
 | 5 | TRUTH | All of them, with no TRUTH | **The Eye**, the Party's own fortress | The Ministry of Love |
 
+### Level design
+
+Each level lasts a little longer than the last and grows denser, not tougher: more waves, enemies, and eyes a minute. Each is built around the word the Party has just taken. A message from the sky comes every 25 to 30 seconds, never two at once, and the blimp is in the sky when the war changes sides.
+
+- **Level 1, the Ministry of Truth** (2 minutes): a lesson in order. Fighters come first, then weaving fighters; the sky clears for the first tower, then for the first bomber, the first drone, and the first AA gun, before they start to mix. FREE falls early, to be enjoyed before the Party takes it, and once more as an upgrade; ESCAPE, TRUTH, and REMEMBER come from the waves. The diary lies on a roof no eye watches, the easiest page to read.
+
 ## Cast
 
 | Enemy | Role | Behavior |

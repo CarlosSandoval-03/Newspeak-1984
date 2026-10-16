@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Assets } from "../assets";
 import { CANVAS_WIDTH } from "../config";
 import type { BlimpDef } from "../types";
-import { Blimp } from "./Blimp";
+import { BLIMP_CROSSING_FRAMES, Blimp } from "./Blimp";
 
 const assets = {
   image: { "propaganda-blimp": {}, "propaganda-blimp-shadow": {} },
@@ -63,6 +63,18 @@ describe("Blimp", () => {
 
       for (let i = 0; blimp.alive && i < 1000; i++) blimp.update();
       expect(blimp.alive).toBe(false);
+    }
+  });
+
+  it("takes as long to cross as it says", () => {
+    for (const from of ["left", "right"] as const) {
+      const blimp = flyFrom(from);
+      let frames = 0;
+      while (blimp.alive) {
+        blimp.update();
+        frames++;
+      }
+      expect(frames).toBeCloseTo(BLIMP_CROSSING_FRAMES, -1);
     }
   });
 

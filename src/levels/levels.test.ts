@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  ALLIANCE_FLIP_AT,
+  CANVAS_HEIGHT,
   CANVAS_WIDTH,
   ENEMY_STATS,
+  GROUND_SLOGAN_SIZE,
+  MURAL_SIZE,
   PICKUP_RADIUS,
+  SCROLL_SPEED,
   SINE_AMPLITUDE,
+  TELESCREEN_SIZE,
 } from "../config";
+import { BLIMP_CROSSING_FRAMES } from "../entities/Blimp";
 import { removedAt } from "../systems/Newspeak";
 import { Spawner } from "../systems/Spawner";
 import { anchorNear, middleStreets } from "./layout";
@@ -129,4 +136,61 @@ it("gives every level a city of its own", () => {
   const seeds = LEVELS.map(({ terrain }) => terrain.seed);
 
   expect(new Set(seeds).size).toBe(LEVELS.length);
+});
+
+// Step 7 writes the levels one at a time; each joins these checks once it is written, while the
+// rest still stand in on the prototype.
+const WRITTEN = 1;
+
+describe.each(
+  LEVELS.slice(0, WRITTEN).map((level, i) => [i + 1, level] as const),
+)("level %i, as designed", (_number, level) => {
+  const blimpSky = (at: number) => [
+    at,
+    at + BLIMP_CROSSING_FRAMES * SCROLL_SPEED,
+  ];
+  // The scroll distances over which a ground message is on screen.
+  const onScreen = (
+    kind: "mural" | "telescreen" | "slogan",
+    defs: { at: number; x?: number }[],
+    height: number,
+  ) =>
+    defs.map(({ at, x }) => {
+      const { y } = anchorNear(level, kind, at, x);
+      return [y - height / 2, y + CANVAS_HEIGHT + height / 2];
+    });
+
+  it("never shows two messages from the sky at once", () => {
+    const spans = [
+      ...onScreen("mural", level.murals, MURAL_SIZE.h),
+      ...onScreen("telescreen", level.telescreens, TELESCREEN_SIZE.h),
+      ...onScreen("slogan", level.groundSlogans, GROUND_SLOGAN_SIZE.h),
+      ...level.blimps.map(({ at }) => blimpSky(at)),
+    ].sort((a, b) => a[0] - b[0]);
+
+    for (let i = 1; i < spans.length; i++)
+      expect(spans[i][0]).toBeGreaterThan(spans[i - 1][1]);
+  });
+
+  it("has a blimp in the sky when the war changes sides", () => {
+    const flip = level.length * ALLIANCE_FLIP_AT;
+
+    expect(
+      level.blimps.some(({ at }) => {
+        const [from, to] = blimpSky(at);
+        return from <= flip && flip <= to;
+      }),
+    ).toBe(true);
+  });
+
+  it("mounts a telescreen over the boss fight, where the city stops", () => {
+    const [[from, to]] = onScreen(
+      "telescreen",
+      level.telescreens.slice(-1),
+      TELESCREEN_SIZE.h,
+    );
+
+    expect(from).toBeLessThanOrEqual(level.length);
+    expect(to).toBeGreaterThanOrEqual(level.length);
+  });
 });
