@@ -10,7 +10,7 @@ Airstrip One, 1984: a grey city under the four Ministries and the Party, permane
 
 | Character | Who | How they appear |
 | --------- | --- | --------------- |
-| **The pilot** | The player: a skilled Party pilot who starts loyal, known only by a four-digit number drawn for each run (`PILOT 6079`). Never speaks. | `player.png` in flight; `pilot-portrait.png` in the Ministry and endings; the ID in briefings, game over, endings, and the honor roll. |
+| **The pilot** | The player: a skilled Party pilot who starts loyal, known only by a four-digit number drawn for each run (`PILOT 6079`). Never speaks. | `player.png` in flight; `pilot-portrait.png` on the personnel file that opens each run; the ID there, in briefings, game over, endings, and the honor roll. |
 | **The Leader** | The face of the Party. Never speaks directly; only watches. | Rooftop murals, telescreens, the obedient ending. |
 | **The Officer** | An Inner Party officer who briefs the pilot before each level and comments on the record after it. The regime's human voice. | `officer-portrait.png` on the Dictionary and Ministry screens. Colder as the Ministry's verdict on the pilot worsens. |
 | **The erased pilot** | A former member of the squadron, vaporized before the game begins. He wrote the diaries. | The blank silhouette in `vaporized.png`; his handwriting in the diary pages. |
@@ -62,6 +62,7 @@ The words themselves (briefings, ticker, diary pages, endings) are in `src/i18n/
 | Scene | When it appears | What the player sees | Assets | Narrative purpose |
 | ----- | --------------- | -------------------- | ------ | ----------------- |
 | Menu | At start, and after game over or an ending. | The Ministry's pyramid over the city at night; title, options, high scores. | `menu-city.png` | The regime dominates the skyline before play begins. |
+| Personnel file | At the start of each run, after `BEGIN SERVICE`. | The pilot's portrait and file from the Ministry of Peace: the number drawn for the run in place of a name (`NAME: NOT REQUIRED`), a line of welcome, and the red `ENLISTED` stamp. | `pilot-portrait.png` | The player is introduced the way the regime sees him: a number, filed and stamped. |
 | Dictionary + briefing | Before every level. | The official dictionary, the edition for this level; this level's word struck out in red. The Officer gives one or two lines of orders. | `dictionary-cover.png`, `officer-portrait.png` | Censorship as a ritual, announced in advance, by a human voice. |
 | Game | During each level. | The city from above, enemies, the HUD, the ticker, the regime's messages. | Sprites, tilesets, landmarks | The war, and the surveillance inside it. |
 | Takeoff and landing | At the start and end of every level. | The plane rolls off the eye painted on the Party's launch platform and climbs; after the boss, it lands on another. | `launch-platform.png` | The regime launches its pilot and recovers him to be judged. The rebel is the only one who doesn't come back. |

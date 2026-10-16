@@ -102,11 +102,12 @@ flowchart LR
 
 ## Structure
 
-**Flow:** Menu → Dictionary → Game → Ministry → Dictionary → … → Ending. Losing every life shows VAPORIZED; `Enter` returns to the Menu. Between levels, the Ministry rewrites suspicion from its verdict. The scenes in this flow are described in [narrative.md › Scenes](narrative.md#scenes).
+**Flow:** Menu → personnel file → Dictionary → Game → Ministry → Dictionary → … → Ending. Losing every life shows VAPORIZED; `Enter` returns to the Menu. Between levels, the Ministry rewrites suspicion from its verdict. The scenes in this flow are described in [narrative.md › Scenes](narrative.md#scenes).
 
 ```mermaid
 flowchart TD
-    menu["Menu"] -->|"BEGIN SERVICE"| dict["Dictionary + briefing<br/>this level's word struck out"]
+    menu["Menu"] -->|"BEGIN SERVICE"| file["Personnel file<br/>the pilot's number, no name"]
+    file -->|"Enter"| dict["Dictionary + briefing<br/>this level's word struck out"]
     menu -->|"HONOR ROLL"| roll["Honor roll"]
     roll --> menu
     menu -->|"LANGUAGE"| menu

@@ -30,6 +30,7 @@ Every place where the player reads something: when it appears, in which voice, h
 | HUD | Machine | Score, lives, suspicion, alert state, words; during a battle, the boss's name in place of the suspicion line. | Values lie by level, each with a tell. | `hud`, `words` | `SUSPICION`, `PURSUIT`, `FLYING FORTRESS` |
 | Word pickups | Machine | Falling pickups, each on a paper card. | Removed words appear struck out in red, on a card dulled to steel. | `words` | `FREE` struck in red |
 | Menu | Machine | Start screen, as a vertical list: begin, honor roll, language. | Language option switches every string. | `menu`, `meta` | `BEGIN SERVICE` |
+| Personnel file | Paperwork | Once, as a run begins: the Ministry of Peace's file on the pilot, typed beside the portrait, then stamped. | — | `enlistment` | `NAME: NOT REQUIRED` |
 | Dictionary | Paperwork | Before each level. | One edition per level; one more word struck. | `dictionary`, `levels` | `DICTIONARY OF NEWSPEAK` · `ELEVENTH EDITION` |
 | Officer briefing | Paperwork | Next to his portrait, before each level. | Three tones per level, by the Ministry's verdict on the last level: calm, wary, cold. | `briefings` | `Pilot 6079. We have read your file. Fly well today.` |
 | Diary line | Human | Bottom of the screen on pickup, without pausing; typed, and slides left once it reaches the margin. | One per level, in order. | `diary.pages[].line` | `These ruins were not made by the enemy.` |
@@ -72,6 +73,9 @@ Every place where the player reads something: when it appears, in which voice, h
 | Towed banner | VT323 | 20 | `#1a1a1a` on `#e8e4d8` | UPPER |
 | Telescreen | VT323 | 20 | `#e8e4d8` on a `#1a1a1a` screen in a `#b3261e` frame | UPPER |
 | High scores | VT323 | 20 | `#e8e4d8`; erased entries `#7a7a7a` | UPPER, scores right-aligned |
+| Personnel file: header and rank | Courier Prime | 20 | `#e8e4d8` | UPPER |
+| Personnel file: the pilot's number | Courier Prime | 40 | `#e8e4d8` | Digits |
+| Personnel file: entries; the welcome | Courier Prime | 16 | `#e8e4d8` | UPPER; sentence case |
 | Dictionary heading, words | Courier Prime | 20 | `#e8e4d8`; removed words struck in red | UPPER |
 | Ministry heading, scores | Courier Prime | 20 | `#e8e4d8`; real score struck in red | UPPER |
 | Stamps (`CORRECTED`, `APPROVED`, `VAPORIZED`) | VT323 | 40 | `#b3261e` inside a rotated `#b3261e` outline | UPPER |

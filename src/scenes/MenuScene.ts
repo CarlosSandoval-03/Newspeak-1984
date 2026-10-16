@@ -6,7 +6,7 @@ import { currentLanguage, LANGUAGES, setLanguage, t } from "../i18n";
 import { resetGame } from "../state";
 import { type HonorRollEntry, readHonorRoll } from "../systems/HonorRoll";
 import { drawHonorRoll } from "../ui/honorRollTable";
-import { DictionaryScene } from "./DictionaryScene";
+import { EnlistmentScene } from "./EnlistmentScene";
 
 const OPTIONS = ["start", "honorRoll", "language"] as const;
 
@@ -54,7 +54,7 @@ export class MenuScene implements Scene {
       case "start":
         if (activate) {
           resetGame();
-          this.manager.change(new DictionaryScene(this.p, this.manager));
+          this.manager.change(new EnlistmentScene(this.p, this.manager));
         }
         break;
       case "honorRoll":

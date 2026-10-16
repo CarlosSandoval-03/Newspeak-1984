@@ -36,6 +36,7 @@ describe("parseFlow", () => {
       ending: "rebel",
     });
     expect(parseFlow("departure")).toEqual({ kind: "departure" });
+    expect(parseFlow("enlistment")).toEqual({ kind: "enlistment" });
   });
 
   it("knows nothing it can't open", () => {

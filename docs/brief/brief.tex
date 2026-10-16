@@ -104,7 +104,7 @@
 
 \subsection{Una partida}
 
-Antes de cada nivel, el Oficial da las órdenes y el Diccionario de Neolengua tacha una palabra. En el aire, el piloto derriba enemigos mientras evita los conos de vigilancia: ser visto atrae más enemigos, después cazadores y al final a la Policía del Pensamiento. Tras cada jefe, el Ministerio de la Verdad tacha el puntaje real y escribe uno oficial. Después del nivel~5, el final depende de las páginas del diario que el piloto se atrevió a leer.
+Al empezar, el régimen presenta al piloto con su ficha de personal: un número en lugar de un nombre. Antes de cada nivel, el Oficial da las órdenes y el Diccionario de Neolengua tacha una palabra. En el aire, el piloto derriba enemigos mientras evita los conos de vigilancia: ser visto atrae más enemigos, después cazadores y al final a la Policía del Pensamiento. Tras cada jefe, el Ministerio de la Verdad tacha el puntaje real y escribe uno oficial. Después del nivel~5, el final depende de las páginas del diario que el piloto se atrevió a leer.
 
 % ---------------------------------------------------------------- 2
 \section{Concepto y pilares}
@@ -235,6 +235,7 @@ Cada página es opcional y arriesgada: sube la sospecha en 25 puntos y empeora e
   \textbf{Escena} & \textbf{Qué ve el jugador} & \textbf{Propósito narrativo} \\
   \midrule
   Menú & La pirámide del Ministerio sobre la ciudad de noche; empezar, cuadro de honor, idioma. & El régimen domina el horizonte antes de jugar. \\
+  Ficha de personal & Al empezar cada partida: el retrato del piloto y su ficha del Ministerio de la Paz, con el número sorteado en lugar del nombre (\game{NOMBRE: NO REQUERIDO}) y el sello \game{\color{red}ALISTADO}. & El jugador es presentado como lo ve el régimen: un número, archivado y sellado. \\
   Diccionario y órdenes & La edición del Diccionario de este nivel, con su palabra tachada en rojo, y las órdenes del Oficial. & La censura como ritual, anunciada de antemano por una voz humana. \\
   Despegue y aterrizaje & El avión rueda desde el ojo pintado en la plataforma del Partido y se eleva; tras el jefe, aterriza en otra. & El régimen lanza a su piloto y lo recupera para juzgarlo. \\
   Juego & La ciudad desde arriba, los enemigos, el HUD, el ticker y los mensajes del régimen. & La guerra, y la vigilancia dentro de ella. \\
@@ -367,16 +368,18 @@ Los diez mejores puntajes oficiales se guardan en el navegador. Cada partida ent
 \begin{center}
 \begin{tikzpicture}[
     node distance=0.5cm,
-    box/.style={draw=ink,fill=paper,rounded corners=2pt,align=center,font=\small,minimum height=0.8cm,text width=2.25cm},
+    box/.style={draw=ink,fill=paper,rounded corners=2pt,align=center,font=\small,minimum height=0.8cm,text width=2.2cm},
     arrow/.style={-{Latex[length=2mm]},draw=concrete}]
   \node[box] (menu) {Menú};
-  \node[box,right=of menu] (dict) {Diccionario y órdenes};
+  \node[box,right=of menu] (file) {Ficha de personal};
+  \node[box,right=of file] (dict) {Diccionario y órdenes};
   \node[box,right=of dict] (takeoff) {Despegue};
   \node[box,right=of takeoff] (game) {Nivel $N$ y su jefe};
   \node[box,below=0.9cm of game] (landing) {Aterrizaje};
   \node[box,below=0.9cm of takeoff] (ministry) {Ministerio: veredicto};
   \node[box,below=0.9cm of dict] (roll) {Cuadro de honor alterado};
-  \draw[arrow] (menu) -- (dict);
+  \draw[arrow] (menu) -- (file);
+  \draw[arrow] (file) -- (dict);
   \draw[arrow] (dict) -- (takeoff);
   \draw[arrow] (takeoff) -- (game);
   \draw[arrow] (game) -- (landing);

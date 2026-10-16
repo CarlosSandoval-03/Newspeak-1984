@@ -55,6 +55,17 @@ export const en = {
     { sector: "SECTOR 5", name: "MINISTRY OF LOVE" },
   ],
 
+  // The pilot's personnel file, opened at the start of a run; {id} is the number drawn for it.
+  enlistment: {
+    header: "MINISTRY OF PEACE",
+    department: "AIR SERVICE · PERSONNEL FILE",
+    rank: "PILOT",
+    fields: ["NAME: NOT REQUIRED", "STATUS: LOYAL", "POSTED TO: THE CAPITAL"],
+    note: "Pilot {id}. From today your number is your name. Fly where you are sent. The Party keeps the record, so you need not.",
+    stamp: "ENLISTED",
+    pressEnter: "PRESS ENTER",
+  },
+
   dictionary: {
     heading: "DICTIONARY OF NEWSPEAK",
     edition: "{ordinal} EDITION",

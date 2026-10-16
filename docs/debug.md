@@ -40,6 +40,7 @@ Tools for testing the game without playing the whole run every time. With them y
 
 | `&start=` | Opens |
 | --------- | ----- |
+| `enlistment` | The pilot's personnel file, as a new run opens. |
 | `dictionary:N` | Level N's Dictionary. |
 | `level:N` | Level N, past the takeoff, with the pilot at the stick. `level` alone is level 1. |
 | `boss:N` | Level N where the city stops, as its boss comes in. |

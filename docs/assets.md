@@ -11,12 +11,13 @@ All images use only the game palette ([art-direction.md](art-direction.md)): the
 | Scene | Assets |
 | ----- | ------ |
 | Menu | `menu-city.png` |
+| Personnel file | `pilot-portrait.png` |
 | Dictionary + briefing | `dictionary-cover.png`, `officer-portrait.png` |
 | Game | Player, enemies, bosses (+ damage), terrain, landmarks, `launch-platform.png`, `poster-leader.png`, `propaganda-blimp.png`, `diary.png`, variants |
 | Pause | `pause-telescreen.png` |
-| Ministry | `memory-hole.png`, `pilot-portrait.png`, `officer-portrait.png` |
+| Ministry | `memory-hole.png` |
 | Game over | `vaporized.png` |
-| Endings | `ending-obedient.png`, `ending-rebel.png`, `pilot-portrait.png` |
+| Endings | `ending-obedient.png`, `ending-rebel.png` |
 
 ## Index by level
 
@@ -105,7 +106,7 @@ Side-view scenes, drawn at an integer scale (240×160 → 2× = 480×320).
 | `menu-city.png` | 240×160 | Menu | Stepped pyramid over the city at night; dark lower third for the title. Regenerated from a pyramid sketch after the first try drew a spire. |
 | `dictionary-cover.png` | 96×128 | Dictionary | Red eye emblem, no title. |
 | `vaporized.png` | 240×160 | Game over | Squadron photo with one pilot's head erased: the diarist, and now the player. |
-| `pilot-portrait.png` | 64×64 | Ministry, endings | The player's pilot; same style as the Leader and the Officer so they can face each other. |
+| `pilot-portrait.png` | 64×64 | Personnel file | The player's pilot; same style as the Leader and the Officer so they can face each other. |
 | `officer-portrait.png` | 64×64 | Dictionary (briefing), Ministry | The Inner Party officer who gives the pilot orders: a face for the regime besides the leader. Completes the trio leader–officer–pilot. |
 | `memory-hole.png` | 240×160 | Ministry | A records clerk at his typewriter beside the memory hole, the slot where records are burned. The real score goes down the hole once the official one and its corrections are typed. |
 | `pause-telescreen.png` | 240×160 | Pause | A telescreen eye with a red iris: even stopping is watched. |
@@ -139,7 +140,7 @@ Some assets are deliberately incomplete: p5 draws the moving or changing part at
 | `dictionary-cover.png` | Heading and edition (`DICTIONARY OF NEWSPEAK`, `ELEVENTH EDITION`) and word list with red strike-throughs, in Courier Prime. | — | 3 |
 | Endings | Text typed below the illustration; the rebel ending also shows the diary pages read. | — | 4 |
 | `diary.png` (pickup) | One line of the page typed at the bottom of the screen on a leather band, without pausing. | — | 3 |
-| `pilot-portrait.png` | — | Thin frame and pilot ID caption. | 4 |
+| `pilot-portrait.png` | **Personnel file:** the portrait at 3×, the file's entries typed beside it (the rank, the pilot's number in Courier Prime at 40 px, `NAME: NOT REQUIRED`), and the red `ENLISTED` stamp pressed across its bottom once typed. | — | 1.0.0 |
 | `poster-leader.png` | **Mural** (`MURAL_SIZE`, 96×100): the portrait at 1× on a red field, over a `#1a1a1a` band with the slogan's two lines in VT323 at 10 px. Painted on a roof with room for it, under anything standing there. | — | 5 |
 | `propaganda-blimp.png` | **Towed banner**: an ink tow line and a 192×24 `#e8e4d8` banner trimmed in red behind the blimp, with the slogan in `#1a1a1a` VT323 at 20 px. Mirrored to fly left; its shadow keeps to the same side. | Banner sways 2 px; it goes blank for a frame when its slogan flips. | 5 |
 | `boss-*-damaged.png` | Reveal damage regions progressively from `boss-*-damage.json`, never a single swap. | Smoke: grey particles from the revealed holes, more as more regions show. | 4 |

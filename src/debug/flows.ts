@@ -8,6 +8,7 @@ import {
 import type { SceneManager } from "../core/SceneManager";
 import { LEVELS } from "../levels/levels";
 import { DictionaryScene } from "../scenes/DictionaryScene";
+import { EnlistmentScene } from "../scenes/EnlistmentScene";
 import { type Ending, EndingScene } from "../scenes/EndingScene";
 import { GameOverScene } from "../scenes/GameOverScene";
 import { GameScene } from "../scenes/GameScene";
@@ -19,7 +20,7 @@ import { type Stats, VERDICT, type Verdict } from "../types";
 // A point of the game to open straight away, named in the URL as `?start=kind:argument`.
 export type Flow =
   | { kind: "dictionary" | "level" | "boss" | "landing"; level: number }
-  | { kind: "departure" | "gameover" }
+  | { kind: "enlistment" | "departure" | "gameover" }
   | { kind: "ministry"; verdict: Verdict }
   | { kind: "ending"; ending: Ending };
 
@@ -69,6 +70,7 @@ export function parseFlow(start: string | null): Flow | null {
     case "boss":
     case "landing":
       return validLevel ? { kind, level } : null;
+    case "enlistment":
     case "departure":
     case "gameover":
       return { kind };
@@ -96,6 +98,9 @@ export function startFlow(
   readDiaries(diaries);
 
   switch (flow.kind) {
+    case "enlistment":
+      manager.change(new EnlistmentScene(p, manager));
+      return;
     case "dictionary":
       state.level = flow.level;
       manager.change(new DictionaryScene(p, manager));

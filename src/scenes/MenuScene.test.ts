@@ -5,7 +5,7 @@ import { Input } from "../core/Input";
 import { SceneManager } from "../core/SceneManager";
 import { currentLanguage, setLanguage } from "../i18n";
 import { state } from "../state";
-import { DictionaryScene } from "./DictionaryScene";
+import { EnlistmentScene } from "./EnlistmentScene";
 import { MenuScene } from "./MenuScene";
 
 // Node has no KeyboardEvent; a plain Event with a code is all Input reads.
@@ -43,7 +43,7 @@ describe("MenuScene", () => {
     vi.unstubAllGlobals();
   });
 
-  it("starts a new run on BEGIN SERVICE", () => {
+  it("starts a new run on BEGIN SERVICE, at the pilot's personnel file", () => {
     const change = vi.spyOn(manager, "change");
     state.realScore = 500;
 
@@ -51,7 +51,7 @@ describe("MenuScene", () => {
     tick();
 
     expect(state.realScore).toBe(0);
-    expect(change).toHaveBeenCalledWith(expect.any(DictionaryScene));
+    expect(change).toHaveBeenCalledWith(expect.any(EnlistmentScene));
   });
 
   it("accepts Shoot as confirm", () => {

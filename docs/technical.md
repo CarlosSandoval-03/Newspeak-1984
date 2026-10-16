@@ -50,7 +50,7 @@ newspeak-1984/
     ├── systems/          # Suspicion, Newspeak, Propaganda, Ministry, HonorRoll, Spawner, Flight
     ├── levels/           # levels.ts (level data), layout.ts (city generator), Background
     ├── ui/               # HUD, Ticker, effects (red vignette, scanlines, glitch, typewriter, typed pages, strikes, stamps), honorRollTable
-    ├── scenes/           # Menu, Dictionary, Game, GameOver, Ministry, Ending
+    ├── scenes/           # Menu, Enlistment, Dictionary, Game, GameOver, Ministry, Ending
     └── debug/            # dev server with ?debug=true only: start flows from the URL, the debug panel, the storage sandbox
 ```
 
@@ -77,7 +77,7 @@ newspeak-1984/
 ```mermaid
 flowchart TD
     main["main.ts"] --> manager["SceneManager<br/>fixed 60 Hz tick"]
-    manager --> others["Menu, Dictionary,<br/>Ministry, Ending"]
+    manager --> others["Menu, Enlistment, Dictionary,<br/>Ministry, Ending"]
     manager --> game["GameScene"]
     game --> entities["entities/<br/>Player, Enemy, Bullet, Eye, Boss, ..."]
     game --> systems["systems/<br/>Spawner, Suspicion, Newspeak, Ministry"]

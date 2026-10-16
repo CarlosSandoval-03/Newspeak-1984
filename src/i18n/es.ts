@@ -49,6 +49,16 @@ export const es: Strings = {
     { sector: "SECTOR 5", name: "MINISTERIO DEL AMOR" },
   ],
 
+  enlistment: {
+    header: "MINISTERIO DE LA PAZ",
+    department: "SERVICIO AÉREO · FICHA DE PERSONAL",
+    rank: "PILOTO",
+    fields: ["NOMBRE: NO REQUERIDO", "ESTADO: LEAL", "DESTINO: LA CAPITAL"],
+    note: "Piloto {id}. Desde hoy su número es su nombre. Vuele adonde se le envíe. El Partido lleva el registro; usted no lo necesita.",
+    stamp: "ALISTADO",
+    pressEnter: "PULSA ENTER",
+  },
+
   dictionary: {
     heading: "DICCIONARIO DE NEOLENGUA",
     edition: "{ordinal} EDICIÓN",

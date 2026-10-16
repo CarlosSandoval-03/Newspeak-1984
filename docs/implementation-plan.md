@@ -790,6 +790,8 @@ A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings,
 
 ## Toward `1.0.0`
 
+- Done: a new run opens on the pilot's personnel file (`EnlistmentScene`), the one place the pilot's portrait shows, which introduces him by the number drawn for the run.
+
 - Play the five levels and balance them: a first run can clear level 1; level 5 is hard but fair (the jump from level 4, +36% enemy hp a minute, is the first thing to lower); each level feels like its missing word, harder than it would be with it. Then balance the obedience weights, suspicion rates, and alert multipliers.
 - The officer's postscript: when the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
 - Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
@@ -862,3 +864,4 @@ These are the gaps this plan filled in. An open decision can still change before
 | 50 | Difficulty rises in density (waves, enemy hp to shoot down, and eyes per minute), not in any one enemy's hp or speed | 7 | Confirmed |
 | 51 | Each level is designed around the word it has just lost | 7 | Confirmed |
 | 52 | The levels use only the mechanics steps 1 to 6 built | 7 | Confirmed |
+| 53 | A new run opens on the pilot's personnel file: his portrait, the run's number in place of a name, stamped `ENLISTED` | — | Confirmed |
