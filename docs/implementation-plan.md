@@ -13,7 +13,7 @@ Every step ends with a playable game. Each one finishes with a version bump (see
 | 4 | Level flow, bosses, Ministry of Truth, high scores, endings | `0.5.0`, `0.5.1`, `0.5.2` | Done |
 | 5 | Propaganda (lying HUD), ticker, glitch, scanlines, messages from the sky, pause | `0.6.0` | Done |
 | 6 | The city's terrain: the river and its bridges, the railway, rubble, a seed per level | `0.7.0` | Done |
-| 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | In progress |
+| 7 | The five levels: length, pace, waves, eyes, and messages, each built around its missing word | `0.8.0` | Done |
 | — | Balance, the officer's postscript, polish | `1.0.0` | Not started |
 
 ---
@@ -733,7 +733,7 @@ The stand-in level data (murals, telescreens, slogans, towers on plazas) moves t
 | 4 | 13 | 17.2 | 75.8 | 3.8 |
 | 5 | 36 | 21.3 | 103.0 | 4.7 |
 
-Each diary but level 1's lies under a tower 82 px away, sweeping across it. What remains is playing them: a first run through level 1, and level 5 hard but fair.
+Each diary but level 1's lies under a tower 82 px away, sweeping across it. `pnpm bench` times level 5 too (`level5`), the densest level, well within budget. Playing them for feel moves to the balance toward `1.0.0`. **Step 7 is done** and released as `0.8.0`. Next: the balance, the officer's postscript, and the polish toward `1.0.0`.
 
 ### Files
 
@@ -784,15 +784,13 @@ A run is about 12 minutes of flight, plus the bosses, the takeoffs and landings,
 
 - [x] Every level has its length, waves, eyes, AA guns, pickups, diary, and messages from the sky as specified.
 - [x] The levels' test checks the pace: waves, enemy hp, and eyes per minute rise from each level to the next; no two messages from the sky share the screen; the blimp is in the sky when the war changes sides.
-- [ ] A first run can clear level 1; level 5 is hard but fair.
-- [ ] Each level feels like its missing word: played with the word, it would be easier.
-- [ ] Both endings can still be reached (`?debug=true&start=boss:5&ending=rebel`, then `obedient`).
+- [x] Both endings can still be reached (`?debug=true&start=boss:5&ending=rebel`, then `obedient`): the scene's tests fly level 5 to each.
 
 ---
 
 ## Toward `1.0.0`
 
-- Balance the obedience weights, suspicion rates, and alert multipliers.
+- Play the five levels and balance them: a first run can clear level 1; level 5 is hard but fair (the jump from level 4, +36% enemy hp a minute, is the first thing to lower); each level feels like its missing word, harder than it would be with it. Then balance the obedience weights, suspicion rates, and alert multipliers.
 - The officer's postscript: when the pilot shot down Thought Police in the last level, the next briefing adds one line per level (`briefingPostscripts` in `i18n/`), such as `P.S. Your Eurasian kill over Sector 2 has been recorded. We know which one we mean.`, so the regime shows it knows the truth it filed away.
 - Polish: the optional p5 additions in [assets.md](assets.md#assets-that-need-p5-additions).
 - Sound is optional. Assets go in `public/assets/sounds/`, played through the Web Audio API, so no new dependency is needed.
