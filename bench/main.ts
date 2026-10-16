@@ -5,7 +5,7 @@ import { Input } from "../src/core/Input";
 import { SceneManager } from "../src/core/SceneManager";
 import { initLanguage } from "../src/i18n";
 import { GameScene } from "../src/scenes/GameScene";
-import { resetGame } from "../src/state";
+import { resetGame, state } from "../src/state";
 import { SCENARIOS, type Pilot } from "./scenarios";
 
 // Long enough for the first chunks, sprites, and fonts to be built before anything is timed.
@@ -79,6 +79,7 @@ if (!scenario) {
       input = new Input(keys);
       const manager = new SceneManager(await loadAssets(p), input);
       resetGame();
+      state.level = scenario.level ?? 1;
       scene = new GameScene(p, manager);
       manager.change(scene);
       // In the air at distance 0, as before takeoffs existed, so the timings stay comparable.

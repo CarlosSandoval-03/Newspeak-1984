@@ -272,6 +272,7 @@ Regions are revealed in file order, and the last one leaves the graphics identic
   | Scenario | What it loads |
   | -------- | ------------- |
   | `level1` | Level 1 as played: waves, eyes, turrets, the scrolling city. |
+  | `level5` | Level 5 as played: the densest waves and the most eyes. A scenario's `level` picks the level its scene is built for. |
   | `level1-spread` | Level 1 with FREE at its maximum, firing all the time. |
   | `pursuit` | Suspicion held at 80: reinforcements, faster fire, autogyros. |
   | `thought-police` | The Thought Police and escort, an eye on the pilot, the red vignette. |

@@ -13,6 +13,8 @@ export interface Pilot {
 export interface Scenario {
   description: string;
   frames: number;
+  // The level the scene is built for; level 1 unless set.
+  level?: number;
   setup?(scene: GameScene, pilot: Pilot): void;
   // Runs before every tick, warm-up included.
   step?(scene: GameScene, frame: number, pilot: Pilot): void;
@@ -32,6 +34,13 @@ function weave(frame: number, pilot: Pilot): void {
 export const SCENARIOS: Record<string, Scenario> = {
   level1: {
     description: "Level 1 as played: waves, eyes, turrets, the city scrolling",
+    frames: 1800,
+    step: (_, frame, pilot) => weave(frame, pilot),
+  },
+
+  level5: {
+    description: "Level 5 as played: the densest waves and the most eyes",
+    level: 5,
     frames: 1800,
     step: (_, frame, pilot) => weave(frame, pilot),
   },
